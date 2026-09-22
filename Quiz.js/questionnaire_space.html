@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz</title>
+  <style>
+
+    body {
+      font-family:Verdana, Geneva, Tahoma, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url(main_image_star-forming_region_carina_nircam_final-5mb.webp);
+      background-size: cover;
+      background-position: center;
+    }
+    h1 {
+      box-shadow: 8px -7px 20px 7px rgb(0, 0, 0);
+      background-color: #ffffff;
+      font-size: 2rem;
+      letter-spacing: 16px;
+      text-orientation: upright;
+      padding: 12px;
+      border-radius: 15px;
+      position: absolute;
+      top: -65px;
+      right: 125px;
+    }
+    #iss {
+      position: absolute;
+      width: 300px;
+      height: 285px;
+      animation: deplacer 47.5s linear 1;
+      overflow: hidden;
+    }
+    @keyframes deplacer {
+      0% {
+        transform: translate(-350%, -75%) rotate(0deg);
+      }
+      100% {
+        transform: translate(350%, 75%) rotate(200deg) scale(0.80);
+      }
+    }
+    #astrorocket {
+      z-index: 199;
+      left: 398px;
+      position: absolute;
+      width: 180px;
+      border-radius: 50%;
+      top: -91px;
+      transform: rotate(38deg);
+      box-shadow: 0px -5px 0px 3px rgb(0 0 0 / 22%);
+    }
+    
+    #quiz-container {
+      position: relative;
+      z-index: 99;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 5px -5px 20px 7px rgb(0 0 0);
+      max-width: 450px;
+      display: flex;
+      align-items: center;
+    }
+    #question {
+      font-size: 1.5rem;
+      padding: 5px;
+    }
+
+    #choix {
+      list-style: none;
+      padding: 0;
+      gap: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    #choix li {
+      margin-bottom: 10px;
+    }
+    #choix input {
+      margin-right: 10px;
+    }
+
+    .button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #3694f8;
+      color: white;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.75s all;
+    }
+    .button:hover{
+      transform: scale(1.085);
+      background: #0071ed;
+      border-radius: 0;
+    }
+  </style>
+
+</head>
+<body>
+
+  <img id="iss" src="iss-bacteries-Photoroom.png" alt="iss">
+  
+  <section id="quiz-container">
+
+    <h1>Question.js</h1>
+    <img id="astrorocket"   src="astronaute-equitation-fusee-cartoon-vector-icon-illustration-concept-icone-technologie-science-isole-vecteur-premium-style-dessin-anime-plat_138676-3535-Photoroom.png" alt="">
+
+    <article id="quiz">
+
+      <div>
+        <p id="question"></p>
+      </div>
+
+      <form action="" method="post">
+        <ul id="choix"></ul>
+      </form>
+      <button class="button" disabled>Valider</button>
+      
+    </article>
+  </section>
+
+  <script>
+    const questions = [
+      {
+        question: "En quelle année l’ère de la conquête spatiale a-t-elle commencé ?",
+        choix: [1913, 1932, 1957, 1964],
+        reponse: 2
+      },
+      {
+        question: "Jusqu’en 2023, combien de missions réussies ont permis à l’Homme de fouler le sol lunaire ?",
+        choix: [1, 3, 6, 8],
+        reponse: 2
+      },
+      {
+        question: "Quel est le nom du premier Homme à effectuer un voyage réussi dans l’espace ?",
+        choix: ["SoukSakone", "Youri Gagarine", "Buzz Aldrin", "Thomas pesquet"],
+        reponse: 1
+      },
+      {
+        question: "Quel est le nom de la station spatiale de coopération internationale placée en orbite terrestre pour la recherche scientifique depuis 1998 ?",
+        choix: ["CSS", "NSA", "ISS", "IRS"],
+        reponse: 2
+      },
+      {
+        question: "Quel était le nom de la première mission spatiale qui a envoyé des humains sur la Lune ?",
+        choix: ["Apollo 7", "Apollo 8","Apollo 11","Apollo 13",],
+        reponse: 2
+      }
+    ];
+
+    let QuestionActuelleIndex = 0; // Pour suivre la question en cours dans le tableau
+    let repsUser = [];
+    let score = 0;
+
+    const quizContainer = document.getElementById("quiz");
+    const nquestion = document.getElementById("question");
+    const nchoix = document.getElementById("choix");
+    const btnSuivant = document.querySelector(".button");
+
+    function afficheQuestion() {
+      const question = questions[QuestionActuelleIndex];
+      nquestion.textContent = question.question;
+
+        nchoix.innerHTML = ""; // chaque fois qu'on affiche une nouvelle question = liste vide
+        question.choix.forEach((choi, index) => { // ajoute du contenue à l'id choix pour chaque question
+        const li = document.createElement("li");
+        
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "choi";
+        input.value = index;
+        input.id = `choi-${index}`;
+
+        input.addEventListener("change", () => { // Déclenché lorsque l'utilisateur sélectionne un input
+          btnSuivant.disabled = false; // Cette ligne permet de rendre le bouton "Suivant" activé dès qu'un choix a été fait.
+          repsUser[QuestionActuelleIndex] = index;
+        });
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `choi-${index}`);
+        label.textContent = choi;
+
+        li.appendChild(input);
+        li.appendChild(label);
+        nchoix.appendChild(li);
+      });
+    }
+
+    btnSuivant.addEventListener("click", () => {
+      const QuestionActuelle = questions[QuestionActuelleIndex];
+      const repUser = repsUser[QuestionActuelleIndex];
+
+      if (repUser === QuestionActuelle.reponse) {
+        score++;
+        btnSuivant.textContent = "Bravo";
+        btnSuivant.style.backgroundColor = "#4CAF50";
+      } else {
+        btnSuivant.textContent = "Mauvaise reponse";
+        btnSuivant.style.backgroundColor = "#fe5436";
+        const divRep = document.createElement("div");
+        divRep.style.paddingTop = "25px";
+        divRep.style.textAlign = "center";
+        divRep.textContent = `La bonne réponse était : ${QuestionActuelle.choix[QuestionActuelle.reponse]}`;
+        quizContainer.appendChild(divRep);
+
+        setTimeout(() => {
+          divRep.remove();
+        }, 4000);
+      }
+
+      // Pour faire 1 click
+      btnSuivant.disabled = true;
+      setTimeout(() => {
+        btnSuivant.classList.remove("mauvaiseRep");
+        btnSuivant.textContent = "Valider";
+
+        QuestionActuelleIndex++;
+
+        if (QuestionActuelleIndex < questions.length) {
+          afficheQuestion();
+        } else {
+          afficheScore();
+        }
+      }, 1500);
+        });
+
+    function afficheScore() {
+      document.querySelectorAll('img').forEach(img => img.remove());
+      document.querySelector('h1').remove();
+      quizContainer.innerHTML = `
+      <h2>Voici ton score est de : ${score} sur ${questions.length}</h2>
+      <input type="submit" value="Envoyez" class="button">
+      `;
+    }
+
+    afficheQuestion();
+  </script>
+</body>
+</html>
