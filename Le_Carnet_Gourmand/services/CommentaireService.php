@@ -2,21 +2,23 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/services/RecetteService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/Commentaire.php");
 require_once(ROOT . "/daos/CommentaireDao.php");
-require_once(ROOT . "/services/CompteService.php");
-require_once(ROOT . "/services/RecetteService.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
 
+// Un commentaire est publié après validation par un administrateur.
+// Avant cela, seuls son auteur et les administrateurs le voient.
 class CommentaireService extends AbstractService implements IService
 {
-    private CompteService $compteService;
     private RecetteService $recetteService;
 
     public function __construct() {
         $this->dao = new CommentaireDao();
-        $this->compteService = new CompteService();
         $this->recetteService = new RecetteService();
     }
 
@@ -24,121 +26,96 @@ class CommentaireService extends AbstractService implements IService
         return $this->dao;
     }
 
-    function findAll(): array {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut voir tous les commentaires.");
-        }
-        return $this->getDao()->findAll();
+    // Liste de modération : administrateurs seulement ($estApprouve = false pour les commentaires en attente)
+    function findAll(?bool $estApprouve = null): array {
+        AuthService::requireAdmin();
+        return $this->getDao()->findAll($estApprouve);
     }
 
-    function findByPk(int|array $pk): IEntity {
-        /** @var Commentaire $commentaire */
+    // Commentaires d'une recette visible : les approuvés, plus ceux en attente de l'utilisateur connecté
+    // (un administrateur voit tout)
+    function findByRecette(int $fkRecette): array {
+        $this->recetteService->findByPk($fkRecette);
+        $moi = AuthService::currentUser();
+        return $this->getDao()->findByRecette($fkRecette, !AuthService::isAdmin(), $moi?->getPkCompte());
+    }
+
+    // $pk = ['fk_compte' => X, 'fk_recette' => Y]
+    function findByPk(int|array $pk): Commentaire {
         $commentaire = $this->getDao()->findByPk($pk);
-
-        if (!$commentaire) {
-            throw new HttpStatusException("Commentaire introuvable", 404);
+        if ($commentaire === null
+            || $commentaire->getEstSupprime()
+            || (!$commentaire->getEstApprouve() && !AuthService::canManage($commentaire->getFkCompte()))) {
+            throw new NotFoundException("Commentaire introuvable.");
         }
-
-        if (!isAdmin() && !$commentaire->getEstApprouve()) {
-            throw new HttpStatusException("Commentaire non approuvé", 403);
-        }
-
-        if ($commentaire->getEstSupprime()) {
-            $commentaire->setCompte(null);
-        } else {
-            $compteEntity = $commentaire->getCompte();
-            if ($compteEntity !== null) {
-                try {
-                    $compte = $this->compteService->findByPk($compteEntity->getPkCompte());
-                    $commentaire->setCompte($compte);
-                } catch (HttpStatusException $e) {
-                    // Si le compte est supprimé ou banni, on anonymise
-                    $commentaire->setCompte(null);
-                }
-            }
-        }
-
+        $this->recetteService->findByPk($commentaire->getFkRecette());
         return $commentaire;
     }
 
-    function findByRecette(int $pkRecette): array {
-        // Vérifier que la recette existe
-        try {
-            $this->recetteService->findByPk($pkRecette);
-        } catch (HttpStatusException $e) {
-            throw new HttpStatusException("La recette n'existe pas", 404);
-        }
-
-        $commentaires = $this->getDao()->findByRecette($pkRecette);
-
-        foreach ($commentaires as $commentaire) {
-            if ($commentaire->getEstSupprime()) {
-                $commentaire->setCompte(null);
-            } else {
-                $compteEntity = $commentaire->getCompte();
-                if ($compteEntity !== null) {
-                    try {
-                        $compte = $this->compteService->findByPk($compteEntity->getPkCompte());
-                        $commentaire->setCompte($compte);
-                    } catch (HttpStatusException $e) {
-                        $commentaire->setCompte(null);
-                    }
-                }
-            }
-        }
-
-        return $commentaires;
-    }
-
+    // Un commentaire par compte et par recette publiée ; il attend ensuite la validation
     function insert(IEntity $entity): int {
-        if (!isUser() && !isAdmin()) {
-            _403_Forbidden("Seuls les utilisateurs connectés peuvent poster un commentaire.");
-        }
-
         /** @var Commentaire $entity */
+        $moi = AuthService::requireUser();
+        $this->recetteService->findPublished($entity->getFkRecette());
+
+        $entity->setFkCompte($moi->getPkCompte());
         $entity->setDateCreation(new DateTime());
         $entity->setEstApprouve(false);
         $entity->setEstSupprime(false);
-        
-        $currentUser = getCurrentUser();
-        $entity->setCompte($currentUser);
 
-        return parent::insert($entity);
+        $existant = $this->getDao()->findByPk($entity->getPk());
+        if ($existant !== null && !$existant->getEstSupprime()) {
+            throw new ConflictException("Vous avez déjà commenté cette recette : modifiez votre commentaire avec PUT.");
+        }
+        if ($existant !== null) {
+            // La table n'a pas d'identifiant propre : un ancien commentaire supprimé est réutilisé
+            $this->getDao()->update($entity);
+            return 1;
+        }
+        return $this->getDao()->insert($entity);
     }
 
-    function update(IEntity $entity): IEntity {
+    // $entity contient l'état voulu ; il est comparé à la version en base :
+    //  - contenu : modifiable par l'auteur seulement, le commentaire repasse alors en validation
+    //    (sauf si l'auteur est administrateur)
+    //  - est_approuve : modifiable par un administrateur seulement (modération)
+    function update(IEntity $entity): Commentaire {
         /** @var Commentaire $entity */
-        $oldEntity = $this->getDao()->findByPk([
-            'fk_compte'  => $entity->getCompte()->getPkCompte(),
-            'fk_recette' => $entity->getRecette()->getPkRecette()
-        ]);
+        $moi = AuthService::requireUser();
+        $avant = $this->findByPk($entity->getPk());
+        $estAuteur = $moi->getPkCompte() === $avant->getFkCompte();
+        $changeContenu = $entity->getContenu() !== $avant->getContenu();
+        $changeStatut = $entity->getEstApprouve() !== $avant->getEstApprouve();
 
-        if (!($oldEntity instanceof Commentaire)) {
-            throw new InvalidArgumentException("Expected Commentaire, got " . get_class($oldEntity));
+        if ($changeContenu && !$estAuteur) {
+            throw new ForbiddenException("Seul l'auteur peut modifier le texte de son commentaire.");
+        }
+        if ($changeStatut && !$moi->isAdmin()) {
+            throw new ForbiddenException("Seul un administrateur peut approuver ou refuser un commentaire.");
         }
 
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut approuver ou refuser un commentaire.");
+        if ($changeContenu) {
+            $avant->setContenu($entity->getContenu());
+            if (!$moi->isAdmin()) {
+                $avant->setEstApprouve(false);
+            }
+        }
+        if ($changeStatut) {
+            $avant->setEstApprouve($entity->getEstApprouve());
         }
 
-        $oldEntity->setEstApprouve($entity->getEstApprouve());
-        return $this->getDao()->update($oldEntity);
+        $this->getDao()->update($avant);
+        return $avant;
     }
 
+    // Suppression logique par l'auteur ou un administrateur
     function delete(int|array $pk): void {
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("delete() attend une clé composite : ['fk_compte'=>X, 'fk_recette'=>Y]");
+        AuthService::requireUser();
+        $commentaire = $this->findByPk($pk);
+        if (!AuthService::canManage($commentaire->getFkCompte())) {
+            throw new ForbiddenException("Vous ne pouvez supprimer que vos propres commentaires.");
         }
-
-        /** @var Commentaire $commentaire */
-        $commentaire = $this->getDao()->findByPk($pk);
-        $currentUser = getCurrentUser();
-
-        if ($commentaire->getCompte()->getPkCompte() !== $currentUser->getPkCompte() && !isAdmin()) {
-            _403_Forbidden("Vous n'avez pas le droit de supprimer ce commentaire.");
-        }
-
-        $this->getDao()->delete($pk);
+        $this->getDao()->delete($commentaire->getPk());
     }
 }
 ?>

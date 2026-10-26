@@ -1,15 +1,15 @@
 <?php
 
-	require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-	require_once(ROOT . "/entities/Role.php");
-	require_once(ROOT . "/services/RoleService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/RoleService.php");
+require_once(ROOT . "/services/AuthService.php");
 
+// GET api.php?route=Role[&pk_role=X] : administrateurs seulement
 class RoleGetController extends AbstractController implements IController
 {
     private RoleService $service;
-    private ?int $pk = null; // pk_role optionnel
+    private ?int $pkRole = null;
 
     public function __construct(array $form)
     {
@@ -17,31 +17,28 @@ class RoleGetController extends AbstractController implements IController
         $this->service = new RoleService();
     }
 
-	function checkForm() {
-	}
-
-    function checkCybersec() {
+    protected function checkForm(): void
+    {
+        $this->alias("pk_role", "pk");
     }
 
-    function checkRights()
+    protected function checkCybersec(): void
     {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté.");
+        if ($this->has("pk_role")) {
+            $this->pkRole = $this->getId("pk_role");
         }
     }
 
-    function processRequest()
+    protected function checkRights(): void
     {
-        if ($this->pk !== null) {
-            $role = $this->service->findByPk($this->pk);
-            if ($role === null) {
-                _404_Not_Found("Rôle introuvable");
-            }
-            $this->response = $role;
-        } else {
-            $roles = $this->service->findAll();
-            $this->response = $roles;
-        }
+        AuthService::requireAdmin();
+    }
+
+    protected function processRequest(): void
+    {
+        $this->response = $this->pkRole !== null
+            ? $this->service->findByPk($this->pkRole)
+            : $this->service->findAll();
     }
 }
 ?>

@@ -2,16 +2,32 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/Recette.php");
+require_once(ROOT . "/entities/CategorieRecette.php");
 require_once(ROOT . "/daos/RecetteDao.php");
-require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/daos/CategorieDao.php");
+require_once(ROOT . "/daos/CategorieRecetteDao.php");
+require_once(ROOT . "/utils/Database.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
 
+// Règles de visibilité d'une recette :
+//  - approuvée et non supprimée : visible par tous ;
+//  - non approuvée : visible uniquement par son auteur et par les administrateurs ;
+//  - supprimée : visible par personne (404).
 class RecetteService extends AbstractService implements IService
 {
+    private CategorieDao $categorieDao;
+    private CategorieRecetteDao $categorieRecetteDao;
+
     public function __construct() {
         $this->dao = new RecetteDao();
+        $this->categorieDao = new CategorieDao();
+        $this->categorieRecetteDao = new CategorieRecetteDao();
     }
 
     function getDao(): RecetteDao {
@@ -19,102 +35,151 @@ class RecetteService extends AbstractService implements IService
     }
 
     function findAll(): array {
-        if (!isAdmin()) {
-            return $this->getDao()->findAllApprouvees();
+        return $this->search();
+    }
+
+    // Liste filtrée. Les recettes non approuvées n'apparaissent que pour un administrateur,
+    // ou pour l'auteur qui consulte sa propre liste (filtre fk_compte).
+    function search(?int $fkCategorie = null, ?int $fkCompte = null): array {
+        if ($fkCategorie !== null && $this->categorieDao->findByPk($fkCategorie) === null) {
+            throw new NotFoundException("Catégorie introuvable.");
         }
-        return $this->getDao()->findAll();
+        $moi = AuthService::currentUser();
+        $voitNonApprouvees = AuthService::isAdmin()
+            || ($fkCompte !== null && $moi !== null && $moi->getPkCompte() === $fkCompte);
+
+        $recettes = $this->getDao()->search(!$voitNonApprouvees, $fkCategorie, $fkCompte);
+        return $this->withCategories($recettes);
     }
 
-    function findByPk(int|array $pk): IEntity {
-        return $this->getDao()->findByPk($pk);
+    function findByPk(int|array $pk): Recette {
+        $recette = $this->getDao()->findByPk($pk);
+        if ($recette === null || !$this->isVisible($recette)) {
+            throw new NotFoundException("Recette introuvable.");
+        }
+        return $this->withCategories([$recette])[0];
     }
 
-    function findByCategorie(int $catId): array {
-        return $this->getDao()->findByCategorie($catId);
+    // Recette visible ET publiée : nécessaire pour la noter, la commenter ou la mettre en favori
+    function findPublished(int $pk): Recette {
+        $recette = $this->findByPk($pk);
+        if (!$recette->getEstApprouve()) {
+            throw new ConflictException("Cette recette n'est pas encore publiée (en attente de validation).");
+        }
+        return $recette;
     }
 
-    function insert(IEntity $entity): int {
+    // Recette que l'utilisateur connecté peut modifier : son auteur ou un administrateur
+    function findManageable(int $pk): Recette {
+        AuthService::requireUser();
+        $recette = $this->findByPk($pk);
+        if (!AuthService::canManage($recette->getFkCompte())) {
+            throw new ForbiddenException("Vous n'avez pas le droit de modifier cette recette.");
+        }
+        return $recette;
+    }
+
+    // Création : la recette est enregistrée en attente de validation, avec au moins une catégorie
+    function insert(IEntity $entity, array $pkCategories = []): int {
         /** @var Recette $entity */
+        $auteur = AuthService::requireUser();
+        $pkCategories = $this->checkCategories($pkCategories);
 
-        if (!(isUser() || isAdmin())) {
-            _403_Forbidden("Seul un utilisateur peut poster une recette.");
-        }
-
-        $date = new DateTime();
-        $entity->setDateCreation($date);
-        $entity->setDateModification($date);
+        $now = new DateTime();
+        $entity->setFkCompte($auteur->getPkCompte());
+        $entity->setDateCreation($now);
+        $entity->setDateModification($now);
         $entity->setEstApprouve(false);
         $entity->setEstSupprime(false);
 
-        $currentUser = getCurrentUser();
-        $entity->setCompte($currentUser);
-
-        return parent::insert($entity);
+        // Recette et liaisons dans la même transaction : pas de recette sans catégorie
+        $pk = Database::getInstance()->transaction(function () use ($entity, $pkCategories): int {
+            $pk = $this->getDao()->insert($entity);
+            foreach ($pkCategories as $pkCategorie) {
+                $this->categorieRecetteDao->insert(CategorieRecette::create($pk, $pkCategorie));
+            }
+            return $pk;
+        });
+        $entity->setPkRecette($pk);
+        return $pk;
     }
 
-    function update(IEntity $entity): IEntity {
-        if (!($entity instanceof Recette)) {
-            throw new InvalidArgumentException("Expected instance of Recette");
+    // Modification par l'auteur ou un administrateur. $pkCategories : null = catégories inchangées,
+    // sinon remplace toutes les catégories. Une recette modifiée par son auteur repasse en
+    // validation, pour qu'un contenu approuvé ne puisse pas être changé sans modération.
+    function update(IEntity $entity, ?array $pkCategories = null): Recette {
+        /** @var Recette $entity */
+        $recette = $this->findManageable($entity->getPkRecette());
+        if ($pkCategories !== null) {
+            $pkCategories = $this->checkCategories($pkCategories);
         }
 
-        $currentUser = getCurrentUser();
-        /** @var Recette $oldEntity */
-        $oldEntity = $this->getDao()->findByPk($entity->getPkRecette());
-
-        if (!($oldEntity instanceof Recette)) {
-            throw new RuntimeException("Expected Recette from DAO");
-        }
-
-        if (!isAdmin() && $oldEntity->getCompte()->getPkCompte() !== $currentUser->getPkCompte()) {
-            _403_Forbidden("Vous n'avez pas le droit de modifier cette recette.");
-        }
-
-        $oldEntity->setNom($entity->getNom());
-        $oldEntity->setIngredients($entity->getIngredients());
-        $oldEntity->setDetails($entity->getDetails());
-        $oldEntity->setImage($entity->getImage());
-        $oldEntity->setLien($entity->getLien());
-        $oldEntity->setDateModification(new DateTime());
-
-        return $this->getDao()->update($oldEntity);
-    }
-
-    function approve(int $pk, bool $approve = true): void {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut approuver une recette.");
-        }
-        
-        /** @var Recette $recette */
-        $recette = $this->getDao()->findByPkAdmin($pk);
-        
-        if (!($recette instanceof Recette)) {
-            throw new RuntimeException("Expected Recette from DAO");
-        }
-        
-        $recette->setEstApprouve($approve);
+        $recette->setNom($entity->getNom());
+        $recette->setIngredients($entity->getIngredients());
+        $recette->setDetails($entity->getDetails());
+        $recette->setImage($entity->getImage());
+        $recette->setLien($entity->getLien());
         $recette->setDateModification(new DateTime());
+        if (!AuthService::isAdmin()) {
+            $recette->setEstApprouve(false);
+        }
 
-        $this->getDao()->update($recette);
+        Database::getInstance()->transaction(function () use ($recette, $pkCategories): void {
+            $this->getDao()->update($recette);
+            if ($pkCategories !== null) {
+                $this->categorieRecetteDao->deleteByRecette($recette->getPkRecette());
+                foreach ($pkCategories as $pkCategorie) {
+                    $this->categorieRecetteDao->insert(CategorieRecette::create($recette->getPkRecette(), $pkCategorie));
+                }
+            }
+        });
+        return $this->findByPk($recette->getPkRecette());
     }
 
+    // Validation (ou retrait de la validation) par un administrateur
+    function approve(int $pk, bool $approuve): Recette {
+        AuthService::requireAdmin();
+        $recette = $this->findByPk($pk);
+        $recette->setEstApprouve($approuve);
+        $this->getDao()->update($recette);
+        return $recette;
+    }
+
+    // Suppression logique par l'auteur ou un administrateur
     function delete(int|array $pk): void {
-        if (is_array($pk)) {
-            throw new InvalidArgumentException("delete() attend un entier, pas un tableau.");
+        $recette = $this->findManageable(is_array($pk) ? (int)($pk['pk_recette'] ?? 0) : $pk);
+        $this->getDao()->delete($recette->getPkRecette());
+    }
+
+    // Ajoute à chaque recette ses catégories (une seule requête pour toute la liste)
+    function withCategories(array $recettes): array {
+        $pks = array_map(fn(Recette $recette) => $recette->getPkRecette(), $recettes);
+        $categories = $this->categorieDao->findByRecettes($pks);
+        foreach ($recettes as $recette) {
+            $recette->setCategories($categories[$recette->getPkRecette()] ?? []);
         }
+        return $recettes;
+    }
 
-        $currentUser = getCurrentUser();
-        /** @var Recette $recette */
-        $recette = $this->getDao()->findByPk($pk);
-
-        if (!($recette instanceof Recette)) {
-            throw new RuntimeException("Expected Recette from DAO");
+    function isVisible(Recette $recette): bool {
+        if ($recette->getEstSupprime()) {
+            return false;
         }
+        return $recette->getEstApprouve() || AuthService::canManage($recette->getFkCompte());
+    }
 
-        if (!isAdmin() && $recette->getCompte()->getPkCompte() !== $currentUser->getPkCompte()) {
-            _403_Forbidden("Vous n'avez pas le droit de supprimer cette recette.");
+    // Au moins une catégorie (association 1,n du MCD), toutes existantes, sans doublon
+    private function checkCategories(array $pkCategories): array {
+        $pkCategories = array_values(array_unique(array_map('intval', $pkCategories)));
+        if (empty($pkCategories)) {
+            throw new BadRequestException("Une recette doit avoir au moins une catégorie.");
         }
-
-        $this->getDao()->delete($pk);
+        foreach ($pkCategories as $pkCategorie) {
+            if ($this->categorieDao->findByPk($pkCategorie) === null) {
+                throw new NotFoundException("Catégorie $pkCategorie introuvable.");
+            }
+        }
+        return $pkCategories;
     }
 }
 ?>

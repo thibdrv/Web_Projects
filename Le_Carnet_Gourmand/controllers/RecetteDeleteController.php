@@ -1,41 +1,42 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Recette.php");
-    require_once(ROOT . "/services/CategorieService.php");
-    require_once(ROOT . "/services/CategorieRecetteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/RecetteService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-class RecetteDeleteController extends AbstractController implements IController {
+// DELETE api.php?route=Recette&pk_recette=X : suppression logique (auteur ou administrateur)
+class RecetteDeleteController extends AbstractController implements IController
+{
     private RecetteService $service;
+    private int $pkRecette;
 
-    public function __construct(array $form) {
+    public function __construct(array $form)
+    {
         parent::__construct($form);
         $this->service = new RecetteService();
     }
 
-    protected function checkForm() {
-        if (!isset($this->form['pk_recette'])) {
-            throw new HttpStatusException("Le champ 'pk_recette' est obligatoire", 400);
-        }
+    protected function checkForm(): void
+    {
+        $this->alias("pk_recette", "pk");
+        $this->requireParams("pk_recette");
     }
 
-        protected function checkCybersec() {}
-
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour modifier une recette.");
-        }
+    protected function checkCybersec(): void
+    {
+        $this->pkRecette = $this->getId("pk_recette");
     }
 
-    protected function processRequest() {
-        $this->service->delete((int)$this->form['pk_recette']);
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
+    }
 
-        $this->response = [
-            "message" => "Recette supprimée avec succès",
-            "id" => (int)$this->form['pk_recette']
-        ];
+    protected function processRequest(): void
+    {
+        $this->service->delete($this->pkRecette);
+        $this->response = ["pk_recette" => $this->pkRecette];
     }
 }
 ?>

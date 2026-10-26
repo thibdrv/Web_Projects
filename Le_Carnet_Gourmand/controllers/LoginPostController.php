@@ -1,87 +1,49 @@
 <?php
 
-    require_once(ROOT . "/exceptions/HttpStatusException.php");
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/utils/SessionManager.php");
-    require_once(ROOT . "/entities/Compte.php");
-	require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
 
+// POST api.php?route=Login {"email", "mot_de_passe"}
 class LoginPostController extends AbstractController implements IController
 {
     private CompteService $compteService;
     private string $email;
-    private string $motdepasse;
+    private string $motDePasse;
 
     public function __construct(array $form)
     {
-        parent::__construct($form, "LoginPostController");
+        parent::__construct($form);
         $this->compteService = new CompteService();
     }
 
-    protected function checkForm()
+    protected function checkForm(): void
     {
-        if (!isset($this->form['email'])) {
-            throw new HttpStatusException("parameter email not exists", 400);
-        }
-        if (!isset($this->form['mot_de_passe'])) {
-            throw new HttpStatusException("parameter mot_de_passe not exists", 400);
-        }
+        $this->requireParams("email", "mot_de_passe");
     }
 
-    protected function checkCybersec()
+    protected function checkCybersec(): void
     {
-        if (!isEmail($this->form['email'])) {
-            throw new HttpStatusException("parameter email is not valid", 400);
+        $this->email = $this->getString("email", 3, 100);
+        if (!isEmail($this->email)) {
+            throw new BadRequestException("Adresse email invalide.");
         }
-        $this->email = sanitizeString($this->form['email']);
-
-        if (!isSanitizedString($this->form['mot_de_passe'])) {
-            throw new HttpStatusException("parameter mot de passe is not valid", 400);
-        }
-        $this->motdepasse = sanitizeString($this->form['mot_de_passe']);
+        // Le mot de passe n'est ni nettoyé ni filtré : il est seulement comparé au hash
+        $this->motDePasse = $this->getPassword("mot_de_passe");
     }
 
-    protected function checkRights()
+    protected function checkRights(): void
     {
-        // Pas besoin de vérification de droits pour login
+        // Pas besoin d'être connecté pour se connecter
     }
 
-    protected function processRequest()
+    protected function processRequest(): void
     {
-        if (isLogged()) {
-            throw new HttpStatusException("Already Authenticated", 499);
-        }
-
-        // Vérifier les identifiants
-        $compte = Compte::createForCredential($this->email, $this->motdepasse);
-        $pk = $this->compteService->isValidCredential($compte);
-
-        error_log("LoginPostController - pk reçu du service (immédiat) = " . var_export($pk, true));
-
-        if (is_null($pk)) {
-            throw new HttpStatusException("Invalid Credential", 401);
-        }
-
-    /** @var Compte $fullCompte */
-    $fullCompte = $this->compteService->findByPkForLogin($pk);
-
-        SessionManager::login($pk);
-        $_SESSION['email']       = $fullCompte->getEmail();
-        $_SESSION['pseudo']      = $fullCompte->getPseudo();
-        $_SESSION['est_supprime'] = $fullCompte->getEstSupprime();
-        $_SESSION['est_banni']    = $fullCompte->getEstBanni();
-        $_SESSION['fk_role']      = $fullCompte->getRole()->getPkRole();
-
-        error_log("LoginPostController - après login, session=" . print_r($_SESSION, true));
-
-        $this->response = [
-            "success" => true,
-            "message" => "Vous êtes connecté 🎉",
-            "compte_pk" => $pk,
-            "pseudo" => $fullCompte->getPseudo()
-        ];
+        $compte = $this->compteService->authenticate($this->email, $this->motDePasse);
+        AuthService::login($compte);
+        $this->response = $compte;
     }
 }
 ?>

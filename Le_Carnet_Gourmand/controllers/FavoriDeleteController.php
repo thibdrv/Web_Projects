@@ -1,14 +1,15 @@
 <?php
 
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
-require_once(ROOT . "/entities/Favori.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/services/FavoriService.php");
+require_once(ROOT . "/services/AuthService.php");
 
+// DELETE api.php?route=Favori&fk_recette=X : retire la recette des favoris du compte connecté
 class FavoriDeleteController extends AbstractController implements IController
 {
     private FavoriService $service;
+    private int $fkRecette;
 
     public function __construct(array $form)
     {
@@ -16,32 +17,26 @@ class FavoriDeleteController extends AbstractController implements IController
         $this->service = new FavoriService();
     }
 
-
-    protected function checkForm() {
-        if (!isset($this->form['fk_recette'])) {
-            throw new HttpStatusException("fk_recette est obligatoire pour supprimer un favori", 400);
-        }
+    protected function checkForm(): void
+    {
+        $this->alias("fk_recette", "pk_recette");
+        $this->requireParams("fk_recette");
     }
 
-    protected function checkCybersec() {
-        if (!ctype_digit((string)$this->form['fk_recette'])) {
-            throw new HttpStatusException("fk_recette doit être un entier", 400);
-        }
+    protected function checkCybersec(): void
+    {
+        $this->fkRecette = $this->getId("fk_recette");
     }
 
-    protected function checkRights() {
-        if (!isLogged()) {
-            throw new HttpStatusException("Vous devez être connecté.", 401);
-        }
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
     }
 
-    protected function processRequest() {
-        $pk = [
-            'fk_recette' => (int)$this->form['fk_recette']
-        ];
-        $this->service->delete($pk);
-        $this->response = ["success" => true, "message" => "Favori supprimé"];
+    protected function processRequest(): void
+    {
+        $this->service->delete($this->fkRecette);
+        $this->response = ["fk_recette" => $this->fkRecette, "est_favori" => false];
     }
-
 }
 ?>

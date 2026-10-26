@@ -2,7 +2,6 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: mysql-bgetest.alwaysdata.net
 -- Generation Time: Sep 16, 2026 at 11:13 AM
 -- Server version: 10.11.18-MariaDB
 -- PHP Version: 8.4.25
@@ -163,8 +162,8 @@ CREATE TABLE `comptes` (
 --
 
 INSERT INTO `comptes` (`pk_compte`, `email`, `pseudo`, `mot_de_passe`, `date_creation`, `est_banni`, `est_supprime`, `fk_role`) VALUES
-(1, 'herveguerre@hotmail.fr', 'Herve', '', '2025-06-13 12:26:18', 0, 0, 2),
-(2, 'angelique-dereeper@hotmail.fr', 'Angelique', '', '2025-06-13 12:28:29', 0, 0, 1);
+(1, 'admin@example.com', 'Herve', '', '2025-06-13 12:26:18', 0, 0, 2),
+(2, 'membre@example.com', 'Angelique', '', '2025-06-13 12:28:29', 0, 0, 1);
 
 -- --------------------------------------------------------
 

@@ -2,45 +2,69 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/Categorie.php");
 require_once(ROOT . "/daos/CategorieDao.php");
+require_once(ROOT . "/daos/CategorieRecetteDao.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
 
 class CategorieService extends AbstractService implements IService
 {
+    private CategorieRecetteDao $categorieRecetteDao;
+
     public function __construct() {
         $this->dao = new CategorieDao();
+        $this->categorieRecetteDao = new CategorieRecetteDao();
     }
 
-    function getDao(): IDao {
+    function getDao(): CategorieDao {
         return $this->dao;
     }
 
-    function findByPk(int|array $pk): IEntity {
-        return $this->getDao()->findByPk($pk);
-    }
-
-    function findAll(): array {
-        return $this->getDao()->findAll();
+    // Lecture publique
+    function findByPk(int|array $pk): Categorie {
+        return $this->findOrFail($pk, "Catégorie introuvable.");
     }
 
     function insert(IEntity $entity): int {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut créer une catégorie.");
-        }
-        return $this->getDao()->insert($entity);
+        AuthService::requireAdmin();
+        /** @var Categorie $entity */
+        $this->checkNomDisponible($entity->getNom(), null);
+
+        $pk = $this->getDao()->insert($entity);
+        $entity->setPkCategorie($pk);
+        return $pk;
     }
 
-    function update(IEntity $entity): IEntity {
-        throw new HttpStatusException("Modification de catégorie interdite", 403);
+    function update(IEntity $entity): Categorie {
+        AuthService::requireAdmin();
+        /** @var Categorie $entity */
+        $this->findByPk($entity->getPkCategorie());
+        $this->checkNomDisponible($entity->getNom(), $entity->getPkCategorie());
+
+        $this->getDao()->update($entity);
+        return $this->findByPk($entity->getPkCategorie());
     }
 
+    // Une catégorie encore utilisée par des recettes ne peut pas être supprimée
     function delete(int|array $pk): void {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut supprimer une catégorie.");
+        AuthService::requireAdmin();
+        $categorie = $this->findByPk($pk);
+
+        $nbRecettes = $this->categorieRecetteDao->countByCategorie($categorie->getPkCategorie());
+        if ($nbRecettes > 0) {
+            throw new ConflictException("Impossible de supprimer la catégorie : $nbRecettes recette(s) l'utilisent encore.");
         }
-        $this->getDao()->delete($pk);
+        $this->getDao()->delete($categorie->getPkCategorie());
+    }
+
+    // `categories.nom` est UNIQUE en base
+    private function checkNomDisponible(string $nom, ?int $pkActuel): void {
+        $existante = $this->getDao()->findByNom($nom);
+        if ($existante !== null && $existante->getPkCategorie() !== $pkActuel) {
+            throw new ConflictException("La catégorie « $nom » existe déjà.");
+        }
     }
 }
 ?>

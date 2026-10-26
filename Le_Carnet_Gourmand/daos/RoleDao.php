@@ -3,68 +3,46 @@
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/daos/AbstractDao.php");
-require_once(ROOT . "/utils/BddSingleton.php");
-require_once(ROOT . "/exceptions/HttpStatusException.php");
 require_once(ROOT . "/entities/Role.php");
 
-class RoleDao extends AbstractDao implements IDao {
-    
+class RoleDao extends AbstractDao implements IDao
+{
     function getTableName(): string {
         return "roles";
     }
-    
+
     function getPrimaryKeyName(): string {
         return "pk_role";
     }
-    
-    function createEntityFromRow($row): IEntity {
+
+    function createEntityFromRow(object $row): Role {
         return Role::createFromRow($row);
     }
 
     function findAll(): array {
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "SELECT r.* FROM roles r";
-        $stmt = $pdo->prepare($sql);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-
-        $rows = $stmt->fetchAll();
-        $roles = [];
-
-        foreach ($rows as $row) {
-            $roles[] = $this->createEntityFromRow($row);
-        }
-
-        return $roles;
+        $rows = $this->db()->fetchAll("SELECT r.* FROM roles r ORDER BY r.pk_role");
+        return $this->createEntitiesFromRows($rows);
     }
 
-    function findByPk(int|array $pk): IEntity {   
-        if (is_array($pk)) {
-            throw new InvalidArgumentException("RoleDao attend une clé primaire simple (int).");
-        } 
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "SELECT r.* FROM roles r WHERE r.pk_role = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(1, $pk, PDO::PARAM_INT);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-        $row = $stmt->fetch();
-        if (!$row) {
-            throw new HttpStatusException("Rôle avec l'ID " . $pk . " introuvable", 404);
-        }
-        return $this->createEntityFromRow($row);
+    function findByPk(int|array $pk): ?Role {
+        return parent::findByPk($pk);
     }
 
     function insert(IEntity $entity): int {
-        throw new Exception("Insertion de rôle interdite");
+        $this->checkEntity($entity, Role::class);
+        /** @var Role $entity */
+        return $this->db()->insert("INSERT INTO roles (nom) VALUES (:nom)", [
+            ":nom" => $entity->getNom(),
+        ]);
     }
-    
-    function delete(int|array $pk): void { 
-        throw new Exception("Suppression de rôle interdite");
-    }
-    
-    function update(IEntity $entity): IEntity {
-        throw new Exception("Modification de rôle interdite");
+
+    function update(IEntity $entity): bool {
+        $this->checkEntity($entity, Role::class);
+        /** @var Role $entity */
+        return $this->db()->execute("UPDATE roles SET nom = :nom WHERE pk_role = :pk", [
+            ":nom" => $entity->getNom(),
+            ":pk" => $entity->getPkRole(),
+        ]) > 0;
     }
 }
 ?>

@@ -1,130 +1,83 @@
-// script.js
-import { myFetch } from "./fetch.js";
-import { recettes } from "./recettes.js";  // ⬅️ on importe recettes.js
-import { afficheLoginZone, doCreateAccount, doLogin, doLogout } from "./compte.js";
-import { partager } from "./formulaireRecette.js";
+// Point d'entrée du frontend : barre de navigation, routes et chargement de la session
+import { startRouter, updateActiveLinks } from './router.js';
+import { refreshSession, onSessionChange, currentUser, isAdmin } from './session.js';
+import { openAuthModal, logout } from './compte.js';
+import { accueil } from './accueil.js';
+import { recettes } from './recettes.js';
+import { detailRecette } from './recetteDetail.js';
+import { partager } from './formulaireRecette.js';
+import { h, showLoading, toastError } from './ui.js';
 
-window.partager = partager;
-window.accueil = accueil;
-window.recettes = recettes; 
-window.doCreateAccount = doCreateAccount;
-window.doLogin = doLogin;
-window.doLogout = doLogout;
-
+const navbar = document.getElementById('navbar');
+const navToggle = document.getElementById('navToggle');
 
 function renderNavbar() {
-  const navbar = document.getElementById("navbar");
-  navbar.innerHTML = "";
+    const compte = currentUser();
+    const liens = [
+        h('a', { href: '#/', text: "Accueil" }),
+        h('a', { href: '#/recettes', text: "Recettes" }),
+        h('a', { href: '#/partager', className: 'nav-cta', text: "Partager une recette" }),
+    ];
+    const bienvenue = `Bonjour, ${compte?.pseudo}${isAdmin() ? " (admin)" : ""}`;
+    const zoneCompte = compte
+        ? [
+            h('span', { className: 'user-info', title: bienvenue, text: bienvenue }),
+            h('button', { type: 'button', className: 'nav-link', text: "Se déconnecter", onClick: logout }),
+        ]
+        : [
+            h('button', { type: 'button', className: 'nav-link', text: "Se connecter", onClick: () => openAuthModal('login') }),
+            h('button', { type: 'button', className: 'nav-link', text: "S'inscrire", onClick: () => openAuthModal('signup') }),
+        ];
+    navbar.replaceChildren(...liens, ...zoneCompte);
+    updateActiveLinks();
+}
 
-  myFetch(null, (sessionInfo) => {
-    let aAccueil = document.createElement("a");
-    aAccueil.textContent = "Accueil";
-    aAccueil.href = "#";
-    aAccueil.onclick = (e) => { e.preventDefault(); accueil(); };
-    navbar.appendChild(aAccueil);
+function toggleMenu(open) {
+    navbar.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? "Fermer le menu" : "Ouvrir le menu");
+}
 
-    let aRecettes = document.createElement("a");
-    aRecettes.textContent = "Recettes";
-    aRecettes.href = "#";
-    aRecettes.onclick = (e) => { e.preventDefault(); recettes(); };
-    navbar.appendChild(aRecettes);
+function pageIntrouvable(main) {
+    main.replaceChildren(
+        h('section', { className: 'empty-state page-message' },
+            h('h2', { text: "Page introuvable" }),
+            h('p', { text: "Cette adresse ne correspond à aucune page du site." }),
+            h('a', { href: '#/', className: 'btn btn-primary', text: "Retour à l'accueil" }))
+    );
+}
 
-    if (sessionInfo.isLogged) {
-      let spanUser = document.createElement("span");
-      spanUser.className = "user-info";
-      spanUser.textContent = `Bonjour, ${sessionInfo.pseudo ?? "Utilisateur"}`;
-      navbar.appendChild(spanUser);
-
-      let aLogout = document.createElement("a");
-      aLogout.textContent = "Se déconnecter";
-      aLogout.href = "#";
-      aLogout.onclick = (e) => { e.preventDefault(); doLogout(); };
-      navbar.appendChild(aLogout);
-    } else {
-      let aSignup = document.createElement("a");
-      aSignup.textContent = "S’inscrire";
-      aSignup.href = "#";
-      aSignup.onclick = (e) => { e.preventDefault(); doCreateAccount(); };
-      navbar.appendChild(aSignup);
-
-      let aLogin = document.createElement("a");
-      aLogin.textContent = "Se connecter";
-      aLogin.href = "#";
-      aLogin.onclick = (e) => { e.preventDefault(); doLogin(); };
-      navbar.appendChild(aLogin);
+// --- Éléments fixes de la page ---
+navToggle.addEventListener('click', () => toggleMenu(!navbar.classList.contains('open')));
+navbar.addEventListener('click', event => {
+    if (event.target.closest('a, button')) {
+        toggleMenu(false); // referme le menu mobile après un choix
     }
-  }, "api.php?route=Session", "GET", (error) => {
-    console.error("Erreur navbar:", error);
-  });
-}
-
-
-function accueil() { 
-  const main = document.getElementById("main");
-  if (!main) {
-    console.error("⚠️ Impossible de trouver #main dans le DOM");
-    return;
-  }
-
-  main.innerHTML = `
-    <h2>Bienvenue sur l'accueil</h2>
-
-    <!-- Section YouTube -->
-    <a href="https://www.youtube.com/channel/UCOmtyPKnEgK3p1vRHU7Ie1A" 
-      target="_blank" 
-      class="accueil-link">
-      <div class="accueil-section">
-        <h3>Découvrez nos recettes en vidéos !</h3>
-        <p>
-          Retrouvez une sélection de recettes gourmandes et faciles à réaliser directement en vidéo.  
-          Pas à pas, vous apprendrez à cuisiner comme un chef en suivant nos tutoriels sur notre chaîne YouTube.  
-          Que vous soyez débutant ou passionné de cuisine, il y en a pour tous les goûts !
-        </p>
-      </div>
-    </a>
-
-    <!-- Section Partagez vos recettes -->
-    <a href="#" id="footerPartager" class="accueil-link">
-      <div class="accueil-section">
-      <h3>👉 Cliquez ici pour partager votre recette</h3>
-        <p>
-          Vous avez une recette originale, familiale ou créative que vous aimeriez partager avec la communauté ?  
-          Ne la gardez pas pour vous ! Notre site vous permet de publier vos propres recettes afin que d’autres gourmands puissent les découvrir, les cuisiner et les apprécier.  
-          Ajoutez vos ingrédients, vos astuces et une belle photo pour mettre en valeur votre plat.
-        </p>
-      </div>
-    </a>
-`;
-
-  // Recharge la navbar
-  renderNavbar();
-}
-
-
-// Affichage initial au chargement de la page
-document.addEventListener("DOMContentLoaded", () => {
-    accueil();
-
-    document.getElementById("currentYear").textContent = new Date().getFullYear();
-
-    document.getElementById("footerAccueil")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        accueil();
-    });
-
-    document.getElementById("footerRecettes")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        recettes();
-    });
-
-    // Footer partager recette
-    document.getElementById("footerPartager")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        partager();
-    });
-
-    document.getElementById("backToTop")?.addEventListener("click", () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
 });
+document.getElementById('backToTop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+// Connexion ou déconnexion faite dans un autre onglet : on se resynchronise au retour sur celui-ci
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        refreshSession().catch(() => {}); // hors ligne : on garde l'état affiché
+    }
+});
+
+// --- Démarrage ---
+renderNavbar();
+onSessionChange(renderNavbar);
+
+showLoading(document.getElementById('main'), "Chargement du site…");
+try {
+    await refreshSession();
+} catch (error) {
+    toastError(error); // le site reste utilisable en visiteur
+}
+
+startRouter([
+    { path: /^\/$/, view: accueil },
+    { path: /^\/recettes$/, view: recettes },
+    { path: /^\/recette\/(\d+)$/, view: (main, id) => detailRecette(main, Number(id)) },
+    { path: /^\/partager$/, view: partager },
+], pageIntrouvable);

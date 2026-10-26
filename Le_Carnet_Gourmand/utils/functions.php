@@ -1,287 +1,237 @@
 <?php
 
-	require_once(ROOT . "/exceptions/HttpStatusException.php");
-	require_once(ROOT . "/entities/Compte.php");
-    require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/exceptions/HttpStatusException.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
+require_once(ROOT . "/exceptions/MethodNotAllowedException.php");
+require_once(ROOT . "/exceptions/UnsupportedMediaTypeException.php");
+require_once(ROOT . "/controllers/IController.php");
 
-define("MYSQL_DATE_FORMAT", "Y-m-d h:m:s");
-
-function serverBootstrap()          // désactive l’affichage des erreurs PHP sur la page
+// ---------------------------------------------------------------------------
+// Amorçage : aucune erreur PHP n'est affichée dans la réponse (elle casserait le JSON).
+// Les warnings/notices deviennent des exceptions, interceptées par api.php.
+// ---------------------------------------------------------------------------
+function serverBootstrap(): void
 {
-    error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_STRICT & ~E_NOTICE & ~E_PARSE);
-    ini_set('display_errors', 'off');
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+    error_reporting(E_ALL);
+    date_default_timezone_set('Europe/Paris');
+
+    set_error_handler(function (int $severity, string $message, string $file = '', int $line = 0): bool {
+        if (!(error_reporting() & $severity)) {
+            return false; // erreur masquée par l'opérateur @
+        }
+        if ($severity === E_DEPRECATED || $severity === E_USER_DEPRECATED) {
+            error_log("Deprecated : $message ($file:$line)");
+            return true;
+        }
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    });
+
+    // Erreur fatale non interceptable (mémoire, compilation...) : on renvoie quand même du JSON
+    register_shutdown_function(function (): void {
+        $error = error_get_last();
+        $fatal = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR];
+        if ($error !== null && in_array($error['type'], $fatal, true) && !headers_sent()) {
+            sendJsonError(500, "Erreur interne du serveur.");
+        }
+    });
 }
 
-
-// Pour crée une constante = valeur qui ne changera jamais pendant l’exécution du script
-define("START_TIME", "startTime");
-define("COMPTE_PK", "pk_compte");
-
-
-function destroy_Session(): void {
-    // Détruire proprement la session
-    $_SESSION = [];
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-    session_destroy();
-    session_start(); // relancer une nouvelle session propre
-}
-
-// verifie si il es connecter
-function isLogged() : bool {
-    return isset($_SESSION[COMPTE_PK]);
-}
-// recupere la pk d'un compte
-function getComptePkFromSession() : ?int {
-    return isLogged() ? $_SESSION[COMPTE_PK] : NULL;
-}
-// sais qui est connecter
-function getCurrentUser(): ?Compte {
-    if (!isLogged()) {
-        return null;
-    }
-    $compteDao = new CompteDao();
-    return $compteDao->findByPk($_SESSION[COMPTE_PK]);
-}
-function isUser(): bool {
-    $currentUser = getCurrentUser();
-    return $currentUser !== null && $currentUser->getRole()->getPkRole() == 1;
-}
-function isAdmin(): bool {
-    $currentUser = getCurrentUser();
-    return $currentUser !== null && $currentUser->getRole()->getPkRole() == 2;
-}
-
-function headerAndDie(int $code, string $msg) {
-    http_response_code($code);
-    header('Content-Type: application/json');
-    echo json_encode(["success" => false, "error" => $msg]);
-    die();
-}
-
-function _400_Bad_Request($msg = "Bad Request") {
-    http_response_code(400);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _401_Unauthorized($msg = "Unauthorized") {
-    http_response_code(401);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _403_Forbidden($msg = "Forbidden") {
-    http_response_code(403);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _404_Not_Found($msg = "Not Found") {
-    http_response_code(404);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _405_Method_Not_Allowed($msg = "Method Not Allowed") {
-    http_response_code(405);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _499_Authentication_Error($msg = "Authentication Error") {
-    http_response_code(499);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _500_Internal_Server_Error($msg = "Internal Server Error") {
-    http_response_code(500);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-function _501_Not_Implemented($msg = "Not Implemented") {
-    http_response_code(501);
-    echo json_encode(["error" => $msg]);
-    exit;
-}
-
-// raccourci catch
-function raiseHttpStatus(HttpStatusException $ex) : void
+// ---------------------------------------------------------------------------
+// Réponses JSON (format du contrat : voir API_CONTRACT.md)
+// ---------------------------------------------------------------------------
+function jsonEncode(mixed $data): string
 {
-    switch($ex->getCode())
-    {
-        case 400 : _400_Bad_Request($ex->getMessage()); break;
-        case 401 : _401_Unauthorized($ex->getMessage()); break;
-        case 403 : _403_Forbidden($ex->getMessage()); break;
-        case 404 : _404_Not_Found($ex->getMessage()); break;
-        case 405 : _405_Method_Not_Allowed(); break;
-        case 499 : _499_Authentication_Error($ex->getMessage()); break;
-        case 500 : // Ici on veut savoir ce qu'il se passe dans le serveur 
-            error_log($ex); // c'est un cas d'exception non souhaité...
-            _500_Internal_Server_Error($ex->getMessage()); break;
+    return json_encode(
+        $data,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR
+    );
+}
+
+function sendJson(int $status, string $json): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('X-Content-Type-Options: nosniff');
+    echo $json;
+}
+
+// {"success": false, "error": "..."}
+function sendJsonError(int $status, string $message): void
+{
+    sendJson($status, jsonEncode(["success" => false, "error" => $message]));
+}
+
+// Transforme une HttpStatusException en réponse d'erreur
+function raiseHttpStatus(HttpStatusException $ex): void
+{
+    $status = $ex->getCode();
+    if ($status < 400 || $status > 599) {
+        error_log("Code HTTP invalide " . $status . " : " . $ex);
+        $status = 500;
+    }
+    $message = $ex->getMessage();
+    if ($status >= 500) {
+        error_log((string)$ex); // erreur serveur : on garde la trace complète dans les logs
+        if ($status !== 503) {
+            $message = "Erreur interne du serveur."; // le détail (classe, fichier...) ne sort pas du serveur
+        }
+    }
+    sendJsonError($status, $message);
+}
+
+// Erreurs SQL non anticipées par les services : le message SQL n'est jamais renvoyé au client
+function raisePdoException(PDOException $ex): void
+{
+    error_log((string)$ex);
+    switch ($ex->errorInfo[1] ?? null) {
+        case 1062: // doublon sur une clé unique
+            sendJsonError(409, "Cette ressource existe déjà.");
+            break;
+        case 1451: // ligne encore référencée par une clé étrangère
+            sendJsonError(409, "Cette ressource est encore utilisée par d'autres données.");
+            break;
+        case 1452: // clé étrangère vers une ligne inexistante
+            sendJsonError(400, "La requête fait référence à une ressource inexistante.");
+            break;
         default:
-            error_log("Http Status Exception not managed: " . $ex->getCode());
-            _500_Internal_Server_Error("Unhandled status code: " . $ex->getCode());
-    break;
-        case 501:
-        _501_Not_Implemented($ex->getMessage());
-        break;
+            sendJsonError(500, "Erreur de base de données.");
     }
 }
 
-function extractForm() : array {
-    // test de la méthode, sinon 405
-    switch ($_SERVER['REQUEST_METHOD'])
-    {
-        case 'GET' : return $_GET;
-        case 'POST' : return $_POST;
-        case 'PUT' : 
-            $raw = file_get_contents(('php://input')); // cache php
-            $form = [];
-            parse_str($raw, $form);     // builtin php d'extraction de formulaire
-            return $form;
-        case 'DELETE' : return $_GET;
-        default : _405_Method_Not_Allowed("Method not allowed");
-    }
-}
+// ---------------------------------------------------------------------------
+// Lecture de la requête
+// ---------------------------------------------------------------------------
 
-function extractRoute( array $FORM) : string
+// Paramètres de la requête : query string, fusionnée avec le corps JSON pour POST / PUT / DELETE
+function extractForm(): array
 {
-    if (!isset($FORM['route']))     // si le paramètre n'existe pas, 400
-    {
-        _400_Bad_Request("No parameter : route");
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    switch ($method) {
+        case 'GET':
+            return $_GET;
+        case 'POST':
+        case 'PUT':
+            return array_merge($_GET, readJsonBody(false));
+        case 'DELETE':
+            // les paramètres d'un DELETE peuvent aussi passer dans l'URL : le corps est facultatif
+            return array_merge($_GET, readJsonBody(true));
+        default:
+            throw new MethodNotAllowedException("Méthode HTTP non supportée : " . $method);
     }
-    // on extrait la route, puis on sécurise la variable pour éviter les injections
-    $ROUTE = $FORM['route'];
-    if (preg_match("/^[A-Z][A-Za-z]{1,63}$/", $ROUTE))
-    {
-        return $ROUTE; // commence par une lettre majuscule, suivi d'une à 63 lettres
-    }
-    _400_Bad_Request("Wrong syntax : route");
 }
 
-function createController ($FORM, $ROUTE)
+// Corps de la requête, obligatoirement en application/json et sous forme d'objet
+function readJsonBody(bool $optional): array
 {
-    // Mise en forme de la méthode
-    $METHOD = createMethod();         
-
-    // instancier dynamiquement un contrôleur en fonction de la route et de la méthode HTTP
-    $CLASS_NAME = $ROUTE . $METHOD . "Controller"; // ex : Article Get Controller
-
-    //Construction du chemin absolu
-    $FILE = ROOT . "/controllers/". $CLASS_NAME . ".php";
-
-    // si le fichier n'existe pas, exception
-    if (!file_exists($FILE))
-    {
-        throw new HttpStatusException("Unknow Controller : " . $ROUTE . $METHOD, 404);
+    $raw = file_get_contents('php://input');
+    if ($raw === false || trim($raw) === '') {
+        if ($optional) {
+            return [];
+        }
+        throw new BadRequestException("Le corps de la requête (objet JSON) est obligatoire.");
     }
+
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+    if (!isJsonContentType($contentType)) {
+        throw new UnsupportedMediaTypeException("Le Content-Type doit être application/json.");
+    }
+
     try {
-        // Chargement et instanciation
-        require($FILE);
-        $CONTROLLER = new $CLASS_NAME($FORM); // new Article Get Controller ($FORM)
-        return $CONTROLLER;
-    } catch (ParseError $e) {
-        error_log($e);
-        _500_Internal_Server_Error("Internal Server Error");
-        exit;
+        $data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+    } catch (JsonException $e) {
+        throw new BadRequestException("Le corps de la requête n'est pas un JSON valide.");
     }
-}
-
-function createMethod() {
-    $method = strtolower($_SERVER["REQUEST_METHOD"]); // tout en minuscule
-    return ucfirst($method); // 1ere lettre en majuscule
-}
-
-function isPassword(string $password) : bool
-{
-	$regex = '/^(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9]).{12,}$/u'; 
-	return preg_match($regex, $password);
-}
-
-function isPseudo(string $pseudo) {
-    return true;
-}
-
-function hashPassword(string $str) {
-        return password_hash($str, PASSWORD_BCRYPT);
-}
-
-// Controller si la chaine est un entier naturel [0,N]
-function isNaturalInteger (string $str) : bool {
-    return ctype_digit($str);
-}
-
-function getSanitizedString(array $form, string $name) : string {
-	if (!isSanitizedString( $form[$name] ))
-        {
-		throw _400_Bad_Request($msg = "")("CYBERSEC Receive bad request, param is not a sanitized string : " . $msg);
-		}
-	return $form[$name];
-}
-
-function sanitizeString(string $input) : string {
-	return htmlspecialchars($input, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); // Convertit les caractères spéciaux en entités HTML pour éviter les injections XSS
-}
-
-function isSanitizedString(string $str) : bool {
-	return $str == sanitizeString($str);
-}
- 
-function isSanitizedContent(string $str): bool
-{
-	// Vérifie qu'il n'y a pas de balises HTML ou de scripts
-	if (strip_tags($str) !== $str) {
-		return false;
-	}
-	// Vérifie qu'il n'y a pas de caractères interdits (comme <, >, etc.)
-    // Autorise les caractères spéciaux et les accents
-	return !preg_match('/[<>]/', $str);
-}
-
-function checkFormElement(array $form, string $name)
-{
-	if (! isset($form[$name])) // l'id doit etre présent
-		{
-		throw _400_Bad_Request($msg = "")("CYBERSEC Receive bad request, no parameter : " . $msg);
-		}
-}
-
-function isWord(string $str, int $start = 1, int $end = 64) : bool
-{
-	return preg_match("/^[A-Za-z]{" .$start . "," .$end . "}$/", $str);
-}
-function getWord(array $form, string $name) : int {
-	if (!isWord($form[$name]))
-        {
-		{
-		throw _400_Bad_Request($msg = "")("CYBERSEC Receive bad request, param is not a word : " . $msg);
-		}
+    if (!is_array($data) || ($data !== [] && array_is_list($data))) {
+        throw new BadRequestException("Le corps de la requête doit être un objet JSON.");
     }
-	return $form[$name];
+    return $data;
 }
 
-function isBool(string $bool) : bool 
+function isJsonContentType(string $contentType): bool
 {
-	return $bool === "true" || $bool === "false";
-}
-function getBoolean(array $form, string $name) : bool {
-	if (!isBool($form[$name]))
-        {
-		throw _400_Bad_Request($msg = "")("CYBERSEC Receive bad request, param is not a boolean : " . $msg);
-		}
-        return $form[$name] == "true";
+    $mediaType = strtolower(trim(explode(';', $contentType)[0]));
+    return $mediaType === 'application/json';
 }
 
-function isEmail(string $mail) : bool {
-	return filter_var($mail, FILTER_VALIDATE_EMAIL) !== false;
-} 
-    
+function extractRoute(array $form): string
+{
+    $route = $form['route'] ?? null;
+    if (!is_string($route) || $route === '') {
+        throw new BadRequestException("Paramètre 'route' manquant.");
+    }
+    // Une majuscule suivie de 1 à 63 lettres : le nom sert à charger un fichier, rien d'autre n'est accepté
+    if (!preg_match("/^[A-Z][A-Za-z]{1,63}$/", $route)) {
+        throw new BadRequestException("Syntaxe de route invalide.");
+    }
+    return $route;
+}
+
+// Instancie dynamiquement <Route><Methode>Controller (ex : RecettePostController)
+function createController(array $form): IController
+{
+    $route = extractRoute($form);
+    $method = ucfirst(strtolower($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $className = $route . $method . "Controller";
+    $file = ROOT . "/controllers/" . $className . ".php";
+
+    if (!is_file($file)) {
+        foreach (['Get', 'Post', 'Put', 'Delete'] as $other) {
+            if (is_file(ROOT . "/controllers/" . $route . $other . "Controller.php")) {
+                throw new MethodNotAllowedException("La route " . $route . " n'accepte pas la méthode " . strtoupper($method) . ".");
+            }
+        }
+        throw new NotFoundException("Route inconnue : " . $route);
+    }
+
+    require_once($file);
+    if (!class_exists($className, false) || !is_subclass_of($className, 'IController')) {
+        throw new HttpStatusException("Contrôleur invalide : " . $className, 500);
+    }
+    return new $className($form);
+}
+
+// ---------------------------------------------------------------------------
+// Validation de format (utilisée par les contrôleurs dans checkCybersec)
+// ---------------------------------------------------------------------------
+function isEmail(string $mail): bool
+{
+    return mb_strlen($mail) <= 100 && filter_var($mail, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+// Au moins 12 caractères, une majuscule, une minuscule et un caractère spécial.
+// 72 octets maximum : au-delà, bcrypt ignore silencieusement la fin du mot de passe.
+function isPassword(string $password): bool
+{
+    return strlen($password) <= 72
+        && preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9]).{12,}$/u', $password) === 1;
+}
+
+// 3 à 50 caractères : lettres (accents compris), chiffres, espace, point, tiret, tiret bas
+function isPseudo(string $pseudo): bool
+{
+    return preg_match('/^[\p{L}\p{N} ._\-]{3,50}$/u', $pseudo) === 1;
+}
+
+function isHttpUrl(string $url): bool
+{
+    if (mb_strlen($url) > 255 || filter_var($url, FILTER_VALIDATE_URL) === false) {
+        return false;
+    }
+    $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+    return $scheme === 'http' || $scheme === 'https';
+}
+
+// Image d'une recette : fichier du dossier public/image/ ou URL http(s)
+function isImagePath(string $path): bool
+{
+    if (isHttpUrl($path)) {
+        return true;
+    }
+    return mb_strlen($path) <= 255
+        && preg_match('#^public/image/[^/\\\\"<>]+\.(webp|png|jpe?g|gif)$#iu', $path) === 1;
+}
+
 ?>

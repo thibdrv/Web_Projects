@@ -2,157 +2,147 @@
 
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/entities/AbstractEntity.php");
-require_once(ROOT . "/entities/Compte.php");
+require_once(ROOT . "/entities/Categorie.php");
 
-class Recette extends AbstractEntity implements IEntity {
-    private int $pk_recette;
-    private string $nom;
-    private string $ingredients;
-    private string $details;
-    private DateTime $date_creation;
-    private DateTime $date_modification;
-    private bool $est_approuve;
-    private bool $est_supprime;
-    private ?string $image = null;
+// Table `recettes`
+class Recette extends AbstractEntity implements IEntity
+{
+    private ?int $pk_recette = null;
+    private string $nom = "";
+    private string $ingredients = "";
+    private string $details = "";
+    private ?DateTime $date_creation = null;
+    private ?DateTime $date_modification = null;
+    private bool $est_approuve = false;
+    private bool $est_supprime = false;
+    private string $image = "";   // colonne NOT NULL : chaîne vide si aucune image
     private ?string $lien = null;
-    private Compte $compte;
-    private array $categories = [];
+    private ?int $fk_compte = null;
 
-    public function getCategories(): array {
-        return $this->categories;
-    }
+    // Champs lus par jointure, non enregistrés dans `recettes`
+    private ?string $auteur_pseudo = null; // comptes.pseudo de l'auteur (null si compte supprimé)
+    private array $categories = [];        // Categorie[] via `categories_recettes`
 
-    public function setCategories(array $categories): void {
-        $this->categories = $categories;
-    }
-
-    function getPkRecette(): int {
+    public function getPkRecette(): ?int {
         return $this->pk_recette;
     }
-    function setPkRecette(int $pk_recette): void {
+    public function setPkRecette(?int $pk_recette): void {
         $this->pk_recette = $pk_recette;
     }
 
-    function getNom(): string {
+    public function getNom(): string {
         return $this->nom;
     }
-    function setNom(string $nom): void {
+    public function setNom(string $nom): void {
         $this->nom = $nom;
     }
 
-    function getDateCreation(): DateTime {
-        return $this->date_creation;
-    }
-    function setDateCreation(DateTime $date_creation): void {
-        $this->date_creation = $date_creation;
-    }
-
-    function getDateModification(): DateTime {
-        return $this->date_modification;
-    }
-    function setDateModification(DateTime $date_modification): void {
-        $this->date_modification = $date_modification;
-    }
-
-    function getEstSupprime(): bool {
-        return $this->est_supprime;
-    }
-    function setEstSupprime(bool $est_supprime): void {
-        $this->est_supprime = $est_supprime;
-    }
-
-    function getEstApprouve(): bool {
-        return $this->est_approuve;
-    }
-    function setEstApprouve(bool $est_approuve): void {
-        $this->est_approuve = $est_approuve;
-    }
-
-    function getIngredients(): string {
+    public function getIngredients(): string {
         return $this->ingredients;
     }
-    function setIngredients(string $ingredients): void {
+    public function setIngredients(string $ingredients): void {
         $this->ingredients = $ingredients;
     }
 
-    function getDetails(): string {
+    public function getDetails(): string {
         return $this->details;
     }
-    function setDetails(string $details): void {
+    public function setDetails(string $details): void {
         $this->details = $details;
     }
 
-    function getImage(): ?string {
+    public function getDateCreation(): ?DateTime {
+        return $this->date_creation;
+    }
+    public function setDateCreation(?DateTime $date_creation): void {
+        $this->date_creation = $date_creation;
+    }
+
+    public function getDateModification(): ?DateTime {
+        return $this->date_modification;
+    }
+    public function setDateModification(?DateTime $date_modification): void {
+        $this->date_modification = $date_modification;
+    }
+
+    public function getEstApprouve(): bool {
+        return $this->est_approuve;
+    }
+    public function setEstApprouve(bool $est_approuve): void {
+        $this->est_approuve = $est_approuve;
+    }
+
+    public function getEstSupprime(): bool {
+        return $this->est_supprime;
+    }
+    public function setEstSupprime(bool $est_supprime): void {
+        $this->est_supprime = $est_supprime;
+    }
+
+    public function getImage(): string {
         return $this->image;
     }
-    function setImage(?string $image): void {
+    public function setImage(string $image): void {
         $this->image = $image;
     }
 
-    function getLien(): ?string {
+    public function getLien(): ?string {
         return $this->lien;
     }
     public function setLien(?string $lien): void {
         $this->lien = $lien;
     }
 
-    function getCompte(): Compte {
-        return $this->compte;
+    public function getFkCompte(): ?int {
+        return $this->fk_compte;
     }
-    function setCompte(Compte $compte): void {
-        $this->compte = $compte;
+    public function setFkCompte(?int $fk_compte): void {
+        $this->fk_compte = $fk_compte;
     }
 
-    // Recette::createFromRow($row) (GET / PUT / DELETE)
-    public static function createFromRow($row): Recette {
+    public function getAuteurPseudo(): ?string {
+        return $this->auteur_pseudo;
+    }
+    public function setAuteurPseudo(?string $auteur_pseudo): void {
+        $this->auteur_pseudo = $auteur_pseudo;
+    }
+
+    /** @return Categorie[] */
+    public function getCategories(): array {
+        return $this->categories;
+    }
+    /** @param Categorie[] $categories */
+    public function setCategories(array $categories): void {
+        $this->categories = $categories;
+    }
+
+    // Recette::createFromRow($row) (lecture BDD)
+    public static function createFromRow(object $row): Recette {
         $recette = new Recette();
-
-        $recette->setPkRecette( intval($row->pk_recette) );
-        $recette->setNom( $row->nom );
-        $recette->setIngredients( $row->ingredients );
-        $recette->setDetails( $row->details );
-        $recette->setDateCreation( new DateTime($row->date_creation) );
-        $recette->setDateModification( new DateTime($row->date_modification) );
-        $recette->setEstApprouve( boolval($row->est_approuve) );
-        $recette->setEstSupprime( boolval($row->est_supprime) );
-        $recette->setImage( $row->image ?? null );
-        $recette->setLien( $row->lien ?? null );
-
-        // Hydrate le compte associé
-        if (isset($row->pk_compte)) {
-            $compte = new Compte();
-            $compte->setPkCompte(intval($row->pk_compte));
-            if (isset($row->pseudo)) {
-                $compte->setPseudo($row->pseudo);
-            }
-            $recette->setCompte($compte);
-        }
-
+        $recette->setPkRecette((int)$row->pk_recette);
+        $recette->setNom($row->nom);
+        $recette->setIngredients($row->ingredients);
+        $recette->setDetails($row->details);
+        $recette->setDateCreation(self::toDateTime($row->date_creation));
+        $recette->setDateModification(self::toDateTime($row->date_modification));
+        $recette->setEstApprouve((bool)$row->est_approuve);
+        $recette->setEstSupprime((bool)$row->est_supprime);
+        $recette->setImage($row->image ?? "");
+        // lien vide ('') et NULL coexistent dans le jeu de données : on normalise en null
+        $recette->setLien(($row->lien ?? '') === '' ? null : $row->lien);
+        $recette->setFkCompte((int)$row->fk_compte);
+        $recette->setAuteurPseudo($row->auteur_pseudo ?? null);
         return $recette;
     }
 
-    // Recette::create(...) (POST)
-    public static function create(
-        string $nom,
-        string $ingredients,
-        string $details,
-        ?string $image,
-        ?string $lien,
-        Compte $compte
-    ): Recette {
+    // Recette::create(...) (POST) : dates, statut et auteur sont fixés par le service
+    public static function create(string $nom, string $ingredients, string $details, string $image = "", ?string $lien = null): Recette {
         $recette = new Recette();
-
         $recette->setNom($nom);
         $recette->setIngredients($ingredients);
         $recette->setDetails($details);
         $recette->setImage($image);
         $recette->setLien($lien);
-        $recette->setDateCreation(new DateTime());
-        $recette->setDateModification(new DateTime());
-        $recette->setEstApprouve(false);
-        $recette->setEstSupprime(false);
-        $recette->setCompte($compte);
-
         return $recette;
     }
 }

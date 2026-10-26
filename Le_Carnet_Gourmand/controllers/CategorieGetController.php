@@ -1,15 +1,14 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Categorie.php");
-	require_once(ROOT . "/services/CategorieService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/CategorieService.php");
 
-    
+// GET api.php?route=Categorie[&pk_categorie=X] : lecture publique
 class CategorieGetController extends AbstractController implements IController
 {
     private CategorieService $service;
+    private ?int $pkCategorie = null;
 
     public function __construct(array $form)
     {
@@ -17,31 +16,28 @@ class CategorieGetController extends AbstractController implements IController
         $this->service = new CategorieService();
     }
 
-    // existe t il ?
-    protected function checkForm() {
-        // GET peut lister toutes les catégories ou une seule par ID
-        // donc pas de champs obligatoires
+    protected function checkForm(): void
+    {
+        $this->alias("pk_categorie", "pk");
     }
 
-    // es-ce valide : string, int
-    protected function checkCybersec() {
-        if (isset($this->form['pk']) && !ctype_digit((string)$this->form['pk'])) {
-            throw new HttpStatusException("pk doit être un entier", 400);
+    protected function checkCybersec(): void
+    {
+        if ($this->has("pk_categorie")) {
+            $this->pkCategorie = $this->getId("pk_categorie");
         }
     }
 
-    // a t il le droit ?
-    protected function checkRights() {
-        // Lecture libre → aucune restriction
+    protected function checkRights(): void
+    {
+        // Lecture libre
     }
 
-    // transmet au service
-    protected function processRequest() {
-        if (isset($this->form['pk'])) {
-            $this->response = $this->service->findByPk((int)$this->form['pk']);
-        } else {
-            $this->response = $this->service->findAll();
-        }
+    protected function processRequest(): void
+    {
+        $this->response = $this->pkCategorie !== null
+            ? $this->service->findByPk($this->pkCategorie)
+            : $this->service->findAll();
     }
 }
 ?>

@@ -1,6 +1,6 @@
 <?php
 
-interface IEntity extends JsonSerializable 
+interface IEntity extends JsonSerializable
 {
 
 }

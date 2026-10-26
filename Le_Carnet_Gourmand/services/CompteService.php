@@ -2,135 +2,178 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/Compte.php");
+require_once(ROOT . "/entities/Role.php");
 require_once(ROOT . "/daos/CompteDao.php");
-require_once(ROOT . "/services/RoleService.php");
+require_once(ROOT . "/daos/RoleDao.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
+require_once(ROOT . "/exceptions/UnauthorizedException.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
 
 class CompteService extends AbstractService implements IService
 {
-    private RoleService $roleService;
+    private RoleDao $roleDao;
 
     public function __construct() {
         $this->dao = new CompteDao();
-        $this->roleService = new RoleService();
-    }
-
-    function isValidCredential(Compte $compte): ?int {
-        return $this->dao->isValidCredential($compte);
+        $this->roleDao = new RoleDao();
     }
 
     function getDao(): CompteDao {
         return $this->dao;
     }
 
-    function findByPkForSession(int $pk): Compte {
-        return $this->getDao()->findByPk($pk);
-    }
-
-    function findByPkForLogin(int $pk): IEntity {
-        return $this->getDao()->findByPk($pk);
-    }
-
+    // Liste de tous les comptes (bannis et supprimés compris) : administrateurs seulement
     function findAll(): array {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut voir tous les comptes.");
-        }
+        AuthService::requireAdmin();
         return $this->getDao()->findAll();
     }
 
+    // Son propre compte, ou n'importe quel compte pour un administrateur
     function findByPk(int|array $pk): Compte {
-        if (is_array($pk)) {
-            throw new InvalidArgumentException("findByPk attend un entier");
+        $moi = AuthService::requireUser();
+        if (!$moi->isAdmin() && $moi->getPkCompte() !== $pk) {
+            throw new ForbiddenException("Vous ne pouvez consulter que votre propre compte.");
+        }
+        return $this->findOrFail($pk, "Compte introuvable.");
+    }
+
+    // Inscription. Le compte reçu porte le mot de passe en clair : il est remplacé par son hash.
+    function insert(IEntity $entity): int {
+        /** @var Compte $entity */
+        if (AuthService::isLogged()) {
+            throw new ConflictException("Vous êtes déjà connecté : déconnectez-vous pour créer un autre compte.");
+        }
+        $this->checkEmailDisponible($entity->getEmail(), null);
+        $this->checkPseudoDisponible($entity->getPseudo(), null);
+
+        $role = $this->roleDao->findByPk(Role::UTILISATEUR);
+        if ($role === null) {
+            throw new HttpStatusException("Le rôle utilisateur est absent de la base.", 500);
         }
 
-        $currentUserPk = getComptePkFromSession();
-        $compte = $this->getDao()->findByPk($pk);
+        $entity->setMotDePasse(password_hash($entity->getMotDePasse(), PASSWORD_DEFAULT));
+        $entity->setDateCreation(new DateTime());
+        $entity->setEstBanni(false);
+        $entity->setEstSupprime(false);
+        $entity->setFkRole($role->getPkRole());
 
-        if (isAdmin()) {
-            return $compte;
+        $pk = $this->getDao()->insert($entity);
+        $entity->setPkCompte($pk);
+        $entity->setRoleNom($role->getNom());
+        return $pk;
+    }
+
+    // Connexion : renvoie le compte si l'email et le mot de passe sont corrects
+    function authenticate(string $email, string $motDePasse): Compte {
+        if (AuthService::isLogged()) {
+            throw new ConflictException("Vous êtes déjà connecté.");
         }
 
-        if ($pk !== $currentUserPk) {
-            _403_Forbidden("Vous n'avez pas le droit de voir le compte d'un autre utilisateur.");
+        $compte = $this->getDao()->findByEmail($email);
+        // Même message que l'email existe ou non : on ne révèle pas quels emails sont inscrits
+        if ($compte === null
+            || $compte->getEstSupprime()
+            || $compte->getMotDePasse() === ""
+            || !password_verify($motDePasse, $compte->getMotDePasse())) {
+            throw new UnauthorizedException("Email ou mot de passe incorrect.");
+        }
+        if ($compte->getEstBanni()) {
+            throw new ForbiddenException("Ce compte a été banni.");
         }
 
-        if ($compte->getEstSupprime() || $compte->getEstBanni()) {
-            throw new HttpStatusException("Ce compte est désactivé", 403);
+        // Hash plus robuste disponible (nouvelle version de PHP) : on le met à jour
+        if (password_needs_rehash($compte->getMotDePasse(), PASSWORD_DEFAULT)) {
+            $compte->setMotDePasse(password_hash($motDePasse, PASSWORD_DEFAULT));
+            $this->getDao()->update($compte);
         }
-
         return $compte;
     }
 
-    function insert(IEntity $entity): int {
+    // Modification d'un compte. $entity contient l'état voulu (chargé puis modifié par le contrôleur) ;
+    // il est comparé à la version en base pour savoir ce qui change et qui a le droit de le changer :
+    //  - le titulaire : email, pseudo, mot de passe (email et mot de passe exigent l'ancien mot de passe)
+    //  - un administrateur, sur le compte d'un autre : est_banni, est_supprime, fk_role
+    function update(IEntity $entity, ?string $nouveauMotDePasse = null, ?string $ancienMotDePasse = null): Compte {
         /** @var Compte $entity */
-        $role = $this->roleService->findByPk(1);
-        $entity->setRole($role);
-        $entity->setDateCreation(new DateTime());
-        $entity->setEstSupprime(false);
-        $entity->setEstBanni(false);
+        $moi = AuthService::requireUser();
+        $avant = $this->findByPk($entity->getPkCompte());
+        $estTitulaire = $moi->getPkCompte() === $avant->getPkCompte();
 
-        return parent::insert($entity);
-    }
+        $changeEmail = mb_strtolower($entity->getEmail()) !== mb_strtolower($avant->getEmail());
+        $changePseudo = $entity->getPseudo() !== $avant->getPseudo();
+        $changeStatut = $entity->getEstBanni() !== $avant->getEstBanni()
+            || $entity->getEstSupprime() !== $avant->getEstSupprime()
+            || $entity->getFkRole() !== $avant->getFkRole();
 
-    function update(IEntity $entity): IEntity {
-        if (!($entity instanceof Compte)) {
-            throw new InvalidArgumentException("Expected instance of Compte");
+        if (($changeEmail || $changePseudo || $nouveauMotDePasse !== null) && !$estTitulaire) {
+            throw new ForbiddenException("Seul le titulaire du compte peut modifier son email, son pseudo ou son mot de passe.");
         }
-
-        $currentUser = $this->getDao()->findByPk(getComptePkFromSession());
-        /** @var Compte $currentUser */
-
-        if (isUser() && $entity->getPkCompte() == $currentUser->getPkCompte()) {
-            $currentUser->setMotDePasse($entity->getMotDePasse());
-            return $this->getDao()->update($currentUser);
-        }
-
-        if (isAdmin()) {
-            $oldEntity = $this->getDao()->findByPk($entity->getPkCompte());
-            /** @var Compte $oldEntity */
-
-            $oldEntity->setEstBanni($entity->getEstBanni());
-
-            if ($entity->getPkCompte() == $currentUser->getPkCompte()) {
-                $oldEntity->setMotDePasse($entity->getMotDePasse());
+        if ($changeStatut) {
+            if (!$moi->isAdmin()) {
+                throw new ForbiddenException("Seul un administrateur peut bannir, restaurer ou changer le rôle d'un compte.");
             }
-
-            return $this->getDao()->update($oldEntity);
+            if ($estTitulaire) {
+                throw new ConflictException("Un administrateur ne peut pas modifier le statut ou le rôle de son propre compte.");
+            }
+            if ($this->roleDao->findByPk($entity->getFkRole()) === null) {
+                throw new NotFoundException("Rôle introuvable.");
+            }
+        }
+        if ($changeEmail || $nouveauMotDePasse !== null) {
+            if ($ancienMotDePasse === null) {
+                throw new BadRequestException("Le paramètre 'ancien_mot_de_passe' est obligatoire pour changer l'email ou le mot de passe.");
+            }
+            if (!password_verify($ancienMotDePasse, $avant->getMotDePasse())) {
+                throw new ForbiddenException("Ancien mot de passe incorrect.");
+            }
+        }
+        if ($changeEmail) {
+            $this->checkEmailDisponible($entity->getEmail(), $avant->getPkCompte());
+        }
+        if ($changePseudo) {
+            $this->checkPseudoDisponible($entity->getPseudo(), $avant->getPkCompte());
         }
 
-        _403_Forbidden("Vous n'avez pas le droit de modifier ce compte.");
-        // Ne devrait jamais arriver, mais PHP nécessite un return
-        throw new RuntimeException("Unexpected state");
+        // On repart de la version en base : seuls les champs autorisés sont recopiés
+        $avant->setEmail($entity->getEmail());
+        $avant->setPseudo($entity->getPseudo());
+        $avant->setEstBanni($entity->getEstBanni());
+        $avant->setEstSupprime($entity->getEstSupprime());
+        $avant->setFkRole($entity->getFkRole());
+        if ($nouveauMotDePasse !== null) {
+            $avant->setMotDePasse(password_hash($nouveauMotDePasse, PASSWORD_DEFAULT));
+        }
+
+        $this->getDao()->update($avant);
+        return $this->findOrFail($avant->getPkCompte(), "Compte introuvable.");
     }
 
+    // Suppression logique : par le titulaire ou par un administrateur
     function delete(int|array $pk): void {
-        if (is_array($pk)) {
-            throw new InvalidArgumentException("delete() attend un entier, pas un tableau.");
+        $compte = $this->findByPk($pk);
+        if ($compte->getEstSupprime()) {
+            throw new NotFoundException("Ce compte est déjà supprimé.");
         }
-
-        $currentUser = getCurrentUser();
-        $targetCompte = $this->getDao()->findByPk($pk);
-
-        if (!isAdmin() && $currentUser->getPkCompte() !== $targetCompte->getPkCompte()) {
-            _403_Forbidden("Vous n'avez pas le droit de supprimer ce compte.");
-        }
-
-        $this->getDao()->delete($pk);
+        $this->getDao()->delete($compte->getPkCompte());
     }
 
-    function restore(int|array $pk): void {
-        if (is_array($pk)) {
-            throw new InvalidArgumentException("restore() attend un entier, pas un tableau.");
+    private function checkEmailDisponible(string $email, ?int $pkActuel): void {
+        $existant = $this->getDao()->findByEmail($email);
+        if ($existant !== null && $existant->getPkCompte() !== $pkActuel) {
+            throw new ConflictException("Cet email est déjà utilisé.");
         }
+    }
 
-        $currentUser = getCurrentUser();
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut restaurer un compte.");
+    private function checkPseudoDisponible(string $pseudo, ?int $pkActuel): void {
+        $existant = $this->getDao()->findByPseudo($pseudo);
+        if ($existant !== null && $existant->getPkCompte() !== $pkActuel) {
+            throw new ConflictException("Ce pseudo est déjà utilisé.");
         }
-
-        $this->getDao()->restore($pk);
     }
 }
 ?>

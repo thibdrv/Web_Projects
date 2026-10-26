@@ -1,15 +1,16 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Categorie.php");
-	require_once(ROOT . "/services/CategorieService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/CategorieService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-
+// DELETE api.php?route=Categorie&pk_categorie=X : administrateurs seulement,
+// refusé (409) tant que des recettes utilisent la catégorie
 class CategorieDeleteController extends AbstractController implements IController
 {
     private CategorieService $service;
+    private int $pkCategorie;
 
     public function __construct(array $form)
     {
@@ -17,30 +18,26 @@ class CategorieDeleteController extends AbstractController implements IControlle
         $this->service = new CategorieService();
     }
 
-    // existe ?
-    protected function checkForm() {
-        // verifie si existe dans form
-        if (!isset($this->form['pk_categorie'])) {
-            throw new HttpStatusException("La pk de la catégorie est obligatoire pour la suppression", 400);
-        }
+    protected function checkForm(): void
+    {
+        $this->alias("pk_categorie", "pk");
+        $this->requireParams("pk_categorie");
     }
-    // valide ? string, int
-    protected function checkCybersec() {
-        // verifie si chiffre
-        if (!ctype_digit((string)$this->form['pk_categorie'])) {
-            throw new HttpStatusException("pk doit être un entier", 400);
-        }
+
+    protected function checkCybersec(): void
+    {
+        $this->pkCategorie = $this->getId("pk_categorie");
     }
-    // a t-il le droit ?
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté.");
-        }
+
+    protected function checkRights(): void
+    {
+        AuthService::requireAdmin();
     }
-    // transmet au service
-    protected function processRequest() {
-        $this->service->delete((int)$this->form['pk_categorie']);
-        $this->response = ["message" => "Catégorie supprimée avec succès"];
+
+    protected function processRequest(): void
+    {
+        $this->service->delete($this->pkCategorie);
+        $this->response = ["pk_categorie" => $this->pkCategorie];
     }
 }
 ?>

@@ -1,22 +1,25 @@
 <?php
 
-    require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/controllers/IController.php");
-    require_once(ROOT . "/controllers/AbstractController.php");
-    require_once(ROOT . "/entities/Compte.php");
-    require_once(ROOT . "/exceptions/HttpStatusException.php");
-    require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
 
-
+// PUT api.php?route=Compte {"pk_compte", ...champs à modifier}
+//  - titulaire : "pseudo", "email", "mot_de_passe" ("ancien_mot_de_passe" exigé pour l'email et le mot de passe)
+//  - administrateur sur un autre compte : "est_banni", "est_supprime" (restauration), "fk_role"
 class ComptePutController extends AbstractController implements IController
 {
     private CompteService $compteService;
-    private ?int $pk = null;
-
-    // Données du formulaire
-    private ?string $motdepasse = null;
+    private int $pkCompte;
+    private ?string $email = null;
+    private ?string $pseudo = null;
+    private ?string $motDePasse = null;
+    private ?string $ancienMotDePasse = null;
     private ?bool $estBanni = null;
-    private $role = null;
+    private ?bool $estSupprime = null;
+    private ?int $fkRole = null;
 
     public function __construct(array $form)
     {
@@ -24,75 +27,77 @@ class ComptePutController extends AbstractController implements IController
         $this->compteService = new CompteService();
     }
 
-    // Vérifie que pk_compte est présent
     protected function checkForm(): void
     {
-        if (!isset($this->form['pk_compte'])) {
-            _400_Bad_Request("Missing parameter: pk_compte");
-        }
+        $this->requireParams("pk_compte");
+        $this->requireOneOf("email", "pseudo", "mot_de_passe", "est_banni", "est_supprime", "fk_role");
     }
 
-    // Sécurise et valide les entrées
     protected function checkCybersec(): void
     {
-        // pk_compte
-        if (!ctype_digit((string)$this->form['pk_compte'])) {
-            _400_Bad_Request("Invalid pk_compte");
-        }
-        $this->pk = intval($this->form['pk_compte']);
+        $this->pkCompte = $this->getId("pk_compte");
 
-        // mot_de_passe (optionnel)
-        if (isset($this->form['mot_de_passe'])) {
-            if (!isSanitizedString($this->form['mot_de_passe'])) {
-                _400_Bad_Request("Invalid mot_de_passe");
+        if ($this->has("email")) {
+            $this->email = $this->getString("email", 3, 100);
+            if (!isEmail($this->email)) {
+                throw new BadRequestException("Adresse email invalide.");
             }
-            $this->motdepasse = $this->form['mot_de_passe'];
         }
-
-        // est_banni (optionnel, doit être 0/1)
-        if (isset($this->form['est_banni'])) {
-            $val = $this->form['est_banni'];
-            if ($val !== "0" && $val !== "1") {
-                _400_Bad_Request("Invalid est_banni");
+        if ($this->has("pseudo")) {
+            $this->pseudo = $this->getString("pseudo", 3, 50);
+            if (!isPseudo($this->pseudo)) {
+                throw new BadRequestException("Le pseudo ne peut contenir que des lettres, des chiffres, des espaces et . _ -");
             }
-            $this->estBanni = ($val === "1");
+        }
+        if ($this->has("mot_de_passe")) {
+            $this->motDePasse = $this->getPassword("mot_de_passe");
+            if (!isPassword($this->motDePasse)) {
+                throw new BadRequestException(
+                    "Le mot de passe doit contenir de 12 à 72 caractères, dont une majuscule, une minuscule et un caractère spécial."
+                );
+            }
+        }
+        if ($this->has("ancien_mot_de_passe")) {
+            $this->ancienMotDePasse = $this->getPassword("ancien_mot_de_passe");
+        }
+        if ($this->has("est_banni")) {
+            $this->estBanni = $this->getBool("est_banni");
+        }
+        if ($this->has("est_supprime")) {
+            $this->estSupprime = $this->getBool("est_supprime");
+        }
+        if ($this->has("fk_role")) {
+            $this->fkRole = $this->getId("fk_role");
         }
     }
 
-    // Vérifie que l'utilisateur est connecté
     protected function checkRights(): void
     {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté.");
-        }
+        // Le détail (titulaire / administrateur) est vérifié par CompteService::update()
+        AuthService::requireUser();
     }
 
-    // Prépare un objet Compte à partir du formulaire
-    private function createFromForm(): Compte
+    protected function processRequest(): void
     {
-        // Email/pseudo temporaires juste pour respecter le constructeur
-        $compte = new Compte("tmp@mail.com", "tmpPseudo", "tmpPassword"); 
-        $compte->setPkCompte($this->pk);
-
-        if ($this->motdepasse !== null) {
-            $compte->setMotDePasse($this->motdepasse);
+        // On part du compte actuel et on applique uniquement les champs envoyés
+        $compte = $this->compteService->findByPk($this->pkCompte);
+        if ($this->email !== null) {
+            $compte->setEmail($this->email);
+        }
+        if ($this->pseudo !== null) {
+            $compte->setPseudo($this->pseudo);
         }
         if ($this->estBanni !== null) {
             $compte->setEstBanni($this->estBanni);
         }
+        if ($this->estSupprime !== null) {
+            $compte->setEstSupprime($this->estSupprime);
+        }
+        if ($this->fkRole !== null) {
+            $compte->setFkRole($this->fkRole);
+        }
 
-        return $compte;
-    }
-
-
-    /**
-     * Exécute la mise à jour via le service
-     */
-    protected function processRequest(): void
-    {
-        $compte = $this->createFromForm();
-        $updated = $this->compteService->update($compte);
-        $this->response = ["status" => "success", "Compte mis à jour" => $updated];
+        $this->response = $this->compteService->update($compte, $this->motDePasse, $this->ancienMotDePasse);
     }
 }
 ?>

@@ -2,90 +2,85 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/services/RecetteService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
-require_once(ROOT . "/utils/functions.php");
 require_once(ROOT . "/entities/Favori.php");
 require_once(ROOT . "/daos/FavoriDao.php");
-require_once(ROOT . "/services/RecetteService.php");
-require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
+require_once(ROOT . "/exceptions/MethodNotAllowedException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
 
+// Les favoris sont privés : chacun ne voit et ne gère que les siens
 class FavoriService extends AbstractService implements IService
 {
     private RecetteService $recetteService;
-    private CompteService $compteService;
 
     public function __construct() {
         $this->dao = new FavoriDao();
         $this->recetteService = new RecetteService();
-        $this->compteService = new CompteService();
     }
 
     function getDao(): FavoriDao {
         return $this->dao;
     }
 
+    // Tous les favoris de tous les comptes : administrateurs seulement
     function findAll(): array {
-        throw new HttpStatusException("Méthode non disponible pour les favoris", 403);
+        AuthService::requireAdmin();
+        return $this->getDao()->findAll();
     }
 
-    function findByPk(int|array $pk): IEntity {
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("findByPk attend une clé composite ['fk_compte'=>X, 'fk_recette'=>Y]");
+    function findByPk(int|array $pk): Favori {
+        if (!is_array($pk) || !AuthService::canManage(isset($pk['fk_compte']) ? (int)$pk['fk_compte'] : null)) {
+            throw new ForbiddenException("Vous ne pouvez consulter que vos propres favoris.");
         }
-
-        $currentUserPk = getComptePkFromSession();
-        if ($pk['fk_compte'] !== $currentUserPk && !isAdmin()) {
-            _403_Forbidden("Vous ne pouvez accéder qu'à vos propres favoris.");
-        }
-
-        return $this->getDao()->findByPk($pk);
+        return $this->findOrFail($pk, "Cette recette n'est pas dans les favoris.");
     }
 
-    function findByCompte(int $fkCompte): array {
-        $currentUserPk = getComptePkFromSession();
-        if ($fkCompte !== $currentUserPk && !isAdmin()) {
-            _403_Forbidden("Vous ne pouvez voir que vos propres favoris.");
-        }
-
-        return $this->getDao()->findByCompte($fkCompte);
+    // Favoris du compte connecté, avec les recettes qu'il a le droit de voir
+    function findMine(): array {
+        $moi = AuthService::requireUser();
+        $favoris = array_values(array_filter(
+            $this->getDao()->findByCompte($moi->getPkCompte()),
+            fn(Favori $favori) => $this->recetteService->isVisible($favori->getRecette())
+        ));
+        $this->recetteService->withCategories(array_map(fn(Favori $favori) => $favori->getRecette(), $favoris));
+        return $favoris;
     }
 
+    function estFavori(int $fkRecette): bool {
+        $moi = AuthService::requireUser();
+        return $this->getDao()->exists($moi->getPkCompte(), $fkRecette);
+    }
+
+    // Ajout d'une recette publiée aux favoris du compte connecté
     function insert(IEntity $entity): int {
         /** @var Favori $entity */
-        $currentUser = getCurrentUser();
-        $entity->setCompte($currentUser);
+        $moi = AuthService::requireUser();
+        $entity->setFkCompte($moi->getPkCompte());
+        $this->recetteService->findPublished($entity->getFkRecette());
 
-        $fkCompte = $entity->getCompte()->getPkCompte();
-        $fkRecette = $entity->getRecette()->getPkRecette();
-
-        // Vérifier que la recette existe
-        $this->recetteService->findByPk($fkRecette);
-
-        if ($this->getDao()->exists($fkCompte, $fkRecette)) {
-            throw new HttpStatusException("Vous avez déjà ajouté cette recette en favori.", 409);
+        if ($this->getDao()->exists($moi->getPkCompte(), $entity->getFkRecette())) {
+            throw new ConflictException("Cette recette est déjà dans vos favoris.");
         }
-
-        return parent::insert($entity);
+        return $this->getDao()->insert($entity);
     }
 
     function update(IEntity $entity): IEntity {
-        throw new HttpStatusException("Modification de favori interdite", 403);
+        throw new MethodNotAllowedException("Un favori ne se modifie pas.");
     }
 
+    // $pk : identifiant de la recette (ou ['fk_recette' => X]) ; le compte est toujours celui connecté
     function delete(int|array $pk): void {
-        if (!is_array($pk) || !isset($pk['fk_recette'])) {
-            throw new InvalidArgumentException("delete() attend ['fk_recette'=>Y]");
+        $moi = AuthService::requireUser();
+        $fkRecette = is_array($pk) ? (int)($pk['fk_recette'] ?? 0) : $pk;
+
+        $supprime = $this->getDao()->delete(['fk_compte' => $moi->getPkCompte(), 'fk_recette' => $fkRecette]);
+        if (!$supprime) {
+            throw new NotFoundException("Cette recette n'est pas dans vos favoris.");
         }
-
-        $currentUserPk = getComptePkFromSession();
-
-        $compositePk = [
-            'fk_compte'  => $currentUserPk,
-            'fk_recette' => $pk['fk_recette']
-        ];
-
-        $this->getDao()->delete($compositePk);
     }
 }
 ?>

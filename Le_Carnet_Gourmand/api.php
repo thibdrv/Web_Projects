@@ -1,42 +1,34 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
-define("ROOT", dirname(__FILE__) ) ; // tous les appels seront en chemin absolu / pour definir un chemin pour ne pas avoir de soucis 
+define("ROOT", dirname(__FILE__)); // tous les require utilisent un chemin absolu
 
 require_once(ROOT . "/utils/functions.php");
 require_once(ROOT . "/utils/SessionManager.php");
+require_once(ROOT . "/exceptions/HttpStatusException.php");
 
+serverBootstrap(); // aucune erreur PHP affichée : la réponse reste du JSON valide
 
-// Démarrer la session si elle n'est pas déjà démarrée
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-error_log("Session ID: " . session_id());
-error_log("Session: " . print_r($_SESSION, true));
-
-serverBootstrap();  // programme qui amorce un autre programme pour annuler les erreurs php de xampp
-SessionManager::manageSession();
-// test dans le terminal
-// Get-Content "C:\xampp\apache\logs\error.log" -Wait -Tail 10 | ForEach-Object { $_ -replace "\\n", "`n" }
-
-
-//Extraire la méthode supportée
-$FORM = extractForm();     // extrait le formulaire, selon la méthode
-//Créer la route 
-$ROUTE = extractRoute($FORM);
-
-//Créer le controller et les exceptions
+// Point d'entrée unique de l'API :
+// api.php?route=Recette (GET) → controllers/RecetteGetController.php
+// Succès : {"success": true, "data": ...}    Échec : {"success": false, "error": "..."}
 try
 {
-    $CONTROLLER = createController($FORM, $ROUTE);
+    SessionManager::start();
+    $FORM = extractForm();                 // query string + corps JSON (POST, PUT, DELETE)
+    $CONTROLLER = createController($FORM); // <Route><Methode>Controller
     $response = $CONTROLLER->execute();
-    header('Content-Type: application/json');
-    echo $response;
+    sendJson($CONTROLLER->getStatusCode(), $response);
 }
-catch(HttpStatusException $ex)
+catch (HttpStatusException $ex)
 {
-    error_log("HttpStatusException: " . $ex->getCode() . " - " . $ex->getMessage());
-    raiseHttpStatus ($ex);
+    raiseHttpStatus($ex);
+}
+catch (PDOException $ex)
+{
+    raisePdoException($ex);
+}
+catch (Throwable $ex)
+{
+    error_log((string)$ex);
+    sendJsonError(500, "Erreur interne du serveur.");
 }

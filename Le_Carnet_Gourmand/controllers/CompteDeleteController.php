@@ -1,50 +1,47 @@
 <?php
 
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
-require_once(ROOT . "/entities/Compte.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/services/CompteService.php");
-require_once(ROOT . "/exceptions/HttpStatusException.php");
+require_once(ROOT . "/services/AuthService.php");
 
-class CompteDeleteController extends AbstractController implements IController {
-    private CompteService $service;
+// DELETE api.php?route=Compte&pk_compte=X : suppression logique (titulaire ou administrateur)
+class CompteDeleteController extends AbstractController implements IController
+{
+    private CompteService $compteService;
+    private int $pkCompte;
 
-    public function __construct(array $form) {
+    public function __construct(array $form)
+    {
         parent::__construct($form);
-        $this->service = new CompteService();
+        $this->compteService = new CompteService();
     }
 
-    protected function checkForm() {
-        if (!isset($this->form['pk_compte'])) {
-            throw new HttpStatusException("Le champ 'pk_compte' est obligatoire", 400);
+    protected function checkForm(): void
+    {
+        $this->alias("pk_compte", "pk");
+        $this->requireParams("pk_compte");
+    }
+
+    protected function checkCybersec(): void
+    {
+        $this->pkCompte = $this->getId("pk_compte");
+    }
+
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
+    }
+
+    protected function processRequest(): void
+    {
+        $this->compteService->delete($this->pkCompte);
+
+        // Le titulaire qui supprime son propre compte est déconnecté
+        if (AuthService::currentUser()?->getPkCompte() === $this->pkCompte) {
+            AuthService::logout();
         }
-    }
-
-    protected function checkCybersec() {
-        if (!ctype_digit((string)$this->form['pk_compte'])) {
-            throw new HttpStatusException("pk_compte doit être un entier", 400);
-        }
-    }
-
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour supprimer un compte.");
-        }
-        // ⚠️ Les droits plus fins (admin ou propriétaire)
-        // sont gérés dans CompteService::delete()
-    }
-
-    protected function processRequest() {
-        $pk = (int)$this->form['pk_compte'];
-
-        // Suppression via le service (qui gère les droits)
-        $this->service->delete($pk);
-
-        $this->response = [
-            "status"   => "success",
-            "message"  => "Compte supprimé avec succès",
-            "pk_compte" => $pk
-        ];
+        $this->response = ["pk_compte" => $this->pkCompte];
     }
 }
+?>

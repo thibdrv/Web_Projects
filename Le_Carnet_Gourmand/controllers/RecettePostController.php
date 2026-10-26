@@ -1,16 +1,27 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Recette.php");
-	require_once(ROOT . "/services/RecetteService.php");
-    require_once(ROOT . "/services/CategorieRecetteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/entities/Recette.php");
+require_once(ROOT . "/services/RecetteService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
 
-
+// POST api.php?route=Recette
+// {"nom", "ingredients", "details", "categories": [1, 2] (ou "fk_categorie": 1), "image"?, "lien"?}
+// La recette est créée en attente de validation par un administrateur.
 class RecettePostController extends AbstractController implements IController
 {
+    // TEXT = 65 535 octets, soit au moins 16 383 caractères en utf8mb4
+    public const TEXTE_MAX = 15000;
+
     private RecetteService $service;
+    private string $nom;
+    private string $ingredients;
+    private string $details;
+    private array $categories = [];
+    private string $image = "";
+    private ?string $lien = null;
 
     public function __construct(array $form)
     {
@@ -18,83 +29,52 @@ class RecettePostController extends AbstractController implements IController
         $this->service = new RecetteService();
     }
 
-    protected function checkForm() {
-        // Vérifie la présence des champs obligatoires
-        if (!isset($this->form['nom'], $this->form['details'], $this->form['ingredients'], $this->form['fk_categorie'])) {
-        throw new HttpStatusException(
-            "Les champs 'nom', 'details', 'ingredients' et 'fk_categorie' sont obligatoires",
-            400
-        );
-        }
+    protected function checkForm(): void
+    {
+        $this->requireParams("nom", "ingredients", "details");
+        $this->requireOneOf("categories", "fk_categorie");
     }
 
-    protected function checkCybersec() {
-        // Vérifie que 'nom' est une chaîne de minimum 3 caractères
-        if (!is_string($this->form['nom']) || strlen(trim($this->form['nom'])) < 3) {
-            throw new HttpStatusException("Nom invalide", 400);
+    protected function checkCybersec(): void
+    {
+        // Les textes sont enregistrés tels quels (requêtes préparées) : c'est à l'affichage qu'ils sont échappés
+        $this->nom = $this->getString("nom", 3, 100);
+        $this->ingredients = $this->getString("ingredients", 3, self::TEXTE_MAX);
+        $this->details = $this->getString("details", 5, self::TEXTE_MAX);
+
+        if ($this->has("categories")) {
+            $this->categories = $this->getIdList("categories");
+        }
+        if ($this->has("fk_categorie")) {
+            $this->categories = array_values(array_unique(array_merge($this->categories, $this->getIdList("fk_categorie"))));
         }
 
-        // Vérifie que 'description' est une chaîne de minimum 5 caractères
-        if (!is_string($this->form['details']) || strlen(trim($this->form['details'])) < 5) {
-            throw new HttpStatusException("details invalide", 400);
+        if ($this->has("image")) {
+            $this->image = $this->getString("image", 1, 255);
+            if (!isImagePath($this->image)) {
+                throw new BadRequestException("L'image doit être un fichier de public/image/ ou une URL http(s).");
+            }
         }
-
-        // Vérifie que 'fk_categorie' est un entier positif
-        if (!ctype_digit((string)$this->form['fk_categorie'])) {
-            throw new HttpStatusException("fk_categorie doit être un entier", 400);
-        }
-
-        // Vérifie que 'ingredients' existe et est une chaîne non vide
-        if (!isset($this->form['ingredients']) || !is_string($this->form['ingredients']) || strlen(trim($this->form['ingredients'])) < 3) {
-            throw new HttpStatusException("Ingredients invalide", 400);
-        }
-
-        // Vérification contre l'injection SQL basique sur 'nom', 'description' et 'ingredients'
-        $fieldsToCheck = ['nom', 'details', 'ingredients'];
-            if (preg_match('/\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|--|;)\b/i', $value)) {
-                throw new HttpStatusException("Le champ '$field' contient des caractères interdits (SQL Injection)", 400);
+        if ($this->has("lien")) {
+            $this->lien = $this->getString("lien", 1, 255);
+            if (!isHttpUrl($this->lien)) {
+                throw new BadRequestException("Le lien doit être une URL http(s).");
             }
         }
     }
 
-
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour ajouter une recette.");
-        }
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
     }
 
-    protected function processRequest() {
-        $recette = new Recette();
-        $recette->setNom(trim($this->form['nom']));
-        $recette->setDetails(trim($this->form['details']));
-        $recette->setIngredients(trim($this->form['ingredients']));
+    protected function processRequest(): void
+    {
+        $recette = Recette::create($this->nom, $this->ingredients, $this->details, $this->image, $this->lien);
+        $pkRecette = $this->service->insert($recette, $this->categories);
 
-        // Associer l’auteur
-        $compteService = new CompteService();
-        $compte = $compteService->findByPk(getComptePkFromSession());
-        $recette->setCompte($compte);
-
-        // 1. On insère la recette et récupère son ID
-        $recetteId = $this->service->insert($recette);
-        $recette->setPkRecette($recetteId);
-
-        // 2. On insère dans la table d’association
-        $categorieService = new CategorieService();
-        $categorie = $categorieService->findByPk((int)$this->form['fk_categorie']);
-
-        $categorieRecette = CategorieRecette::create($recette, $categorie);
-        $categorieRecetteService = new CategorieRecetteService();
-        $categorieRecetteService->insert($categorieRecette);
-
-
-        http_response_code(201);
-
-        $this->response = [
-            "success" => true,
-            "message" => "Recette créée avec succès",
-            "pk_recette" => $recetteId
-        ];
+        $this->statusCode = 201;
+        $this->response = $this->service->findByPk($pkRecette);
     }
 }
 ?>

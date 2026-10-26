@@ -1,21 +1,49 @@
 <?php
 
-require_once ROOT . "/entities/IEntity.php";
-require_once ROOT . "/daos/IDao.php";
+require_once(ROOT . "/entities/IEntity.php");
+require_once(ROOT . "/daos/IDao.php");
+require_once(ROOT . "/utils/Database.php");
 
 abstract class AbstractDao implements IDao
-{   
+{
     abstract function getTableName(): string;
-    abstract function getPrimaryKeyName();
-    abstract function createEntityFromRow($row): IEntity;
 
-    function findAll(): array {
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "SELECT e.* FROM " . $this->getTableName() . " e";
-        $stmt = $pdo->prepare($sql);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-        $rows = $stmt->fetchAll();
+    // Nom de la colonne clé primaire, ou liste des colonnes pour une clé composite
+    abstract function getPrimaryKeyName(): string|array;
+
+    abstract function createEntityFromRow(object $row): IEntity;
+
+    protected function db(): Database
+    {
+        return Database::getInstance();
+    }
+
+    function findAll(): array
+    {
+        $rows = $this->db()->fetchAll("SELECT * FROM " . $this->getTableName());
+        return $this->createEntitiesFromRows($rows);
+    }
+
+    function findByPk(int|array $pk): ?IEntity
+    {
+        [$where, $params] = $this->pkCondition($pk);
+        $row = $this->db()->fetchOne("SELECT * FROM " . $this->getTableName() . " WHERE " . $where . " LIMIT 1", $params);
+        return $row === null ? null : $this->createEntityFromRow($row);
+    }
+
+    // Suppression physique (les tables avec est_supprime redéfinissent delete())
+    function delete(int|array $pk): bool
+    {
+        [$where, $params] = $this->pkCondition($pk);
+        return $this->db()->execute("DELETE FROM " . $this->getTableName() . " WHERE " . $where, $params) > 0;
+    }
+
+    abstract function insert(IEntity $entity): int;
+
+    abstract function update(IEntity $entity): bool;
+
+    protected function createEntitiesFromRows(array $rows): array
+    {
         $entities = [];
         foreach ($rows as $row) {
             $entities[] = $this->createEntityFromRow($row);
@@ -23,44 +51,48 @@ abstract class AbstractDao implements IDao
         return $entities;
     }
 
-    function findByPk(int|array $pk): IEntity {
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $pkName = $this->getPrimaryKeyName();
-        
-        // Gestion clé composite
-        if (is_array($pkName)) {
-            if (!is_array($pk)) {
-                throw new InvalidArgumentException("Cette table utilise une clé composite.");
+    // Construit "col = :col [AND col2 = :col2]" et ses paramètres à partir de la clé primaire.
+    // Les noms de colonnes viennent du code (getPrimaryKeyName), jamais de la requête HTTP.
+    protected function pkCondition(int|array $pk, string $alias = ""): array
+    {
+        $columns = (array)$this->getPrimaryKeyName();
+        if (!is_array($pk)) {
+            if (count($columns) !== 1) {
+                throw new InvalidArgumentException(static::class . " attend une clé composite : " . implode(", ", $columns));
             }
-            $conditions = [];
-            $params = [];
-            foreach ($pkName as $index => $key) {
-                $conditions[] = "e." . $key . " = :" . $key;
-                $params[":" . $key] = $pk[$key];
-            }
-            $sql = "SELECT e.* FROM " . $this->getTableName() . " e WHERE " . implode(" AND ", $conditions) . " LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value, PDO::PARAM_INT);
-            }
-        } else {
-            // Clé simple
-            $sql = "SELECT e.* FROM " . $this->getTableName() . " e WHERE e." . $pkName . " = ? LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(1, $pk);
+            $pk = [$columns[0] => $pk];
         }
-        
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-        $row = $stmt->fetch();
-        if (!$row) {
-            throw new HttpStatusException("Entité non trouvée", 404);
+
+        $conditions = [];
+        $params = [];
+        foreach ($columns as $column) {
+            if (!isset($pk[$column])) {
+                throw new InvalidArgumentException(static::class . " : valeur manquante pour la clé " . $column);
+            }
+            $conditions[] = ($alias === "" ? "" : $alias . ".") . $column . " = :" . $column;
+            $params[":" . $column] = (int)$pk[$column];
         }
-        return $this->createEntityFromRow($row);
+        return [implode(" AND ", $conditions), $params];
     }
 
-    abstract function insert(IEntity $entity): int;
-    abstract function update(IEntity $entity): IEntity;
-    abstract function delete(array|int $pk): void;
+    // Vérifie qu'on reçoit bien l'entité gérée par ce DAO
+    protected function checkEntity(IEntity $entity, string $class): void
+    {
+        if (!($entity instanceof $class)) {
+            throw new InvalidArgumentException(static::class . " attend une instance de " . $class);
+        }
+    }
+
+    // Marqueurs ":p0, :p1..." et paramètres pour une clause IN (...)
+    protected function inClause(array $values, string $prefix = "p"): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach (array_values($values) as $i => $value) {
+            $placeholders[] = ":" . $prefix . $i;
+            $params[":" . $prefix . $i] = $value;
+        }
+        return [implode(", ", $placeholders), $params];
+    }
 }
 ?>

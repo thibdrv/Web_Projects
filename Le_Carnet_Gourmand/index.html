@@ -17,23 +17,25 @@
 
 <header>
   <div id="header-bar">
-    <p class="brand">Le Carnet <span>Gourmand</span></p>
-    <button id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
-    <nav class="navbar" id="navbar"></nav>
+    <a href="#/" class="brand">Le Carnet <span>Gourmand</span></a>
+    <button id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navbar">☰</button>
+    <nav class="navbar" id="navbar" aria-label="Navigation principale"></nav>
   </div>
 </header>
 
-<div class="modal-overlay" id="myModal" style="display:none;" aria-hidden="true">
-  <div class="modal-box" role="dialog" aria-modal="true">
-    <button class="modal-close" id="closeLogin" aria-label="Fermer">&times;</button>
+<div class="modal-overlay" id="myModal" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="closeLogin" type="button" aria-label="Fermer">&times;</button>
     <div id="modalFormContainer"></div>
   </div>
 </div>
 
-<main id="main"></main>
+<main id="main" tabindex="-1">
+  <noscript><p class="empty-state">Le Carnet Gourmand a besoin de JavaScript pour afficher les recettes.</p></noscript>
+</main>
 
 <footer>
-  <button id="backToTop" class="back-to-top" aria-label="Retour en haut">⬆</button>
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Retour en haut">⬆</button>
   <div class="footer-container">
     <div class="footer-section">
       <h3>À propos</h3>
@@ -45,9 +47,9 @@
     <div class="footer-section">
       <h3>Navigation</h3>
       <ul>
-        <li><a href="#" id="footerAccueil">Accueil</a></li>
-        <li><a href="#" id="footerRecettes">Recettes</a></li>
-        <li><a href="#" id="footerPartager">Partager une recette</a></li>
+        <li><a href="#/">Accueil</a></li>
+        <li><a href="#/recettes">Recettes</a></li>
+        <li><a href="#/partager">Partager une recette</a></li>
       </ul>
     </div>
     <div class="footer-section">
@@ -65,12 +67,10 @@
   </div>
 </footer>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 
     <script type="module" src="public/js/script.js"></script>
-
-    
 
 </body>
 </html>

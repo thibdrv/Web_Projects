@@ -1,17 +1,31 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Recette.php");
-    require_once(ROOT . "/services/CategorieService.php");
-    require_once(ROOT . "/services/CategorieRecetteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/controllers/RecettePostController.php");
+require_once(ROOT . "/services/RecetteService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
 
-
-
+// PUT api.php?route=Recette, deux usages :
+//  - modération (administrateur) : {"pk_recette", "est_approuve": true|false}
+//  - modification partielle (auteur ou administrateur) :
+//    {"pk_recette", "nom"?, "ingredients"?, "details"?, "image"?, "lien"?, "categories"?}
+//    "categories" remplace toutes les catégories ; "image": "" ou "lien": null les efface.
 class RecettePutController extends AbstractController implements IController
 {
+    private const CHAMPS = ["nom", "ingredients", "details", "image", "lien", "categories", "fk_categorie"];
+
     private RecetteService $service;
+    private int $pkRecette;
+    private ?bool $estApprouve = null;
+    private ?string $nom = null;
+    private ?string $ingredients = null;
+    private ?string $details = null;
+    private ?string $image = null;
+    private ?string $lien = null;
+    private bool $changeLien = false;
+    private ?array $categories = null;
 
     public function __construct(array $form)
     {
@@ -19,108 +33,94 @@ class RecettePutController extends AbstractController implements IController
         $this->service = new RecetteService();
     }
 
-    protected function checkForm() {
-        if (!isset($this->form['pk_recette'])) {
-            throw new HttpStatusException("Le champ 'pk' est obligatoire", 400);
+    protected function checkForm(): void
+    {
+        $this->alias("pk_recette", "pk");
+        $this->requireParams("pk_recette");
+
+        $champs = array_filter(self::CHAMPS, fn(string $champ) => array_key_exists($champ, $this->form));
+        if (array_key_exists("est_approuve", $this->form)) {
+            if (!empty($champs)) {
+                throw new BadRequestException("'est_approuve' s'envoie seul : la modération et la modification sont deux requêtes distinctes.");
+            }
+        } elseif (empty($champs)) {
+            throw new BadRequestException("Aucun champ à modifier : " . implode(", ", self::CHAMPS) . " ou est_approuve.");
         }
     }
 
-    protected function checkCybersec() {
-        // pk est obligatoire
-        if (!isset($this->form['pk_recette']) || !ctype_digit((string)$this->form['pk_recette'])) {
-            throw new HttpStatusException("Le champ 'pk' est obligatoire et doit être un entier", 400);
+    protected function checkCybersec(): void
+    {
+        $this->pkRecette = $this->getId("pk_recette");
+
+        if (array_key_exists("est_approuve", $this->form)) {
+            $this->estApprouve = $this->getBool("est_approuve");
+            return;
         }
 
-        // nom optionnel
-        if (isset($this->form['nom'])) {
-            if (!is_string($this->form['nom']) || strlen(trim($this->form['nom'])) < 3) {
-                throw new HttpStatusException("Nom invalide", 400);
+        if ($this->has("nom")) {
+            $this->nom = $this->getString("nom", 3, 100);
+        }
+        if ($this->has("ingredients")) {
+            $this->ingredients = $this->getString("ingredients", 3, RecettePostController::TEXTE_MAX);
+        }
+        if ($this->has("details")) {
+            $this->details = $this->getString("details", 5, RecettePostController::TEXTE_MAX);
+        }
+        if (array_key_exists("image", $this->form)) {
+            $this->image = $this->has("image") ? $this->getString("image", 1, 255) : "";
+            if ($this->image !== "" && !isImagePath($this->image)) {
+                throw new BadRequestException("L'image doit être un fichier de public/image/ ou une URL http(s).");
             }
         }
-
-        // details/description optionnel
-        if (isset($this->form['details'])) {
-            if (!is_string($this->form['details']) || strlen(trim($this->form['details'])) < 5) {
-                throw new HttpStatusException("Details invalide", 400);
+        if (array_key_exists("lien", $this->form)) {
+            $this->changeLien = true;
+            $this->lien = $this->has("lien") ? $this->getString("lien", 1, 255) : null;
+            if ($this->lien !== null && !isHttpUrl($this->lien)) {
+                throw new BadRequestException("Le lien doit être une URL http(s).");
             }
         }
-
-        // fk_categorie optionnel
-        if (isset($this->form['fk_categorie'])) {
-            if (!ctype_digit((string)$this->form['fk_categorie'])) {
-                throw new HttpStatusException("fk_categorie doit être un entier", 400);
-            }
+        if ($this->has("categories")) {
+            $this->categories = $this->getIdList("categories");
+        } elseif ($this->has("fk_categorie")) {
+            $this->categories = $this->getIdList("fk_categorie");
         }
     }
 
-
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour modifier une recette.");
+    protected function checkRights(): void
+    {
+        if ($this->estApprouve !== null) {
+            AuthService::requireAdmin();
+        } else {
+            AuthService::requireUser(); // auteur ou administrateur : vérifié par le service
         }
     }
 
-protected function processRequest() {
-    // Si c’est une demande d’approbation admin
-    if (isset($this->form['est_approuve'])) {
-        $approve = filter_var($this->form['est_approuve'], FILTER_VALIDATE_BOOLEAN);
-        $this->service->approve((int)$this->form['pk_recette'], $approve);
+    protected function processRequest(): void
+    {
+        if ($this->estApprouve !== null) {
+            $this->response = $this->service->approve($this->pkRecette, $this->estApprouve);
+            return;
+        }
 
-        $this->response = [
-            "message" => "Recette " . ($approve ? "approuvée" : "refusée") . " avec succès",
-            "id" => (int)$this->form['pk_recette']
-        ];
-        return;
-    }
+        // On part de la recette actuelle et on applique uniquement les champs envoyés
+        $recette = $this->service->findByPk($this->pkRecette);
+        if ($this->nom !== null) {
+            $recette->setNom($this->nom);
+        }
+        if ($this->ingredients !== null) {
+            $recette->setIngredients($this->ingredients);
+        }
+        if ($this->details !== null) {
+            $recette->setDetails($this->details);
+        }
+        if ($this->image !== null) {
+            $recette->setImage($this->image);
+        }
+        if ($this->changeLien) {
+            $recette->setLien($this->lien);
+        }
 
-    // Charger la recette
-    $recette = $this->service->findByPk((int)$this->form['pk_recette']);
-    if (!($recette instanceof Recette)) {
-        throw new RuntimeException("Expected Recette from service");
+        $this->response = $this->service->update($recette, $this->categories);
     }
-
-    // Vérification des droits
-    $currentUser = (new CompteService())->findByPk(getComptePkFromSession());
-    if ($recette->getCompte()->getPkCompte() !== $currentUser->getPkCompte() && !isAdmin()) {
-        _403_Forbidden("Vous n'avez pas le droit de modifier cette recette.");
-    }
-
-    // Mise à jour partielle
-    if (isset($this->form['nom'])) {
-        $recette->setNom(trim($this->form['nom']));
-    }
-    if (isset($this->form['details'])) {
-        $recette->setDetails(trim($this->form['details']));
-    }
-    if (isset($this->form['ingredients'])) {
-        $recette->setIngredients(trim($this->form['ingredients']));
-    }
-    if (isset($this->form['image'])) {
-        $recette->setImage(trim($this->form['image']));
-    }
-    if (isset($this->form['lien'])) {
-        $recette->setLien(trim($this->form['lien']));
-    }
-
-    // Mettre à jour la recette
-    $this->service->update($recette);
-
-    // Mettre à jour la catégorie uniquement si demandée
-    if (isset($this->form['fk_categorie'])) {
-        $categorieService = new CategorieService();
-        $categorie = $categorieService->findByPk((int)$this->form['fk_categorie']);
-
-        $categorieRecetteService = new CategorieRecetteService();
-        $categorieRecette = CategorieRecette::create($recette, $categorie);
-        $categorieRecetteService->insert($categorieRecette);
-    }
-
-    // Réponse
-    $this->response = [
-        "message" => "Recette mise à jour avec succès",
-        "id" => $recette->getPkRecette()
-    ];
-}
-
 }
 ?>

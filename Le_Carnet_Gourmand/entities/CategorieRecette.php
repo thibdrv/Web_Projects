@@ -2,52 +2,62 @@
 
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/entities/AbstractEntity.php");
-require_once(ROOT . "/entities/Recette.php");
-require_once(ROOT . "/entities/Categorie.php");
 
-class CategorieRecette extends AbstractEntity implements IEntity {
-    private Recette $recette;
-    private Categorie $categorie;
+// Table de liaison `categories_recettes` (clé composite fk_recette + fk_categorie)
+class CategorieRecette extends AbstractEntity implements IEntity
+{
+    private ?int $fk_recette = null;
+    private ?int $fk_categorie = null;
 
-    public function getRecette(): Recette {
-        return $this->recette;
+    // Champs lus par jointure, non enregistrés
+    private ?string $recette_nom = null;
+    private ?string $categorie_nom = null;
+
+    public function getFkRecette(): ?int {
+        return $this->fk_recette;
+    }
+    public function setFkRecette(?int $fk_recette): void {
+        $this->fk_recette = $fk_recette;
     }
 
-    public function setRecette(Recette $recette): void {
-        $this->recette = $recette;
+    public function getFkCategorie(): ?int {
+        return $this->fk_categorie;
+    }
+    public function setFkCategorie(?int $fk_categorie): void {
+        $this->fk_categorie = $fk_categorie;
     }
 
-    public function getCategorie(): Categorie {
-        return $this->categorie;
+    public function getRecetteNom(): ?string {
+        return $this->recette_nom;
+    }
+    public function setRecetteNom(?string $recette_nom): void {
+        $this->recette_nom = $recette_nom;
     }
 
-    public function setCategorie(Categorie $categorie): void {
-        $this->categorie = $categorie;
+    public function getCategorieNom(): ?string {
+        return $this->categorie_nom;
+    }
+    public function setCategorieNom(?string $categorie_nom): void {
+        $this->categorie_nom = $categorie_nom;
     }
 
-    // CategorieRecette::createFromRow($row) (GET / PUT / DELETE)
-    public static function createFromRow($row): CategorieRecette {
-        $categorieRecette = new CategorieRecette();
+    public function getPk(): array {
+        return ['fk_recette' => $this->fk_recette, 'fk_categorie' => $this->fk_categorie];
+    }
 
-        if (isset($row->pk_recette)) {
-            $recette = new Recette();
-            $recette->setPkRecette(intval($row->pk_recette));
-            $categorieRecette->setRecette($recette);
-        }
-
-        if (isset($row->pk_categorie)) {
-            $categorie = new Categorie();
-            $categorie->setPkCategorie(intval($row->pk_categorie));
-            $categorieRecette->setCategorie($categorie);
-        }
+    // CategorieRecette::createFromRow($row) (lecture BDD)
+    public static function createFromRow(object $row): CategorieRecette {
+        $categorieRecette = self::create((int)$row->fk_recette, (int)$row->fk_categorie);
+        $categorieRecette->setRecetteNom($row->recette_nom ?? null);
+        $categorieRecette->setCategorieNom($row->categorie_nom ?? null);
         return $categorieRecette;
     }
 
     // CategorieRecette::create(...) (POST)
-    public static function create(Recette $recette, Categorie $categorie): CategorieRecette {
+    public static function create(int $fkRecette, int $fkCategorie): CategorieRecette {
         $categorieRecette = new CategorieRecette();
-        $categorieRecette->setRecette($recette);
-        $categorieRecette->setCategorie($categorie);
+        $categorieRecette->setFkRecette($fkRecette);
+        $categorieRecette->setFkCategorie($fkCategorie);
         return $categorieRecette;
     }
 }

@@ -3,15 +3,16 @@
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/entities/AbstractEntity.php");
 
-class Categorie extends AbstractEntity implements IEntity {
-    private int $pk_categorie;
-    private string $nom;
+// Table `categories`
+class Categorie extends AbstractEntity implements IEntity
+{
+    private ?int $pk_categorie = null;
+    private string $nom = "";
 
-    
-    public function getPkCategorie(): int {
+    public function getPkCategorie(): ?int {
         return $this->pk_categorie;
     }
-    public function setPkCategorie(int $pk_categorie): void {
+    public function setPkCategorie(?int $pk_categorie): void {
         $this->pk_categorie = $pk_categorie;
     }
 
@@ -22,10 +23,10 @@ class Categorie extends AbstractEntity implements IEntity {
         $this->nom = $nom;
     }
 
-    // Categorie::createFromRow($row) (GET / PUT / DELETE)
-    public static function createFromRow($row): Categorie {
+    // Categorie::createFromRow($row) (lecture BDD)
+    public static function createFromRow(object $row): Categorie {
         $categorie = new Categorie();
-        $categorie->setPkCategorie(intval($row->pk_categorie));
+        $categorie->setPkCategorie((int)$row->pk_categorie);
         $categorie->setNom($row->nom);
         return $categorie;
     }

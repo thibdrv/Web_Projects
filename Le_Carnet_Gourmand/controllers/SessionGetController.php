@@ -1,46 +1,27 @@
 <?php
 
-require_once(ROOT . "/exceptions/HttpStatusException.php");
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/AuthService.php");
 require_once(ROOT . "/utils/SessionManager.php");
-require_once(ROOT . "/entities/Compte.php");
-require_once(ROOT . "/services/CompteService.php");
 
+// GET api.php?route=Session : état de la session (public)
 class SessionGetController extends AbstractController implements IController
 {
-    private CompteService $compteService;
+    protected function checkForm(): void {}
 
-    public function __construct(array $form)
+    protected function checkCybersec(): void {}
+
+    protected function checkRights(): void {}
+
+    protected function processRequest(): void
     {
-        parent::__construct($form);
-        $this->compteService = new CompteService();
-    }
-
-    protected function checkForm() {}
-    protected function checkCybersec() {}
-    protected function checkRights() {}
-
-    protected function processRequest()
-    {
-        $startTime = $_SESSION[START_TIME] ?? null;
-
+        $compte = AuthService::currentUser();
         $this->response = [
-            "isLogged" => SessionManager::isLogged(),
-            "startTime" => $startTime,
-            "endTime"   => ($startTime ?? time()) + SessionManager::getMaxTime(),
+            "est_connecte" => $compte !== null,
+            "expiration" => $compte !== null ? SessionManager::getExpirationTime() : null,
+            "compte" => $compte,
         ];
-
-        if (SessionManager::isLogged()) {
-            $this->response["pk"]         = $_SESSION['pk_compte'];
-            $this->response["email"]      = $_SESSION['email'];
-            $this->response["pseudo"]     = $_SESSION['pseudo'];
-            $this->response["estSupprime"] = $_SESSION['est_supprime'];
-            $this->response["estBanni"]    = $_SESSION['est_banni'];
-            $this->response["roleId"]      = $_SESSION['fk_role'];
-            // pas de mot de passe ici
-        }
     }
 }
 ?>

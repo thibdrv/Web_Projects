@@ -1,53 +1,50 @@
 <?php
 
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
-require_once(ROOT . "/entities/Commentaire.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/services/CommentaireService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-class CommentaireDeleteController extends AbstractController implements IController {
+// DELETE api.php?route=Commentaire&fk_recette=X[&fk_compte=Y] : suppression logique.
+// Sans fk_compte : son propre commentaire ; avec fk_compte : celui d'un autre (administrateurs).
+class CommentaireDeleteController extends AbstractController implements IController
+{
     private CommentaireService $service;
+    private int $fkRecette;
+    private ?int $fkCompte = null;
 
-    public function __construct(array $form) {
+    public function __construct(array $form)
+    {
         parent::__construct($form);
         $this->service = new CommentaireService();
     }
 
-    protected function checkForm() {
-        if (!isset($this->form['fk_recette'])) {
-            throw new HttpStatusException("Le champ 'fk_recette' est obligatoire", 400);
+    protected function checkForm(): void
+    {
+        $this->requireParams("fk_recette");
+    }
+
+    protected function checkCybersec(): void
+    {
+        $this->fkRecette = $this->getId("fk_recette");
+        if ($this->has("fk_compte")) {
+            $this->fkCompte = $this->getId("fk_compte");
         }
     }
 
-    protected function checkCybersec() {
-        if (!ctype_digit((string)$this->form['fk_recette'])) {
-            throw new HttpStatusException("fk_recette doit être un entier", 400);
-        }
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
     }
 
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté.");
-        }
-    }
-
-    protected function processRequest() {
-        // Le compte courant supprime SON commentaire
-        $compte = getCurrentUser();
+    protected function processRequest(): void
+    {
         $pk = [
-            "fk_compte"  => $compte->getPkCompte(),
-            "fk_recette" => (int)$this->form['fk_recette']
+            'fk_compte' => $this->fkCompte ?? AuthService::requireUser()->getPkCompte(),
+            'fk_recette' => $this->fkRecette,
         ];
-
         $this->service->delete($pk);
-
-        $this->response = [
-            "success" => true,
-            "message" => "Commentaire supprimé avec succès",
-            "compte"  => $pk["fk_compte"],
-            "recette" => $pk["fk_recette"]
-        ];
+        $this->response = $pk;
     }
 }
 ?>

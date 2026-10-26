@@ -1,21 +1,19 @@
 <?php
 
-require_once(ROOT . "/utils/functions.php");
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/entities/Compte.php");
-require_once(ROOT . "/exceptions/HttpStatusException.php");
 require_once(ROOT . "/services/CompteService.php");
+require_once(ROOT . "/exceptions/BadRequestException.php");
 
+// POST api.php?route=Compte {"email", "pseudo", "mot_de_passe"} : inscription
 class ComptePostController extends AbstractController implements IController
 {
-    protected array $form;
-    protected string $email = "";
-    protected string $pseudo = "";
-    protected string $motdepasse = "";
-    protected CompteService $compteService;
-    protected mixed $response;
-    
+    private CompteService $compteService;
+    private string $email;
+    private string $pseudo;
+    private string $motDePasse;
+
     public function __construct(array $form)
     {
         parent::__construct($form);
@@ -24,55 +22,41 @@ class ComptePostController extends AbstractController implements IController
 
     protected function checkForm(): void
     {
-        if (
-            !isset($this->form['email']) ||
-            !isset($this->form['mot_de_passe']) ||
-            !isset($this->form['pseudo'])
-        ) {
-            throw new HttpStatusException("Champs requis : email, mot_de_passe, pseudo", 400);
-        }
+        $this->requireParams("email", "pseudo", "mot_de_passe");
     }
 
     protected function checkCybersec(): void
     {
-        error_log("Form reçu : " . print_r($this->form, true));
-
-        if (!isEmail($this->form['email'])) {
-            throw new HttpStatusException("param email est invalide", 400);
+        $this->email = $this->getString("email", 3, 100);
+        if (!isEmail($this->email)) {
+            throw new BadRequestException("Adresse email invalide.");
         }
-        $this->email = trim($this->form['email']);
 
-        if (!isPassword($this->form['mot_de_passe'])) {
-            throw new HttpStatusException("param mot_de_passe est invalide", 400);
+        $this->pseudo = $this->getString("pseudo", 3, 50);
+        if (!isPseudo($this->pseudo)) {
+            throw new BadRequestException("Le pseudo ne peut contenir que des lettres, des chiffres, des espaces et . _ -");
         }
-        $this->motdepasse = $this->form['mot_de_passe'];
 
-        if (!isPseudo($this->form['pseudo'])) {
-            throw new HttpStatusException("param pseudo est invalide", 400);
+        $this->motDePasse = $this->getPassword("mot_de_passe");
+        if (!isPassword($this->motDePasse)) {
+            throw new BadRequestException(
+                "Le mot de passe doit contenir de 12 à 72 caractères, dont une majuscule, une minuscule et un caractère spécial."
+            );
         }
-        $this->pseudo = trim($this->form['pseudo']);
-
     }
 
-    protected function checkRights(): void {
-        if (isLogged()) {
-            throw new HttpStatusException("Déjà authentifié", 499);
-        }
+    protected function checkRights(): void
+    {
+        // Inscription ouverte ; le service refuse si l'on est déjà connecté
     }
 
     protected function processRequest(): void
     {
-        // On utilise la factory Compte::create
-        $compte = Compte::create($this->email, $this->pseudo, $this->motdepasse);
+        $compte = Compte::create($this->email, $this->pseudo, $this->motDePasse);
+        $this->compteService->insert($compte);
 
-        error_log("Création Compte: email={$compte->getEmail()}, pseudo={$compte->getPseudo()}, mdp={$compte->getMotDePasse()}");
-
-        $pk = $this->compteService->insert($compte);
-
-        $this->response = [
-            "status" => "success",
-            "pk" => $pk
-        ];
+        $this->statusCode = 201;
+        $this->response = $compte;
     }
 }
 ?>

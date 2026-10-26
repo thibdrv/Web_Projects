@@ -1,15 +1,16 @@
 <?php
 
-    require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Note.php");
-	require_once(ROOT . "/services/NoteService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/NoteService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-
+// GET api.php?route=Note&fk_recette=X → {"fk_recette", "moyenne", "nombre_notes", "ma_note"} (public)
+// GET api.php?route=Note               → notes données par le compte connecté
 class NoteGetController extends AbstractController implements IController
 {
     private NoteService $service;
+    private ?int $fkRecette = null;
 
     public function __construct(array $form)
     {
@@ -17,45 +18,32 @@ class NoteGetController extends AbstractController implements IController
         $this->service = new NoteService();
     }
 
-    protected function checkForm() {
-        // Ici GET peut lister toutes les notes de l’utilisateur connecté
-        // donc pas de champs obligatoires
+    protected function checkForm(): void
+    {
+        // ancien nom de paramètre encore utilisé par le frontend
+        $this->alias("fk_recette", "pk_recette");
     }
 
-    protected function checkCybersec() {
-        // Rien à vérifier ici
-    }
-
-    protected function checkRights() {
-        // tout le monde peut voir les notes
-    }
-
-    protected function processRequest() {
-        $pkRecette = $this->form["pk_recette"] ?? null;
-
-        if ($pkRecette !== null) {
-            $moyenne = $this->service->totalNoteParRecette((int)$pkRecette);
-
-            $this->response = [
-                "success"   => true,
-                "recetteId" => (int)$pkRecette,
-                "moyenne"   => $moyenne ?? 0
-            ];
-            return;
+    protected function checkCybersec(): void
+    {
+        if ($this->has("fk_recette")) {
+            $this->fkRecette = $this->getId("fk_recette");
         }
+    }
 
-        $fkCompte = getComptePkFromSession();
-        if ($fkCompte === null) {
-            throw new HttpStatusException("Vous devez être connecté pour voir vos notes.", 401);
+    protected function checkRights(): void
+    {
+        // La moyenne d'une recette est publique ; la liste de ses propres notes demande d'être connecté
+        if ($this->fkRecette === null) {
+            AuthService::requireUser();
         }
+    }
 
-        $notes = $this->service->findByCompte((int)$fkCompte);
-
-        $this->response = [
-            "success"  => true,
-            "compteId" => (int)$fkCompte,
-            "notes"    => $notes
-        ];
+    protected function processRequest(): void
+    {
+        $this->response = $this->fkRecette !== null
+            ? $this->service->statistiques($this->fkRecette)
+            : $this->service->findMine();
     }
 }
 ?>

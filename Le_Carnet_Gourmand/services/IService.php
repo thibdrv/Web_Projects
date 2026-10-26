@@ -3,12 +3,14 @@
 require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/IEntity.php");
 
-interface IService 
+// Un service porte les règles métier : droits, existence, unicité, états.
+// En cas de refus il lève une HttpStatusException (jamais de echo / exit).
+interface IService
 {
     function findByPk(int|array $pk): IEntity;
-    
+
     function findAll(): array;
-    
+
     function insert(IEntity $entity): int;
 
     function update(IEntity $entity): IEntity;

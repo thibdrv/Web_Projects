@@ -2,25 +2,25 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
+require_once(ROOT . "/services/RecetteService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
-require_once(ROOT . "/utils/functions.php");
 require_once(ROOT . "/entities/Note.php");
 require_once(ROOT . "/daos/NoteDao.php");
-require_once(ROOT . "/services/CompteService.php");
-require_once(ROOT . "/services/RecetteService.php");
-
+require_once(ROOT . "/exceptions/BadRequestException.php");
+require_once(ROOT . "/exceptions/ConflictException.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
+require_once(ROOT . "/exceptions/NotFoundException.php");
 
 class NoteService extends AbstractService implements IService
 {
-    protected NoteDao $dao;
-    protected CompteService $compteService;
-    protected RecetteService $recetteService;
+    public const NOTE_MIN = 0;
+    public const NOTE_MAX = 5;
 
-    public function __construct()
-    {
+    private RecetteService $recetteService;
+
+    public function __construct() {
         $this->dao = new NoteDao();
-        $this->compteService = new CompteService();
         $this->recetteService = new RecetteService();
     }
 
@@ -28,125 +28,90 @@ class NoteService extends AbstractService implements IService
         return $this->dao;
     }
 
-    /**
-     * Validation de la note (0 à 5 par pas de 0.5)
-     */
-    private function validateNote(float $note): void {
-        if ($note < 0 || $note > 5) {
-            throw new HttpStatusException("La note doit être comprise entre 0 et 5", 400);
-        }
-        if (fmod($note, 0.5) !== 0.0) {
-            throw new HttpStatusException("La note doit être un multiple de 0.5", 400);
+    // Note sur 5, par demi-points
+    private function checkNote(?float $note): void {
+        if ($note === null || $note < self::NOTE_MIN || $note > self::NOTE_MAX || fmod($note * 2, 1.0) !== 0.0) {
+            throw new BadRequestException("La note doit être comprise entre 0 et 5, par pas de 0,5.");
         }
     }
 
+    // Moyenne et nombre de notes d'une recette visible (consultable sans être connecté),
+    // plus la note du compte connecté s'il en a donné une
+    function statistiques(int $fkRecette): array {
+        $this->recetteService->findByPk($fkRecette);
+        $stats = $this->getDao()->statsByRecette($fkRecette);
 
-    function MoyenneParRecette(int $pkRecette): float {
-        // Tout le monde peut consulter la moyenne (même non connecté)
-        return $this->getDao()->MoyenneParRecette($pkRecette);
-    }
-    function totalNoteParRecette(int $pkRecette): int {
-        // Tout le monde peut consulter le nombre de notes d’une recette
-        return $this->getDao()->totalNoteParRecette($pkRecette);
-    }
-
-    function findByCompte(int $fkCompte): array {
-        $currentUserPk = getComptePkFromSession();
-        if ($fkCompte !== $currentUserPk && !isAdmin()) {
-            _403_Forbidden("Vous ne pouvez voir que vos propres notes.");
+        $maNote = null;
+        $moi = AuthService::currentUser();
+        if ($moi !== null) {
+            $maNote = $this->getDao()->findByPk(['fk_compte' => $moi->getPkCompte(), 'fk_recette' => $fkRecette])?->getNote();
         }
 
-        return $this->getDao()->findByCompte($fkCompte);
+        return [
+            "fk_recette" => $fkRecette,
+            "moyenne" => $stats->moyenne === null ? null : round((float)$stats->moyenne, 1),
+            "nombre_notes" => (int)$stats->nombre_notes,
+            "ma_note" => $maNote,
+        ];
     }
 
+    // Notes données par le compte connecté
+    function findMine(): array {
+        $moi = AuthService::requireUser();
+        return $this->getDao()->findByCompte($moi->getPkCompte());
+    }
+
+    // Toutes les notes de tous les comptes : administrateurs seulement
     function findAll(): array {
-        throw new HttpStatusException("find all not implement", 403);
-    }
-    function findByPk(int|array $pk): IEntity {
-        // Récupérer une note précise (par compte + recette)
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("NoteService attend une clé composite ['fk_compte'=>X, 'fk_recette'=>Y]");
-        }
-
-        $currentUserPk = getComptePkFromSession();
-
-        // L'utilisateur ne peut voir que sa propre note, sauf si admin
-        if ($pk['fk_compte'] !== $currentUserPk && !isAdmin()) {
-            _403_Forbidden("Vous n'avez pas le droit de voir la note d'un autre utilisateur.");
-        }
-
-        return $this->getDao()->findByPk($pk);
+        AuthService::requireAdmin();
+        return $this->getDao()->findAll();
     }
 
+    function findByPk(int|array $pk): Note {
+        if (!is_array($pk) || !AuthService::canManage(isset($pk['fk_compte']) ? (int)$pk['fk_compte'] : null)) {
+            throw new ForbiddenException("Vous ne pouvez consulter que vos propres notes.");
+        }
+        return $this->findOrFail($pk, "Aucune note pour cette recette.");
+    }
 
+    // Première note du compte connecté sur une recette publiée
     function insert(IEntity $entity): int {
-
         /** @var Note $entity */
-        $this->validateNote($entity->getNote());
-        $compte = getCurrentUser();
-        $entity->setCompte($compte);
+        $moi = AuthService::requireUser();
+        $this->checkNote($entity->getNote());
+        $entity->setFkCompte($moi->getPkCompte());
+        $this->recetteService->findPublished($entity->getFkRecette());
 
-        // 1️⃣ Vérifier si la recette existe
-        $recette = $this->recetteService->findByPk($entity->getRecette()->getPkRecette());
-        if (!$recette) {
-            throw new HttpStatusException("La recette que vous essayez de noter n'existe pas.", 404);
+        if ($this->getDao()->findByPk($entity->getPk()) !== null) {
+            throw new ConflictException("Vous avez déjà noté cette recette : modifiez votre note avec PUT.");
         }
-
-        // 2️⃣ Vérifier si une note existe déjà
-        try {
-            $this->getDao()->findByPk([
-                'fk_compte'  => $compte->getPkCompte(),
-                'fk_recette' => $entity->getRecette()->getPkRecette()
-            ]);
-            // si trouvé → c'est un doublon
-            throw new HttpStatusException("Vous avez déjà noté cette recette.", 400);
-
-        } catch (HttpStatusException $e) {
-            if ($e->getCode() !== 404) { 
-                // si ce n’est PAS "note introuvable", alors erreur réelle
-                throw $e;
-            }
-            // si c'est bien 404 → pas encore noté, on continue
-        }
-
-        // 3️⃣ Insertion en BDD
-        return parent::insert($entity);
-    }
-    
-
-    function update(IEntity $entity) {
-        /** @var Note $entity */
-        $this->validateNote($entity->getNote());
-
-        $compte = getCurrentUser();
-        $entity->setCompte($compte);
-
-        return $this->getDao()->update($entity);
+        return $this->getDao()->insert($entity);
     }
 
-    /**
-     * Supprimer une note (DELETE)
-     */
+    // Modification de la note du compte connecté
+    function update(IEntity $entity): Note {
+        /** @var Note $entity */
+        $moi = AuthService::requireUser();
+        $this->checkNote($entity->getNote());
+        $entity->setFkCompte($moi->getPkCompte());
+        $this->recetteService->findPublished($entity->getFkRecette());
+
+        if ($this->getDao()->findByPk($entity->getPk()) === null) {
+            throw new NotFoundException("Vous n'avez pas encore noté cette recette : utilisez POST.");
+        }
+        $this->getDao()->update($entity);
+        return $entity;
+    }
+
+    // $pk : identifiant de la recette (ou ['fk_recette' => X]) ; le compte est toujours celui connecté
     function delete(int|array $pk): void {
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("delete() attend une clé composite ['fk_compte'=>X, 'fk_recette'=>Y]");
+        $moi = AuthService::requireUser();
+        $fkRecette = is_array($pk) ? (int)($pk['fk_recette'] ?? 0) : $pk;
+
+        $supprime = $this->getDao()->delete(['fk_compte' => $moi->getPkCompte(), 'fk_recette' => $fkRecette]);
+        if (!$supprime) {
+            throw new NotFoundException("Vous n'avez pas noté cette recette.");
         }
-
-        $currentUserPk = getComptePkFromSession();
-        if ($pk['fk_compte'] !== $currentUserPk && !isAdmin()) {
-            _403_Forbidden("Vous ne pouvez supprimer que vos propres notes.");
-        }
-
-        $this->getDao()->delete($pk);
     }
-
-    public function dejaNote(int $fkCompte, int $pkRecette): bool {
-        $note = $this->getDao()->findByPk([
-            'fk_compte'  => $fkCompte,
-            'fk_recette' => $pkRecette
-        ]);
-        return $note !== null;
-    }
-
 }
 ?>

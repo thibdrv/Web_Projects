@@ -2,10 +2,11 @@
 
 require_once(ROOT . "/services/IService.php");
 require_once(ROOT . "/services/AbstractService.php");
+require_once(ROOT . "/services/AuthService.php");
 require_once(ROOT . "/entities/IEntity.php");
-require_once(ROOT . "/daos/IDao.php");
 require_once(ROOT . "/entities/Role.php");
 require_once(ROOT . "/daos/RoleDao.php");
+require_once(ROOT . "/exceptions/ForbiddenException.php");
 
 class RoleService extends AbstractService implements IService
 {
@@ -13,31 +14,31 @@ class RoleService extends AbstractService implements IService
         $this->dao = new RoleDao();
     }
 
-    function getDao(): IDao {
+    function getDao(): RoleDao {
         return $this->dao;
     }
 
-    function findByPk(int|array $pk): IEntity {
-        return $this->getDao()->findByPk($pk);
-    }
-
     function findAll(): array {
-        if (!isAdmin()) {
-            _403_Forbidden("Seul un administrateur peut voir la liste des rôles");
-        }
+        AuthService::requireAdmin();
         return $this->getDao()->findAll();
     }
 
+    function findByPk(int|array $pk): Role {
+        AuthService::requireAdmin();
+        return $this->findOrFail($pk, "Rôle introuvable.");
+    }
+
+    // Les rôles sont fixés par le script SQL (1 = utilisateur, 2 = admin)
     function insert(IEntity $entity): int {
-        throw new HttpStatusException("Insertion de rôle interdite", 403);
+        throw new ForbiddenException("La création de rôle est interdite.");
     }
 
     function update(IEntity $entity): IEntity {
-        throw new HttpStatusException("Modification de rôle interdite", 403);
+        throw new ForbiddenException("La modification de rôle est interdite.");
     }
 
     function delete(int|array $pk): void {
-        throw new HttpStatusException("Suppression de rôle interdite", 403);
+        throw new ForbiddenException("La suppression de rôle est interdite.");
     }
 }
 ?>

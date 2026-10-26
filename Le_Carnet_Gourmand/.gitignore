@@ -1,0 +1,14 @@
+# Identifiants de la base de données : ne jamais publier
+utils/config.php
+.env
+
+# Audit de l'ancienne version (bugs corrigés depuis) : conservé en local uniquement
+AUDIT_NOTES.md
+
+# Outils et système
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -2,23 +2,15 @@
 
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/daos/IDao.php");
-require_once(ROOT . "/utils/BddSingleton.php");
-require_once(ROOT . "/utils/functions.php");
 require_once(ROOT . "/daos/AbstractDao.php");
-require_once(ROOT . "/exceptions/HttpStatusException.php");
 require_once(ROOT . "/entities/Commentaire.php");
-require_once(ROOT . "/daos/CompteDao.php");
-require_once(ROOT . "/daos/RecetteDao.php");
 
 class CommentaireDao extends AbstractDao implements IDao
 {
-    private CompteDao $compteDao;
-    private RecetteDao $recetteDao;
-
-    public function __construct() {
-        $this->compteDao = new CompteDao();
-        $this->recetteDao = new RecetteDao();
-    }
+    // Commentaire + pseudo de l'auteur (masqué si le compte est supprimé)
+    private const SELECT = "SELECT ec.*, CASE WHEN a.est_supprime = 1 THEN NULL ELSE a.pseudo END AS auteur_pseudo
+                            FROM ecrire_commentaire ec
+                            INNER JOIN comptes a ON a.pk_compte = ec.fk_compte";
 
     function getTableName(): string {
         return "ecrire_commentaire";
@@ -28,174 +20,88 @@ class CommentaireDao extends AbstractDao implements IDao
         return ["fk_compte", "fk_recette"];
     }
 
-    function createEntityFromRow($row): IEntity {
-        $commentaire = Commentaire::createFromRow($row);
-
-        if (isset($row->fk_compte)) {
-            $commentaire->setCompte($this->compteDao->findByPk($row->fk_compte));
-        }
-
-        if (isset($row->fk_recette)) {
-            $commentaire->setRecette($this->recetteDao->findByPk($row->fk_recette));
-        }
-
-        return $commentaire;
+    function createEntityFromRow(object $row): Commentaire {
+        return Commentaire::createFromRow($row);
     }
 
-    function findAll(): array {
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "SELECT ec.*
-                FROM ecrire_commentaire ec
-                WHERE ec.est_supprime = 0";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-
-        $rows = $stmt->fetchAll();
-        $commentaires = [];
-
-        foreach ($rows as $row) {
-            $commentaires[] = $this->createEntityFromRow($row);
+    // Commentaires non supprimés, tous statuts (ou seulement approuvés / en attente)
+    function findAll(?bool $estApprouve = null): array {
+        $sql = self::SELECT . " WHERE ec.est_supprime = 0";
+        $params = [];
+        if ($estApprouve !== null) {
+            $sql .= " AND ec.est_approuve = :estApprouve";
+            $params[":estApprouve"] = $estApprouve;
         }
-
-        return $commentaires;
+        $rows = $this->db()->fetchAll($sql . " ORDER BY ec.date_creation DESC", $params);
+        return $this->createEntitiesFromRows($rows);
     }
 
-    function findByPk(int|array $pk): IEntity {
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("CommentaireDao attend une clé primaire composite : ['fk_compte'=>X, 'fk_recette'=>Y]");
-        }
-
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "SELECT ec.*
-                FROM ecrire_commentaire ec
-                WHERE ec.fk_compte = :fkCompte AND ec.fk_recette = :fkRecette AND ec.est_supprime = 0";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":fkCompte", $pk['fk_compte'], PDO::PARAM_INT);
-        $stmt->bindValue(":fkRecette", $pk['fk_recette'], PDO::PARAM_INT);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-        $row = $stmt->fetch();
-
-        if (!$row) {
-            throw new HttpStatusException("Commentaire introuvable pour ce couple compte/recette", 404);
-        }
-
-        return $this->createEntityFromRow($row);
+    // Le commentaire du couple (compte, recette), même supprimé ; la ligne active est prioritaire
+    function findByPk(int|array $pk): ?Commentaire {
+        [$where, $params] = $this->pkCondition($pk, "ec");
+        $row = $this->db()->fetchOne(self::SELECT . " WHERE " . $where . " ORDER BY ec.est_supprime ASC LIMIT 1", $params);
+        return $row === null ? null : $this->createEntityFromRow($row);
     }
 
-    function findByRecette(int $pk): array {
-        $pdo = BddSingleton::getInstance()->getPdo();
-
-        $sql = "SELECT ec.* 
-                FROM ecrire_commentaire ec
-                WHERE ec.fk_recette = :fkRecette 
-                AND ec.est_supprime = 0 
-                ORDER BY ec.date_creation DESC";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":fkRecette", $pk, PDO::PARAM_INT);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $stmt->execute();
-
-        $rows = $stmt->fetchAll();
-        $commentaires = [];
-
-        foreach ($rows as $row) {
-            $commentaires[] = $this->createEntityFromRow($row);
+    // Commentaires non supprimés d'une recette.
+    // $approuvesSeulement : seulement les approuvés, plus ceux de $fkCompteAuteur (ses commentaires en attente)
+    function findByRecette(int $fkRecette, bool $approuvesSeulement, ?int $fkCompteAuteur = null): array {
+        $sql = self::SELECT . " WHERE ec.fk_recette = :fkRecette AND ec.est_supprime = 0";
+        $params = [":fkRecette" => $fkRecette];
+        if ($approuvesSeulement) {
+            $sql .= " AND (ec.est_approuve = 1 OR ec.fk_compte = :fkCompteAuteur)";
+            $params[":fkCompteAuteur"] = $fkCompteAuteur ?? 0;
         }
-
-        return $commentaires;
+        $rows = $this->db()->fetchAll($sql . " ORDER BY ec.date_creation DESC", $params);
+        return $this->createEntitiesFromRows($rows);
     }
 
+    // La table n'a pas de clé primaire en BDD : renvoie le nombre de lignes insérées
     function insert(IEntity $entity): int {
+        $this->checkEntity($entity, Commentaire::class);
         /** @var Commentaire $entity */
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "INSERT INTO ecrire_commentaire 
-                (fk_compte, fk_recette, contenu, date_creation, est_approuve, est_supprime)
-                VALUES (:fkCompte, :fkRecette, :contenu, :dCreation, :estApprouve, :estSupprime)";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":fkCompte", $entity->getCompte()->getPkCompte(), PDO::PARAM_INT);
-        $stmt->bindValue(":fkRecette", $entity->getRecette()->getPkRecette(), PDO::PARAM_INT);
-        $stmt->bindValue(":contenu", $entity->getContenu());
-        $stmt->bindValue(":dCreation", $entity->getDateCreation()->format(MYSQL_DATE_FORMAT));
-        $stmt->bindValue(":estApprouve", $entity->getEstApprouve(), PDO::PARAM_BOOL);
-        $stmt->bindValue(":estSupprime", $entity->getEstSupprime(), PDO::PARAM_BOOL);
-
-        try {
-            $stmt->execute();
-            return 1;
-        } catch (PDOException $ex) {
-            error_log($ex->getMessage());
-            throw new HttpStatusException("Erreur lors de l'insertion du commentaire", 500, $ex);
-        }
+        return $this->db()->execute(
+            "INSERT INTO ecrire_commentaire (fk_compte, fk_recette, contenu, date_creation, est_approuve, est_supprime)
+             VALUES (:fkCompte, :fkRecette, :contenu, :dCreation, :estApprouve, :estSupprime)",
+            [
+                ":fkCompte" => $entity->getFkCompte(),
+                ":fkRecette" => $entity->getFkRecette(),
+                ":contenu" => $entity->getContenu(),
+                ":dCreation" => $entity->getDateCreation(),
+                ":estApprouve" => $entity->getEstApprouve(),
+                ":estSupprime" => $entity->getEstSupprime(),
+            ]
+        );
     }
 
-    function update(IEntity $entity): IEntity {
-        if (!($entity instanceof Commentaire)) {
-            throw new InvalidArgumentException("Expected instance of Commentaire");
-        }
-
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $sql = "UPDATE ecrire_commentaire
-                SET est_approuve = :estApprouve
-                WHERE fk_compte = :fkCompte AND fk_recette = :fkRecette";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":fkCompte", $entity->getCompte()->getPkCompte(), PDO::PARAM_INT);
-        $stmt->bindValue(":fkRecette", $entity->getRecette()->getPkRecette(), PDO::PARAM_INT);
-        $stmt->bindValue(":estApprouve", $entity->getEstApprouve(), PDO::PARAM_BOOL);
-
-        try {
-            $stmt->execute();
-            if ($stmt->rowCount() === 0) {
-                throw new HttpStatusException("Commentaire introuvable", 404);
-            }
-            return $this->findByPk([
-                "fk_compte"  => $entity->getCompte()->getPkCompte(),
-                "fk_recette" => $entity->getRecette()->getPkRecette()
-            ]);
-        } catch (PDOException $ex) {
-            error_log("Erreur SQL Update Commentaire : " . $ex->getMessage());
-            throw new HttpStatusException("Erreur lors de la mise à jour du commentaire", 500, $ex);
-        }
+    function update(IEntity $entity): bool {
+        $this->checkEntity($entity, Commentaire::class);
+        /** @var Commentaire $entity */
+        return $this->db()->execute(
+            "UPDATE ecrire_commentaire SET
+                contenu = :contenu,
+                date_creation = :dCreation,
+                est_approuve = :estApprouve,
+                est_supprime = :estSupprime
+             WHERE fk_compte = :fkCompte AND fk_recette = :fkRecette",
+            [
+                ":contenu" => $entity->getContenu(),
+                ":dCreation" => $entity->getDateCreation(),
+                ":estApprouve" => $entity->getEstApprouve(),
+                ":estSupprime" => $entity->getEstSupprime(),
+                ":fkCompte" => $entity->getFkCompte(),
+                ":fkRecette" => $entity->getFkRecette(),
+            ]
+        ) > 0;
     }
 
-    function delete(int|array $pk): void {
-        if (!is_array($pk) || !isset($pk['fk_compte'], $pk['fk_recette'])) {
-            throw new InvalidArgumentException("CommentaireDao attend une clé composite : ['fk_compte'=>X, 'fk_recette'=>Y]");
-        }
-
-        $pdo = BddSingleton::getInstance()->getPdo();
-        // Soft delete
-        $sql = "UPDATE ecrire_commentaire 
-                SET est_supprime = 1
-                WHERE fk_compte = :fkCompte AND fk_recette = :fkRecette";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":fkCompte", $pk['fk_compte'], PDO::PARAM_INT);
-        $stmt->bindValue(":fkRecette", $pk['fk_recette'], PDO::PARAM_INT);
-
-        try {
-            $stmt->execute();
-            if ($stmt->rowCount() === 0) {
-                throw new HttpStatusException("Commentaire introuvable", 404);
-            }
-        } catch (PDOException $ex) {
-            error_log($ex->getMessage());
-            throw new HttpStatusException("Erreur lors de la suppression du commentaire", 500, $ex);
-        }
-    }
-
-    function recetteExists(int $pk): bool {
-        $pdo = BddSingleton::getInstance()->getPdo();
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM recettes WHERE pk_recette = :id");
-        $stmt->bindValue(":id", $pk, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchColumn() > 0;
+    // Suppression logique
+    function delete(int|array $pk): bool {
+        [$where, $params] = $this->pkCondition($pk);
+        return $this->db()->execute(
+            "UPDATE ecrire_commentaire SET est_supprime = 1 WHERE " . $where . " AND est_supprime = 0",
+            $params
+        ) > 0;
     }
 }
 ?>

@@ -1,14 +1,16 @@
 <?php
 
-	require_once(ROOT . "/controllers/IController.php");
-	require_once(ROOT . "/controllers/AbstractController.php");
-	require_once(ROOT . "/utils/functions.php");
-    require_once(ROOT . "/entities/Favori.php");
-	require_once(ROOT . "/services/FavoriService.php");
+require_once(ROOT . "/controllers/AbstractController.php");
+require_once(ROOT . "/controllers/IController.php");
+require_once(ROOT . "/services/FavoriService.php");
+require_once(ROOT . "/services/AuthService.php");
 
+// GET api.php?route=Favori                → favoris du compte connecté (avec les recettes)
+// GET api.php?route=Favori&fk_recette=X   → {"fk_recette": X, "est_favori": bool}
 class FavoriGetController extends AbstractController implements IController
 {
     private FavoriService $service;
+    private ?int $fkRecette = null;
 
     public function __construct(array $form)
     {
@@ -16,37 +18,34 @@ class FavoriGetController extends AbstractController implements IController
         $this->service = new FavoriService();
     }
 
-    protected function checkForm() {
-        // Ici, GET peut se limiter à lister les favoris du compte connecté
-        // Donc pas de paramètres obligatoires
+    protected function checkForm(): void
+    {
+        // ancien nom de paramètre encore utilisé par le frontend
+        $this->alias("fk_recette", "pk_recette");
     }
 
-    protected function checkCybersec() {
-        // Pas grand chose à vérifier ici (tout vient de la session)
-    }
-
-    protected function checkRights() {
-        if (!isLogged()) {
-            throw new HttpStatusException("Vous devez être connecté.", 401);
+    protected function checkCybersec(): void
+    {
+        if ($this->has("fk_recette")) {
+            $this->fkRecette = $this->getId("fk_recette");
         }
     }
 
-    protected function processRequest() {
-        $pkRecette = $this->form["pk_recette"] ?? null;
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
+    }
 
-        if ($pkRecette !== null) {
-            $estFavori = $this->service->estFavori(getComptePkFromSession(), (int)$pkRecette);
+    protected function processRequest(): void
+    {
+        if ($this->fkRecette !== null) {
             $this->response = [
-                "success" => true,
-                "estFavori" => $estFavori
+                "fk_recette" => $this->fkRecette,
+                "est_favori" => $this->service->estFavori($this->fkRecette),
             ];
             return;
         }
-
-        $this->response = [
-            "success" => true,
-            "favoris" => $this->service->findByCompte(getComptePkFromSession())
-        ];
+        $this->response = $this->service->findMine();
     }
 }
 ?>

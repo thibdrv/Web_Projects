@@ -1,15 +1,20 @@
 <?php
 
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/entities/Commentaire.php");
 require_once(ROOT . "/services/CommentaireService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-
+// POST api.php?route=Commentaire {"fk_recette", "contenu"} : un commentaire par compte et par recette,
+// publié après validation par un administrateur
 class CommentairePostController extends AbstractController implements IController
 {
+    public const CONTENU_MAX = 2000;
+
     private CommentaireService $service;
+    private int $fkRecette;
+    private string $contenu;
 
     public function __construct(array $form)
     {
@@ -17,54 +22,30 @@ class CommentairePostController extends AbstractController implements IControlle
         $this->service = new CommentaireService();
     }
 
-
-    protected function checkForm() {
-        if (!isset($this->form['fk_recette'], $this->form['contenu'])) {
-            throw new HttpStatusException("fk_recette et contenu sont obligatoires", 400);
-        }
+    protected function checkForm(): void
+    {
+        $this->requireParams("fk_recette", "contenu");
     }
 
-    protected function checkCybersec() {
-        if (!ctype_digit((string)$this->form['fk_recette'])) {
-            throw new HttpStatusException("fk_recette doit être un entier", 400);
-        }
-        if (!is_string($this->form['contenu']) || strlen(trim($this->form['contenu'])) < 2) {
-            throw new HttpStatusException("Le contenu du commentaire est invalide", 400);
-        }
+    protected function checkCybersec(): void
+    {
+        $this->fkRecette = $this->getId("fk_recette");
+        // Texte enregistré tel quel : c'est à l'affichage qu'il doit être échappé
+        $this->contenu = $this->getString("contenu", 2, self::CONTENU_MAX);
     }
 
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour poster un commentaire.");
-        }
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
     }
 
-    protected function processRequest() {
-        $commentaire = new Commentaire();
-        $commentaire->setContenu(trim($this->form['contenu']));
-        $commentaire->setDateCreation(new DateTime());
-        $commentaire->setEstApprouve(false);
-        $commentaire->setEstSupprime(false);
+    protected function processRequest(): void
+    {
+        $commentaire = Commentaire::create($this->fkRecette, $this->contenu);
+        $this->service->insert($commentaire);
 
-        $compteService = new CompteService();
-        $compte = $compteService->findByPk(getComptePkFromSession());
-        $commentaire->setCompte($compte);
-
-        $recetteService = new RecetteService();
-        $recette = $recetteService->findByPk((int)$this->form['fk_recette']);
-        $commentaire->setRecette($recette);
-
-        $pk = $this->service->insert($commentaire);
-
-        if (!$pk) {
-            throw new HttpStatusException("Échec de l'ajout du commentaire", 500);
-        }
-
-        $this->response = [
-            "success" => true,
-            "message" => "Commentaire en attente",
-            "pk_commentaire" => $pk
-        ];
+        $this->statusCode = 201;
+        $this->response = $this->service->findByPk($commentaire->getPk());
     }
 }
 ?>

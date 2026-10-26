@@ -1,15 +1,17 @@
 <?php
 
-require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/controllers/AbstractController.php");
-require_once(ROOT . "/utils/functions.php");
+require_once(ROOT . "/controllers/IController.php");
 require_once(ROOT . "/entities/CategorieRecette.php");
 require_once(ROOT . "/services/CategorieRecetteService.php");
+require_once(ROOT . "/services/AuthService.php");
 
-
+// POST api.php?route=CategorieRecette {"fk_recette", "fk_categorie"} : auteur de la recette ou administrateur
 class CategorieRecettePostController extends AbstractController implements IController
 {
     private CategorieRecetteService $service;
+    private int $fkRecette;
+    private int $fkCategorie;
 
     public function __construct(array $form)
     {
@@ -17,45 +19,29 @@ class CategorieRecettePostController extends AbstractController implements ICont
         $this->service = new CategorieRecetteService();
     }
 
-
-    // verifie si existe
-    protected function checkForm() {
-        if (!isset($this->form['fk_recette'], $this->form['fk_categorie'])) {
-            throw new HttpStatusException("fk_recette et fk_categorie sont obligatoires", 400);
-        }
+    protected function checkForm(): void
+    {
+        $this->requireParams("fk_recette", "fk_categorie");
     }
 
-    // verifie si valde : string, int...
-    protected function checkCybersec() {
-        if (!ctype_digit((string)$this->form['fk_recette']) || !ctype_digit((string)$this->form['fk_categorie'])) {
-            throw new HttpStatusException("fk_recette et fk_categorie doivent être des entiers", 400);
-        }
+    protected function checkCybersec(): void
+    {
+        $this->fkRecette = $this->getId("fk_recette");
+        $this->fkCategorie = $this->getId("fk_categorie");
     }
 
-    // Verifie les droits
-    protected function checkRights() {
-        if (!isLogged()) {
-            _401_Unauthorized("Vous devez être connecté pour ajouter une catégorie à une recette.");
-        }
+    protected function checkRights(): void
+    {
+        AuthService::requireUser();
     }
 
-    // transmet au service
-    protected function processRequest() {
-        $categorieRecette = new CategorieRecette();
+    protected function processRequest(): void
+    {
+        $liaison = CategorieRecette::create($this->fkRecette, $this->fkCategorie);
+        $this->service->insert($liaison);
 
-        $recetteService = new RecetteService();
-        $recette = $recetteService->findByPk((int)$this->form['fk_recette']);
-        $categorieRecette->setRecette($recette);
-
-        $categorieService = new CategorieService();
-        $categorie = $categorieService->findByPk((int)$this->form['fk_categorie']);
-        $categorieRecette->setCategorie($categorie);
-
-        $pk = $this->service->insert($categorieRecette);
-        if (!$pk) {
-            throw new HttpStatusException("Échec de l'association catégorie/recette", 500);
-        }
-        $this->response = ["success" => true, "message" => "Catégorie associée"];
-        }
+        $this->statusCode = 201;
+        $this->response = $this->service->findByPk($liaison->getPk());
+    }
 }
 ?>

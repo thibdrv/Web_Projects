@@ -1,129 +1,105 @@
 <?php
 
-require_once(ROOT . "/utils/sessioninfo/BaseSessionInfoProvider.php");
-require_once(ROOT . "/utils/sessioninfo/ISessionInfoProvider.php");
-require_once(ROOT . "/entities/Compte.php");
-require_once(ROOT . "/services/CompteService.php");
-require_once(ROOT . "/exceptions/HttpStatusException.php");
-
-class SessionManager {
-    private static ?SessionManager $_INSTANCE = null;
-
-    const START_TIME = "start_time";
+// Gestion bas niveau de la session PHP : cookie, expiration, stockage du compte connecté.
+// La vérification du compte (banni, supprimé, rôle) est faite par services/AuthService.php.
+class SessionManager
+{
     const PK_COMPTE = "pk_compte";
-    const EMAIL = "email";
-    const PSEUDO = "pseudo";
-    const MOTDEPASSE = "mot_de_passe";
-    const DATE_CREATION = "date_creation";
-    const EST_SUPPRIME = "est_supprime";
-    const EST_BANNI = "est_banni";
     const FK_ROLE = "fk_role";
+    const START_TIME = "start_time";
+    const LAST_ACTIVITY = "last_activity";
 
-    private function __construct() {}
+    // Déconnexion automatique après 45 minutes sans requête
+    const MAX_INACTIVITY = 45 * 60;
 
-    public static function getInstance(): SessionManager {
-        if (is_null(self::$_INSTANCE)) {
-            self::$_INSTANCE = new SessionManager();
+    public static function start(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
         }
-        return self::$_INSTANCE;
+
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => self::isHttps(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_start();
+
+        if (self::isExpired()) {
+            $_SESSION = [];
+            session_regenerate_id(true);
+        }
+
+        $now = time();
+        $_SESSION[self::START_TIME] ??= $now;
+        $_SESSION[self::LAST_ACTIVITY] = $now;
     }
 
-    public static function manageSession(): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_set_cookie_params([
-                'lifetime' => 0,
-                'path' => '/',
-                'domain' => 'localhost',
-                'secure' => false, // Mettre à true en production avec HTTPS
-                'httponly' => true,
-                'samesite' => 'Lax'
-            ]);
-            session_start();
-        }
-        self::initSession();
-        if (self::isSessionExpired()) {
-            self::reinitSession();
-        }
+    public static function isLogged(): bool
+    {
+        return isset($_SESSION[self::PK_COMPTE]);
     }
 
-    public static function initSession(): void {
-        if (!isset($_SESSION[self::START_TIME])) {
-            $_SESSION[self::START_TIME] = time();
-        } else if (self::isLogged()) {
-            $_SESSION[self::START_TIME] = time();
-        }
-    }
-
-    public static function isSessionExpired(): bool {
-        return isset($_SESSION[self::START_TIME]) && 
-               ($_SESSION[self::START_TIME] + self::getMaxTime()) < time();
-    }
-
-    public static function reinitSession(): void {
-        session_destroy();
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        self::initSession();
-    }
-
-    public static function isLogged(): bool {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        return isset($_SESSION[self::START_TIME]) && 
-               isset($_SESSION[self::PK_COMPTE]) && 
-               $_SESSION[self::PK_COMPTE] !== null;
-    }
-
-    public static function createISessionInfoProvider(): ISessionInfoProvider {
-        return new BaseSessionInfoProvider();
-    }
-
-    public static function getComptePkFromSession(): ?int {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+    public static function getComptePk(): ?int
+    {
         return self::isLogged() ? (int)$_SESSION[self::PK_COMPTE] : null;
     }
 
-    public static function getCompteFromSession(): ?Compte {
-        if (!self::isLogged()) {
-            return null;
-        }
-
-        $compteService = new CompteService();
-        $comptePk = self::getComptePkFromSession();
-        try {
-            return $compteService->findByPk($comptePk);
-        } catch (HttpStatusException $e) {
-            return null;
-        }
+    public static function getRolePk(): ?int
+    {
+        return isset($_SESSION[self::FK_ROLE]) ? (int)$_SESSION[self::FK_ROLE] : null;
     }
 
-    public static function getRolePkFromSession(): ?int {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        return self::isLogged() ? (int)$_SESSION[self::FK_ROLE] : null;
+    // Timestamp Unix auquel la session expirera sans nouvelle requête
+    public static function getExpirationTime(): ?int
+    {
+        return isset($_SESSION[self::LAST_ACTIVITY]) ? $_SESSION[self::LAST_ACTIVITY] + self::MAX_INACTIVITY : null;
     }
 
-    public static function getMaxTime(): int {
-        return 45 * 60; // 45 minutes
-    }
-
-    public static function login(int $pk): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
+    public static function login(int $pkCompte, int $fkRole): void
+    {
+        // Nouvel identifiant de session à la connexion (protection contre la fixation de session)
         session_regenerate_id(true);
-        $_SESSION[self::PK_COMPTE] = $pk;
-        $_SESSION[self::START_TIME] = time();
+        $now = time();
+        $_SESSION = [
+            self::PK_COMPTE => $pkCompte,
+            self::FK_ROLE => $fkRole,
+            self::START_TIME => $now,
+            self::LAST_ACTIVITY => $now,
+        ];
     }
 
-    public static function logout(): void {
-        self::reinitSession();
+    public static function logout(): void
+    {
+        $_SESSION = [];
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', [
+                'expires' => time() - 42000,
+                'path' => $params['path'],
+                'domain' => $params['domain'],
+                'secure' => $params['secure'],
+                'httponly' => $params['httponly'],
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
+        }
+        session_destroy();
+    }
+
+    private static function isExpired(): bool
+    {
+        return isset($_SESSION[self::LAST_ACTIVITY])
+            && time() - $_SESSION[self::LAST_ACTIVITY] > self::MAX_INACTIVITY;
+    }
+
+    private static function isHttps(): bool
+    {
+        return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
     }
 }
 ?>

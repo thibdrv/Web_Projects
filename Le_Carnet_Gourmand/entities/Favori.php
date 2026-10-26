@@ -2,53 +2,52 @@
 
 require_once(ROOT . "/entities/IEntity.php");
 require_once(ROOT . "/entities/AbstractEntity.php");
-require_once(ROOT . "/entities/Compte.php");
 require_once(ROOT . "/entities/Recette.php");
 
-class Favori extends AbstractEntity implements IEntity {
-    private Compte $compte;
-    private Recette $recette;
+// Table `favori` (clé composite fk_compte + fk_recette)
+class Favori extends AbstractEntity implements IEntity
+{
+    private ?int $fk_compte = null;
+    private ?int $fk_recette = null;
 
-    public function getCompte(): Compte {
-        return $this->compte;
+    // Recette complète, chargée par jointure pour la liste des favoris (non enregistrée)
+    private ?Recette $recette = null;
+
+    public function getFkCompte(): ?int {
+        return $this->fk_compte;
     }
-    public function setCompte(Compte $compte): void {
-        $this->compte = $compte;
+    public function setFkCompte(?int $fk_compte): void {
+        $this->fk_compte = $fk_compte;
     }
 
-    public function getRecette(): Recette {
+    public function getFkRecette(): ?int {
+        return $this->fk_recette;
+    }
+    public function setFkRecette(?int $fk_recette): void {
+        $this->fk_recette = $fk_recette;
+    }
+
+    public function getRecette(): ?Recette {
         return $this->recette;
     }
-    public function setRecette(Recette $recette): void {
+    public function setRecette(?Recette $recette): void {
         $this->recette = $recette;
     }
 
-    // Favori::createFromRow($row) (GET / PUT / DELETE)
-    public static function createFromRow($row): Favori {
-        $favori = new Favori();
+    public function getPk(): array {
+        return ['fk_compte' => $this->fk_compte, 'fk_recette' => $this->fk_recette];
+    }
 
-        // Associe le compte (minimal : juste la PK)
-        if (isset($row->pk_compte)) {
-            $compte = new Compte();
-            $compte->setPkCompte(intval($row->pk_compte));
-            $favori->setCompte($compte);
-        }
-
-        // Associe la recette (minimal : juste la PK)
-        if (isset($row->pk_recette)) {
-            $recette = new Recette();
-            $recette->setPkRecette(intval($row->pk_recette));
-            $favori->setRecette($recette);
-        }
-
-        return $favori;
+    // Favori::createFromRow($row) (lecture BDD)
+    public static function createFromRow(object $row): Favori {
+        return self::create((int)$row->fk_compte, (int)$row->fk_recette);
     }
 
     // Favori::create(...) (POST)
-    public static function create(Compte $compte, Recette $recette): Favori {
+    public static function create(?int $fkCompte, int $fkRecette): Favori {
         $favori = new Favori();
-        $favori->setCompte($compte);
-        $favori->setRecette($recette);
+        $favori->setFkCompte($fkCompte);
+        $favori->setFkRecette($fkRecette);
         return $favori;
     }
 }
