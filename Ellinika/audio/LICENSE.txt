@@ -1,0 +1,5 @@
+All rights reserved. Tous droits réservés.
+
+These sounds were made by a computer (synthetic Greek voice "Athina") for the app Elliniká.
+They are here only so that the app can speak. Please do not copy, redistribute or re-use them.
+See ../LICENCES.md.
