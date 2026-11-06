@@ -1,0 +1,51 @@
+// Numbers. Edit freely.
+//  - "n" is the number, "gr" its Greek word (every "gr" gets a recording: tools/make_audio.py makes it).
+//  - 21 to 99 are built by the app from the tens + the ones (35 = τριάντα πέντε), so they are not listed.
+//  - We use the neuter forms (ένα, τρία, τέσσερα), the ones used for counting.
+const NUMBERS = {
+  "words": [
+    {"n": 0, "gr": "μηδέν", "lat": "miden"},
+    {"n": 1, "gr": "ένα", "lat": "ena"},
+    {"n": 2, "gr": "δύο", "lat": "dio"},
+    {"n": 3, "gr": "τρία", "lat": "tria"},
+    {"n": 4, "gr": "τέσσερα", "lat": "tessera"},
+    {"n": 5, "gr": "πέντε", "lat": "pente"},
+    {"n": 6, "gr": "έξι", "lat": "exi"},
+    {"n": 7, "gr": "εφτά", "lat": "efta"},
+    {"n": 8, "gr": "οχτώ", "lat": "ochto"},
+    {"n": 9, "gr": "εννιά", "lat": "ennia"},
+    {"n": 10, "gr": "δέκα", "lat": "deka"},
+    {"n": 11, "gr": "έντεκα", "lat": "enteka"},
+    {"n": 12, "gr": "δώδεκα", "lat": "dodeka"},
+    {"n": 13, "gr": "δεκατρία", "lat": "dekatria"},
+    {"n": 14, "gr": "δεκατέσσερα", "lat": "dekatessera"},
+    {"n": 15, "gr": "δεκαπέντε", "lat": "dekapente"},
+    {"n": 16, "gr": "δεκαέξι", "lat": "dekaexi"},
+    {"n": 17, "gr": "δεκαεφτά", "lat": "dekaefta"},
+    {"n": 18, "gr": "δεκαοχτώ", "lat": "dekaochto"},
+    {"n": 19, "gr": "δεκαεννιά", "lat": "dekaennia"},
+    {"n": 20, "gr": "είκοσι", "lat": "ikosi"},
+    {"n": 30, "gr": "τριάντα", "lat": "trianta"},
+    {"n": 40, "gr": "σαράντα", "lat": "saranta"},
+    {"n": 50, "gr": "πενήντα", "lat": "peninta"},
+    {"n": 60, "gr": "εξήντα", "lat": "exinta"},
+    {"n": 70, "gr": "εβδομήντα", "lat": "evdominta"},
+    {"n": 80, "gr": "ογδόντα", "lat": "ogdonta"},
+    {"n": 90, "gr": "ενενήντα", "lat": "eneninta"},
+    {"n": 100, "gr": "εκατό", "lat": "ekato"},
+    {"n": 200, "gr": "διακόσια", "lat": "diakosia"},
+    {"n": 300, "gr": "τριακόσια", "lat": "triakosia"},
+    {"n": 400, "gr": "τετρακόσια", "lat": "tetrakosia"},
+    {"n": 500, "gr": "πεντακόσια", "lat": "pentakosia"},
+    {"n": 600, "gr": "εξακόσια", "lat": "exakosia"},
+    {"n": 700, "gr": "εφτακόσια", "lat": "eftakosia"},
+    {"n": 800, "gr": "οχτακόσια", "lat": "ochtakosia"},
+    {"n": 900, "gr": "εννιακόσια", "lat": "enniakosia"},
+    {"n": 1000, "gr": "χίλια", "lat": "chilia"},
+    {"n": 10000, "gr": "δέκα χιλιάδες", "lat": "deka chiliades"},
+    {"n": 100000, "gr": "εκατό χιλιάδες", "lat": "ekato chiliades"},
+    {"n": 1000000, "gr": "ένα εκατομμύριο", "lat": "ena ekatomirio"},
+    {"n": 1000000000, "gr": "ένα δισεκατομμύριο", "lat": "ena disekatomirio"}
+  ],
+  "examples": [21, 32, 45, 58, 67, 76, 89, 94]
+};

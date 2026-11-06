@@ -1,0 +1,80 @@
+// Food and drinks. Edit freely.
+//  - "gr" is the Greek word WITH its "the" (ο = masculine, η = feminine, το = neuter).
+//    Every "gr" gets a recording (tools/make_audio.py makes it).
+//  - "emoji" is optional. Give it only when the picture is clear and not used by another word.
+const FOOD = {
+  "groups": [
+    {"id": "fruit", "name": "Fruit & vegetables", "words": [
+      {"gr": "το μήλο", "lat": "to milo", "en": "apple", "emoji": "🍎"},
+      {"gr": "η μπανάνα", "lat": "i banana", "en": "banana", "emoji": "🍌"},
+      {"gr": "το πορτοκάλι", "lat": "to portokali", "en": "orange", "emoji": "🍊"},
+      {"gr": "το λεμόνι", "lat": "to lemoni", "en": "lemon", "emoji": "🍋"},
+      {"gr": "το σταφύλι", "lat": "to stafili", "en": "grape", "emoji": "🍇"},
+      {"gr": "το καρπούζι", "lat": "to karpouzi", "en": "watermelon", "emoji": "🍉"},
+      {"gr": "το πεπόνι", "lat": "to peponi", "en": "melon", "emoji": "🍈"},
+      {"gr": "το ροδάκινο", "lat": "to rodakino", "en": "peach", "emoji": "🍑"},
+      {"gr": "το αχλάδι", "lat": "to achladi", "en": "pear", "emoji": "🍐"},
+      {"gr": "η φράουλα", "lat": "i fraoula", "en": "strawberry", "emoji": "🍓"},
+      {"gr": "το κεράσι", "lat": "to kerasi", "en": "cherry", "emoji": "🍒"},
+      {"gr": "ο ανανάς", "lat": "o ananas", "en": "pineapple", "emoji": "🍍"},
+      {"gr": "το αβοκάντο", "lat": "to avokado", "en": "avocado", "emoji": "🥑"},
+      {"gr": "η ντομάτα", "lat": "i domata", "en": "tomato", "emoji": "🍅"},
+      {"gr": "το αγγούρι", "lat": "to angouri", "en": "cucumber", "emoji": "🥒"},
+      {"gr": "το καρότο", "lat": "to karoto", "en": "carrot", "emoji": "🥕"},
+      {"gr": "η πατάτα", "lat": "i patata", "en": "potato", "emoji": "🥔"},
+      {"gr": "το κρεμμύδι", "lat": "to kremmidi", "en": "onion", "emoji": "🧅"},
+      {"gr": "το σκόρδο", "lat": "to skordo", "en": "garlic", "emoji": "🧄"},
+      {"gr": "η μελιτζάνα", "lat": "i melitzana", "en": "eggplant", "emoji": "🍆"},
+      {"gr": "η πιπεριά", "lat": "i piperia", "en": "bell pepper", "emoji": "🫑"},
+      {"gr": "το καλαμπόκι", "lat": "to kalamboki", "en": "corn", "emoji": "🌽"},
+      {"gr": "το μανιτάρι", "lat": "to manitari", "en": "mushroom", "emoji": "🍄"},
+      {"gr": "η ελιά", "lat": "i elia", "en": "olive", "emoji": "🫒"},
+      {"gr": "η σαλάτα", "lat": "i salata", "en": "salad", "emoji": "🥗"}
+    ]},
+    {"id": "food", "name": "Food", "words": [
+      {"gr": "το ψωμί", "lat": "to psomi", "en": "bread", "emoji": "🍞"},
+      {"gr": "το τυρί", "lat": "to tiri", "en": "cheese", "emoji": "🧀"},
+      {"gr": "το αυγό", "lat": "to avgo", "en": "egg", "emoji": "🥚"},
+      {"gr": "το κρέας", "lat": "to kreas", "en": "meat", "emoji": "🥩"},
+      {"gr": "το κοτόπουλο", "lat": "to kotopoulo", "en": "chicken (meat)", "emoji": "🍗"},
+      {"gr": "το ρύζι", "lat": "to rizi", "en": "rice", "emoji": "🍚"},
+      {"gr": "η πίτσα", "lat": "i pitsa", "en": "pizza", "emoji": "🍕"},
+      {"gr": "το σάντουιτς", "lat": "to sandouits", "en": "sandwich", "emoji": "🥪"},
+      {"gr": "το χάμπουργκερ", "lat": "to hamburger", "en": "hamburger", "emoji": "🍔"},
+      {"gr": "η σούπα", "lat": "i soupa", "en": "soup", "emoji": "🥣"},
+      {"gr": "η τούρτα", "lat": "i tourta", "en": "cake", "emoji": "🎂"},
+      {"gr": "το παγωτό", "lat": "to pagoto", "en": "ice cream", "emoji": "🍦"},
+      {"gr": "η σοκολάτα", "lat": "i sokolata", "en": "chocolate", "emoji": "🍫"},
+      {"gr": "το μπισκότο", "lat": "to biskoto", "en": "cookie", "emoji": "🍪"},
+      {"gr": "το μέλι", "lat": "to meli", "en": "honey", "emoji": "🍯"},
+      {"gr": "το βούτυρο", "lat": "to voutiro", "en": "butter", "emoji": "🧈"},
+      {"gr": "το αλάτι", "lat": "to alati", "en": "salt", "emoji": "🧂"},
+      {"gr": "η ζάχαρη", "lat": "i zachari", "en": "sugar"},
+      {"gr": "το πιπέρι", "lat": "to piperi", "en": "pepper (spice)"},
+      {"gr": "το λάδι", "lat": "to ladi", "en": "oil"},
+      {"gr": "η φέτα", "lat": "i feta", "en": "feta cheese"},
+      {"gr": "το γιαούρτι", "lat": "to yiaourti", "en": "yogurt"},
+      {"gr": "ο μουσακάς", "lat": "o mousakas", "en": "moussaka"},
+      {"gr": "το σουβλάκι", "lat": "to souvlaki", "en": "souvlaki"},
+      {"gr": "το τζατζίκι", "lat": "to tzatziki", "en": "tzatziki"},
+      {"gr": "το πρωινό", "lat": "to proino", "en": "breakfast"},
+      {"gr": "το μεσημεριανό", "lat": "to mesimeriano", "en": "lunch"},
+      {"gr": "το βραδινό", "lat": "to vradino", "en": "dinner"},
+      {"gr": "το φαγητό", "lat": "to fayito", "en": "food, meal"}
+    ]},
+    {"id": "drinks", "name": "Drinks", "words": [
+      {"gr": "το νερό", "lat": "to nero", "en": "water", "emoji": "💧"},
+      {"gr": "το γάλα", "lat": "to gala", "en": "milk", "emoji": "🥛"},
+      {"gr": "ο καφές", "lat": "o kafes", "en": "coffee", "emoji": "☕"},
+      {"gr": "ο φραπές", "lat": "o frapes", "en": "iced coffee (frappé)"},
+      {"gr": "το τσάι", "lat": "to tsai", "en": "tea", "emoji": "🍵"},
+      {"gr": "ο χυμός", "lat": "o chimos", "en": "juice", "emoji": "🧃"},
+      {"gr": "η λεμονάδα", "lat": "i lemonada", "en": "lemonade"},
+      {"gr": "το αναψυκτικό", "lat": "to anapsiktiko", "en": "soft drink", "emoji": "🥤"},
+      {"gr": "η μπύρα", "lat": "i bira", "en": "beer", "emoji": "🍺"},
+      {"gr": "το κρασί", "lat": "to krasi", "en": "wine", "emoji": "🍷"},
+      {"gr": "το ούζο", "lat": "to ouzo", "en": "ouzo"},
+      {"gr": "το κοκτέιλ", "lat": "to kokteil", "en": "cocktail", "emoji": "🍹"}
+    ]}
+  ]
+};
