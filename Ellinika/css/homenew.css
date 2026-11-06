@@ -1,0 +1,499 @@
+/* ---------- a livelier home page, the opening animation, and the icon size ----------
+   Loaded last. Three things:
+   1. the opening screen (#splash of index.html): "Welcome to Elliniká" in big letters, then it shrinks away
+   2. the home page: a bar of section buttons that sticks to the top, bolder tiles that pop in as you scroll, colored "Practice now" cards
+   3. the icon size on a computer: the number --icos (0.7 to 1.7, set by js/homefx.js, kept in "gl-icos") multiplies the size of every icon of the home page */
+
+/* ===== 1. the opening screen =====
+   "Welcome to Elliniká" (or "Bienvenue sur Elliniká") appears in big letters, stays a moment, then shrinks away and the home page is there. Nothing else.
+   index.html: #splash > .sp-center; the timing is window.__introMs (head of index.html) and js/main.js; a tap or a key skips it; Settings can switch it off (gl-intro). */
+.splash{
+  position:fixed; inset:0; z-index:300; display:grid; place-items:center; cursor:pointer; color:var(--ink);
+  background:
+    radial-gradient(60vmax 40vmax at 20% 15%, color-mix(in srgb,#5C9DFF 20%,transparent), transparent 70%),
+    radial-gradient(55vmax 38vmax at 85% 90%, color-mix(in srgb,#F2C14E 18%,transparent), transparent 70%),
+    var(--bg);
+  transition:opacity .45s ease .1s, visibility .6s;
+}
+.splash.done{opacity:0; visibility:hidden; pointer-events:none}
+.sp-center{display:grid; justify-items:center; gap:18px; padding:0 16px; text-align:center; animation:spShow .75s cubic-bezier(.2,.8,.2,1) both}
+.splash.done .sp-center{animation:spShrink .55s cubic-bezier(.6,0,.4,1) forwards}
+@keyframes spShow{from{opacity:0; transform:scale(.92)} to{opacity:1; transform:scale(1)}}
+@keyframes spShrink{from{opacity:1; transform:scale(1)} to{opacity:0; transform:scale(.35)}}
+.sp-hello{margin:0; font-weight:700; font-size:clamp(.95rem,3.4vw,1.4rem); letter-spacing:.42em; text-transform:uppercase; color:#F2C14E}
+:root[data-theme="light"] .sp-hello{color:#8A5E00}
+html[data-ui="fr"] .sp-en{display:none}
+html:not([data-ui="fr"]) .sp-fr{display:none}
+.splash-logo{margin:0; font-family:var(--serif); font-weight:400; font-size:clamp(3.8rem,19vw,10rem); line-height:1.05; letter-spacing:.02em; color:var(--ink)}
+.splash-logo i{font-style:normal; color:#F2C14E}
+:root[data-theme="light"] .splash-logo i{color:#9A6B00}
+html[data-intro="0"] .sp-center{animation:none}
+
+/* ===== 2. the home page ===== */
+/* the top of the page, kept simple: a small line, the big name in one color, a thin gold rule, one sentence, one frosted button.
+   Dark look: white letters on the night picture. Light look: deep blue letters on the day picture. */
+.home .hero{gap:0}
+.home .hero-kicker{display:flex; align-items:center; gap:14px; margin:0 0 10px; font-size:.72rem; font-weight:700; letter-spacing:.3em; color:rgba(255,255,255,.78); text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.home .hero-kicker::before,.home .hero-kicker::after{content:""; width:28px; height:1px; background:currentColor; opacity:.55}
+.home .hero-title{
+  margin:0; font-size:clamp(3.2rem,13vw,5.6rem); font-weight:800; letter-spacing:-.025em; line-height:1.02;
+  color:#fff; background:none; -webkit-text-fill-color:currentColor; animation:none; filter:none;
+  text-shadow:0 2px 24px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.5);
+}
+.home .hero-title::after{content:""; display:block; width:44px; height:3px; margin:16px auto 14px; border-radius:3px; background:#F2C14E}
+.home .hero-hook{
+  margin:0 0 22px; padding:0; max-width:28ch; border-radius:0; background:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none;
+  font-size:clamp(1.02rem,3.6vw,1.2rem); font-weight:500; line-height:1.4; letter-spacing:0; color:rgba(255,255,255,.92);
+  text-shadow:0 1px 12px rgba(0,0,0,.75), 0 1px 2px rgba(0,0,0,.6);
+}
+.home .levelpill{
+  display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 22px; border-radius:999px; font-size:.95rem; font-weight:700; color:#fff;
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.42); box-shadow:0 8px 24px -10px rgba(0,0,0,.6);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:background .2s, transform .15s, border-color .2s;
+}
+.home .levelpill:hover{background:rgba(255,255,255,.26); border-color:rgba(255,255,255,.7); transform:translateY(-1px)}
+.home .levelpill:active{transform:scale(.97)}
+.home .levelpill:focus-visible{outline:2px solid #F2C14E; outline-offset:3px}
+.home .hero .divider{display:none}
+:root[data-theme="light"] .home .hero-kicker{color:#3d3a33; text-shadow:0 0 8px rgba(255,255,255,.9)}
+:root[data-theme="light"] .home .hero-title{color:#15386f; text-shadow:0 0 22px rgba(255,255,255,.85), 0 1px 2px rgba(255,255,255,.7)}
+:root[data-theme="light"] .home .hero-title::after{background:#C98A0A}
+:root[data-theme="light"] .home .hero-hook{color:#2b2a26; text-shadow:0 0 12px rgba(255,255,255,.95), 0 1px 2px rgba(255,255,255,.8)}
+:root[data-theme="light"] .home .levelpill{color:#15386f; background:rgba(255,255,255,.62); border-color:rgba(21,56,111,.28); box-shadow:0 8px 22px -12px rgba(21,56,111,.5)}
+:root[data-theme="light"] .home .levelpill:hover{background:rgba(255,255,255,.85)}
+
+/* the icon size buttons, in the side menu of a computer, just above "More" */
+#secToday,#secPractice,#secLearn,#secVocab,#secTools{scroll-margin-top:16px}
+.railsize{display:none}
+@media (min-width:900px){
+  .bnav .railsize{
+    display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:auto; padding:8px 4px 6px; border-radius:18px;
+    background:color-mix(in srgb,var(--ink) 6%,transparent); border:1px solid var(--line);
+  }
+  .bnav button[data-nav="more"]{margin-top:0}
+  .railsize .rs-label{font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .railsize .rs-row{display:flex; align-items:center; gap:0}
+  .bnav .railsize button{flex:none; display:grid; place-items:center; padding:0; min-width:26px; height:30px; border-radius:10px; font-size:1rem; font-weight:800; color:var(--ink)}
+  .bnav .railsize button.icoval{min-width:32px; font-size:.68rem; color:var(--muted)}
+  .bnav .railsize button:hover{background:color-mix(in srgb,var(--ink) 12%,transparent); color:var(--ink)}
+}
+
+/* titles of the sections: bigger, with a color bar */
+.home .sect{margin:26px 2px 6px; font-size:.95rem; font-weight:800; letter-spacing:.1em; opacity:1}
+.home .sect::before{width:5px; height:20px; border-radius:3px; background:linear-gradient(180deg,#F2C14E,#E2745B); box-shadow:none}
+:root[data-theme="light"] .home .sect::before{background:linear-gradient(180deg,#D69A12,#C4542F); box-shadow:none}
+
+/* tiles: rounder, an edge of their color, an icon that jumps when you point at it */
+.home .cat{border-radius:22px; border:1px solid color-mix(in srgb,var(--c) 26%,var(--line))}
+.home .cat .ico{box-shadow:0 10px 20px -8px color-mix(in srgb,var(--c) 80%,transparent), inset 0 1px 0 rgba(255,255,255,.38); transition:transform .28s cubic-bezier(.2,1.6,.4,1)}
+.home .cat:hover .ico{transform:translateY(-3px) rotate(-8deg) scale(1.12)}
+.home .cat:active{transform:scale(.97)}
+.home .cat:focus-visible{outline:3px solid var(--c); outline-offset:2px}
+.home .g-tiles .cat,.home .g-recent .cat{border-radius:20px}
+
+/* "Practice now": bright cards, filled with their color */
+.home .g-quick{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
+@media (min-width:900px){ .home .g-quick{grid-template-columns:repeat(5,minmax(0,1fr))} .home .g-quick>.cat:last-child:nth-child(odd){grid-column:auto} }
+.home .g-quick .cat{
+  flex-direction:column; align-items:flex-start; gap:10px; padding:14px; border:0; color:#fff;
+  background:linear-gradient(140deg,var(--c),color-mix(in srgb,var(--c) 52%,#000));
+  box-shadow:0 16px 28px -18px color-mix(in srgb,var(--c) 90%,transparent);
+}
+.home .g-quick .cat::after{background:radial-gradient(130px 90px at 100% 0,rgba(255,255,255,.26),transparent)}
+.home .g-quick .cat .ico{background:rgba(255,255,255,.22); box-shadow:none}
+.home .g-quick .cat .txt b{color:#fff; font-size:1rem}
+.home .g-quick .cat .txt span{color:rgba(255,255,255,.86); font-size:.78rem; -webkit-line-clamp:3}
+.home .g-quick .cat:hover{box-shadow:0 20px 34px -16px color-mix(in srgb,var(--c) 95%,transparent)}
+.home .g-quick .cat:hover .ico{transform:translateY(-3px) rotate(-8deg) scale(1.12)}
+
+/* the progress banner: a little taller, with a pulse on the arrow */
+.home .g-banner .cat{padding:20px}
+.home .g-banner .cat .txt::after{animation:arrowNudge 2.4s ease-in-out infinite}
+@keyframes arrowNudge{0%,100%{margin-right:0} 50%{margin-right:5px}}
+
+/* tiles that pop in as they come on the screen (js/homefx.js adds .fx, then .in) */
+.fx-ready .home .grid:not(.g-recent) .cat,.fx-ready .home .today{animation:none}
+.fx-ready .home .grid:not(.g-recent) .cat.fx,.fx-ready .home .today.fx,.fx-ready .home .sect.fx{
+  transition:opacity .55s ease var(--d,0ms), transform .65s cubic-bezier(.2,1.3,.4,1) var(--d,0ms), box-shadow .2s, border-color .2s;
+}
+.fx-ready .home .grid:not(.g-recent) .cat.fx:not(.in),.fx-ready .home .today.fx:not(.in){opacity:0; transform:translateY(22px) scale(.94)}
+.fx-ready .home .sect.fx:not(.in){opacity:0; transform:translateX(-14px)}
+
+/* ===== 3. icon size on a computer (--icos: 0.7 to 1.7) ===== */
+@media (min-width:761px){
+  .home .g-banner .cat .ico{width:calc(58px*var(--icos,1)); height:calc(58px*var(--icos,1)); font-size:calc(1.6rem*var(--icos,1)); border-radius:calc(18px*var(--icos,1))}
+  .home .g-start .cat .ico{width:calc(58px*var(--icos,1)); height:calc(58px*var(--icos,1)); font-size:calc(1.7rem*var(--icos,1)); border-radius:calc(18px*var(--icos,1))}
+  .home .g-tiles .cat .ico,.home .g-recent .cat .ico{width:calc(44px*var(--icos,1)); height:calc(44px*var(--icos,1)); font-size:calc(1.3rem*var(--icos,1)); border-radius:calc(14px*var(--icos,1))}
+  .home .g-tools .cat .ico{width:calc(44px*var(--icos,1)); height:calc(44px*var(--icos,1)); font-size:calc(1.3rem*var(--icos,1)); border-radius:calc(14px*var(--icos,1))}
+  .home .g-quick .cat .ico{width:calc(46px*var(--icos,1)); height:calc(46px*var(--icos,1)); font-size:calc(1.4rem*var(--icos,1)); border-radius:calc(15px*var(--icos,1))}
+}
+
+/* settings: the slider of the icon size, only on a computer */
+.icosz{display:flex; align-items:center; gap:14px}
+.icosz input[type=range]{flex:1; min-width:0; accent-color:var(--gold,#F2C14E); height:32px; padding:0; background:none; border:0; box-shadow:none}
+.icosz output{min-width:3.4em; text-align:right; font-weight:800; color:var(--muted)}
+@media (max-width:760px){ .icosz-panel{display:none} }
+
+/* "Learn" on a wide screen: three columns; the first tile (the letters) and the last one are twice as wide, so no tile stays alone on its row */
+@media (min-width:900px){
+  .home .g-start>.cat:first-child,.home .g-start>.cat:last-child{grid-column:span 2}
+  .home .g-start>.cat:first-child .txt span{-webkit-line-clamp:2}
+}
+
+/* ===== 7. the home page on a wide screen: a dashboard =====
+   From 1100 px: "Today" and the recent tiles sit side by side, "Practice now" is one row of five cards, and Learn / Vocabulary / Tools are three tabs
+   (one group of tiles at a time, five columns, no tile alone on its row). Under 1100 px (phone, small window) nothing changes: the tab bar is hidden. */
+.dash-top,.dash-today,.dash-side{display:contents}
+.dash-tabs{display:none}
+@media (min-width:1100px){
+  .home:not([hidden]) .dash-top{display:flex; align-items:flex-start; gap:26px}
+  .home .dash-today{display:block; flex:1 1 0; min-width:0}
+  .home .dash-side{display:block; flex:0 0 clamp(250px,24%,310px)}
+  .home .dash-side:not(:has(> :not([hidden]))){display:none}
+  .home .dash-side #pinned,.home .dash-side #recent{max-height:300px; overflow:auto}
+  .home .dash-side .g-recent{grid-template-columns:minmax(0,1fr); max-width:none; gap:8px}
+  .home .dash-side .g-recent .cat{flex-direction:row; align-items:center; justify-content:flex-start; text-align:left; gap:12px; padding:9px 12px; border-radius:16px}
+  .home .dash-side .g-recent .cat .txt{align-items:flex-start; width:auto}
+  .home .dash-side .g-recent .cat .ico{width:calc(36px*var(--icos,1)); height:calc(36px*var(--icos,1)); font-size:calc(1.1rem*var(--icos,1)); border-radius:calc(12px*var(--icos,1))}
+  .home .hsearch{width:min(720px,100%); margin-inline:auto}
+
+  /* the tab bar: a pill that slides under the chosen tab */
+  .home .dash-tabs{
+    display:flex; position:relative; gap:2px; width:max-content; margin:30px 0 16px; padding:5px; border-radius:999px; scroll-margin-top:16px;
+    background:color-mix(in srgb,var(--ink) 7%,transparent); border:1px solid var(--line);
+  }
+  .dash-tabs .dt-pill{
+    position:absolute; top:5px; bottom:5px; left:0; width:var(--w,0); transform:translateX(var(--x,0)); border-radius:999px;
+    background:linear-gradient(135deg,#F2C14E,#E9A13B); box-shadow:0 8px 18px -8px rgba(233,161,59,.9);
+    transition:transform .42s cubic-bezier(.3,1.25,.5,1), width .42s cubic-bezier(.3,1.25,.5,1);
+  }
+  .dash-tabs button{
+    position:relative; z-index:1; font:inherit; font-weight:800; font-size:.92rem; letter-spacing:.05em; cursor:pointer;
+    padding:11px 26px; border:0; border-radius:999px; background:none; color:var(--muted); transition:color .25s;
+  }
+  .dash-tabs button:hover{color:var(--ink)}
+  .dash-tabs button[aria-selected="true"]{color:#241803}
+  .dash-tabs button:focus-visible{outline:3px solid #6FA8FF; outline-offset:2px}
+
+  /* the three groups: titles are replaced by the tabs; only the chosen group shows */
+  .home #secLearn,.home #secVocab,.home #secTools{display:none}
+  .home:not(.tab-learn) #secLearn + .grid,.home:not(.tab-vocab) #secVocab + .grid,.home:not(.tab-tools) #secTools + .grid{display:none}
+  #secLearn + .grid,#secVocab + .grid,#secTools + .grid{animation:dtabIn .45s cubic-bezier(.2,.8,.2,1) backwards}
+  .home .g-start,.home .g-tiles{grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px}
+  .home .g-tools:not(.g-quick){grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+  .home .g-start>.cat:first-child,.home .g-start>.cat:last-child{grid-column:auto}
+  .home .g-start>.cat:first-child .txt span{-webkit-line-clamp:2}
+  .home .g-tools:not(.g-quick)>.cat:last-child:nth-child(odd){grid-column:auto}
+  /* the top of the page is a little shorter */
+  body[data-view="home"] .hero{padding-bottom:6px}
+}
+@keyframes dtabIn{from{opacity:0; transform:translateY(12px)}}
+@media (prefers-reduced-motion:reduce){ .dash-tabs .dt-pill{transition:none} #secLearn + .grid,#secVocab + .grid,#secTools + .grid{animation:none} }
+
+/* ===== 8. a quieter, more "house of luxury" home page =====
+   One idea: the first screen is the whole welcome (the name, the search, the level test, the settings and the side menu), then you scroll to the rest,
+   and the page ends with a large footer. Fewer colors, thin lines, more room. */
+
+/* -- the first screen: the sky fills it, the village sits at its foot and fades into the page -- */
+body[data-view="home"] .deco{height:100vh; height:100svh; -webkit-mask-image:none; mask-image:none}
+@media (max-width:899px){ body[data-view="home"] .scene{bottom:62px} }   /* the picture stands above the bar of the bottom of the screen */
+body[data-view="home"] .deco::before{z-index:1}   /* the tint of the hour covers the whole sky, picture included: no seam where the picture starts */
+body[data-view="home"] .deco::after{content:""; position:absolute; left:0; right:0; bottom:0; height:14%; background:linear-gradient(to bottom,transparent,var(--bg))}
+body[data-view="home"] .home .hero{
+  min-height:calc(100vh - 8px); min-height:calc(100svh - 8px); justify-content:center; gap:0;
+  padding:calc(28px + env(safe-area-inset-top)) 18px clamp(96px,13svh,140px);
+}
+@media (min-width:900px){ body[data-view="home"] .home .hero{padding:40px 18px 70px} }   /* 30 px more at the bottom = the block sits 15 px higher */   /* on a computer the name, the search and the level button sit in the middle of the screen */
+body[data-view="home"] .home .hero-kicker{margin:0 0 20px; font-size:.7rem; letter-spacing:.42em}
+body[data-view="home"] .home .hero-title{font-size:clamp(3.4rem,11.5vw,8.6rem); font-weight:400; letter-spacing:.015em; line-height:1.02}
+body[data-view="home"] .home .hero-title::after{width:56px; height:2px; margin:24px auto 22px}
+body[data-view="home"] .home .hero-hook{max-width:34ch; margin:0 0 34px; font-size:clamp(1rem,2.4vw,1.25rem); font-weight:500; line-height:1.5; letter-spacing:.02em}
+.home .hero .hsearch{width:min(600px,100%); margin:0 auto}
+.home .hero .hs-box{
+  min-height:58px; padding:0 22px; border-radius:999px; box-shadow:0 18px 40px -22px rgba(0,0,0,.7);
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+}
+.home .hero .hs-box input{color:#fff; padding:17px 0; font-weight:500}
+.home .hero .hs-box input::placeholder{color:rgba(255,255,255,.62)}
+.home .hero .hs-box > span{color:rgba(255,255,255,.75)}
+.home .hero .hs-box:focus-within{border-color:#F2C14E; background:rgba(255,255,255,.16)}
+:root[data-theme="light"] .home .hero .hs-box{background:rgba(255,255,255,.72); border-color:rgba(21,56,111,.22); box-shadow:0 18px 40px -24px rgba(21,56,111,.5)}
+:root[data-theme="light"] .home .hero .hs-box input{color:#15233f}
+:root[data-theme="light"] .home .hero .hs-box input::placeholder{color:rgba(21,35,63,.55)}
+:root[data-theme="light"] .home .hero .hs-box > span{color:rgba(21,35,63,.6)}
+body[data-view="home"] .home .hero .hs-results{text-align:left}
+body[data-view="home"] .home .hero .levelpill{margin-top:20px; background:transparent; border:1px solid rgba(255,255,255,.38); font-weight:600; letter-spacing:.06em; padding:0 24px}
+body[data-view="home"] .home .hero .levelpill:hover{border-color:#F2C14E; background:rgba(242,193,78,.12)}
+:root[data-theme="light"] body[data-view="home"] .home .hero .levelpill{border-color:rgba(255,255,255,.6); background:rgba(255,255,255,.16); color:#fff; text-shadow:0 1px 8px rgba(10,20,50,.5)}
+/* the day look: the first screen keeps white letters (the sky is a strong blue at the top, violet at dusk), so they always read */
+:root[data-theme="light"] body[data-view="home"] .home .hero-kicker{color:rgba(255,255,255,.92); text-shadow:0 1px 10px rgba(10,20,50,.6)}
+:root[data-theme="light"] body[data-view="home"] .home .hero-title{color:#fff; text-shadow:0 2px 30px rgba(10,20,60,.5)}
+:root[data-theme="light"] body[data-view="home"] .home .hero-title::after{background:#F2C14E}
+:root[data-theme="light"] body[data-view="home"] .home .hero-hook{color:#fff; text-shadow:0 1px 14px rgba(10,20,50,.65); background:none; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:none; padding:0}
+
+/* a small cue to scroll */
+.hero-scroll{
+  position:absolute; left:calc(50% - 23px); bottom:calc(92px + env(safe-area-inset-bottom)); width:46px; height:46px; display:grid; place-items:center; padding:0; border-radius:50%; cursor:pointer;
+  color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  animation:heroBob 2.4s ease-in-out infinite; transition:background .2s, border-color .2s;
+}
+.hero-scroll:hover{background:rgba(242,193,78,.2); border-color:#F2C14E}
+.hero-scroll:focus-visible{outline:3px solid #6FA8FF; outline-offset:3px}
+:root[data-theme="light"] .hero-scroll{color:#fff; border-color:rgba(255,255,255,.6); background:rgba(255,255,255,.16)}
+@keyframes heroBob{0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)}}
+@media (min-width:900px){ .hero-scroll{bottom:30px} }
+
+/* the first screen appears once the opening screen has left (index.html adds sp-gone) */
+html:not(.sp-gone) .home .hero > :not(.settings){opacity:0}
+.sp-gone .home .hero > :not(.settings){animation:heroIn 1s cubic-bezier(.2,.8,.2,1) backwards}
+.sp-gone .home .hero > :nth-child(3){animation-delay:.1s}
+.sp-gone .home .hero > :nth-child(4){animation-delay:.2s}
+.sp-gone .home .hero > :nth-child(5){animation-delay:.32s}
+.sp-gone .home .hero > :nth-child(6){animation-delay:.42s}
+@keyframes heroIn{from{opacity:0; transform:translateY(24px)}}
+.sp-gone .home .hero > .hero-scroll{animation:heroIn 1s cubic-bezier(.2,.8,.2,1) .6s backwards, heroBob 2.4s ease-in-out 1.6s infinite}
+
+/* the sky above the picture: the color the picture starts with, and a few stars at night (on the first screen) */
+body[data-view="home"] .deco{background-color:var(--r-sky-0)}
+:root:not([data-theme="light"]) .home .hero::before,:root[data-theme="light"][data-tod="night"] .home .hero::before{content:""; position:absolute; left:0; right:0; top:0; height:58%; z-index:-1; pointer-events:none; background-image:radial-gradient(1.4px 1.4px at 8% 12%, rgba(255,255,255,0.8), transparent), radial-gradient(1px 1px at 17% 34%, rgba(255,255,255,0.55), transparent), radial-gradient(1.2px 1.2px at 26% 8%, rgba(255,255,255,0.7), transparent), radial-gradient(1.6px 1.6px at 34% 26%, rgba(255,255,255,0.9), transparent), radial-gradient(1px 1px at 43% 14%, rgba(255,255,255,0.5), transparent), radial-gradient(1.2px 1.2px at 52% 38%, rgba(255,255,255,0.65), transparent), radial-gradient(1.5px 1.5px at 61% 9%, rgba(255,255,255,0.85), transparent), radial-gradient(1px 1px at 69% 28%, rgba(255,255,255,0.55), transparent), radial-gradient(1.3px 1.3px at 78% 16%, rgba(255,255,255,0.75), transparent), radial-gradient(1px 1px at 86% 36%, rgba(255,255,255,0.5), transparent), radial-gradient(1.5px 1.5px at 93% 11%, rgba(255,255,255,0.85), transparent), radial-gradient(1px 1px at 12% 50%, rgba(255,255,255,0.45), transparent), radial-gradient(1.1px 1.1px at 48% 52%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 73% 48%, rgba(255,255,255,0.45), transparent), radial-gradient(1px 1px at 30% 44%, rgba(255,255,255,0.4), transparent), radial-gradient(1.2px 1.2px at 90% 54%, rgba(255,255,255,0.55), transparent); background-repeat:no-repeat}
+
+/* -- the rest of the page, on a computer or a tablet: thin lines, no colored glows -- */
+@media (min-width:761px){
+  .home .sect{margin:72px 2px 20px; font-size:.74rem; font-weight:700; letter-spacing:.34em; text-transform:uppercase; color:var(--muted)}
+  .home .sect::before{display:none}
+  .home .cat,
+  .home .g-quick .cat,
+  .home .g-banner .cat{
+    background:color-mix(in srgb,var(--card) 88%,var(--bg)); border:1px solid var(--line); box-shadow:none; color:var(--ink);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .25s, background .25s, box-shadow .35s;
+  }
+  .home .cat::after{display:none}
+  .home .cat:hover{transform:translateY(-4px); background:var(--card); border-color:color-mix(in srgb,#F2C14E 60%,var(--line)); box-shadow:0 22px 40px -28px rgba(0,0,0,.8)}
+  .home .cat .ico{box-shadow:none}
+  .home .g-quick .cat .ico,.home .g-banner .cat .ico{background:color-mix(in srgb,var(--c) 26%,transparent); backdrop-filter:none}
+  .home .g-quick .cat .txt b,.home .g-banner .cat .txt b{color:var(--ink)}
+  .home .g-quick .cat .txt span,.home .g-banner .cat .txt span{color:var(--muted)}
+  .home .g-quick .cat:hover,.home .g-banner .cat:hover{box-shadow:0 22px 40px -28px rgba(0,0,0,.8)}
+  .home .g-banner .cat .txt::after{background:color-mix(in srgb,#F2C14E 22%,transparent); color:var(--ink)}
+}
+/* the tabs of a wide screen: plain words with one gold line that slides */
+@media (min-width:1100px){
+  .home .dash-tabs{gap:6px; margin:72px 0 22px; padding:0; border-radius:0; background:none; border:0; border-bottom:1px solid var(--line); width:100%}
+  .dash-tabs .dt-pill{top:auto; bottom:-1px; height:2px; border-radius:2px; box-shadow:0 0 14px rgba(242,193,78,.7)}
+  .dash-tabs button{padding:14px 24px; border-radius:0; font-size:.78rem; letter-spacing:.3em; text-transform:uppercase}
+  .dash-tabs button[aria-selected="true"]{color:var(--ink)}
+}
+
+/* -- the settings button: at the far right of the screen, the same round button as the one that opens the side menu (44 px, fixed) -- */
+.home .hero .settings{position:fixed; top:calc(12px + env(safe-area-inset-top)); right:calc(14px + env(safe-area-inset-right)); z-index:41}
+.home .hero .setbtn{width:44px; height:44px; box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
+
+/* the home page only fades in (no move): a page that has a transform, even a finished one, would hold the fixed settings button inside itself instead of at the edge of the screen */
+.home{animation:homeFade .28s ease backwards}
+@keyframes homeFade{from{opacity:0}}
+
+/* -- the phone, easier to use with one thumb -- */
+@media (max-width:899px){
+  /* first screen: the name floats in the upper part, the search and the level button sit low, where the thumb is */
+  body[data-view="home"] .home .hero{justify-content:flex-start; padding:calc(64px + env(safe-area-inset-top)) 18px clamp(104px,15svh,140px)}
+  body[data-view="home"] .home .hero .hero-kicker{margin-top:auto}
+  body[data-view="home"] .home .hero .hero-hook{margin-bottom:0}
+  body[data-view="home"] .home .hero .hsearch{margin:auto auto 0}
+  body[data-view="home"] .home .hero .levelpill{width:min(600px,100%); justify-content:center}
+  .hero-scroll{display:none}   /* a swipe up is natural on a phone, and the thumb zone is kept free */
+}
+/* Learn / Vocabulary / Tools: three big tabs (the same as on a computer) instead of three long lists one under the other */
+.home #secLearn,.home #secVocab,.home #secTools{display:none}
+.home:not(.tab-learn) #secLearn + .grid,.home:not(.tab-vocab) #secVocab + .grid,.home:not(.tab-tools) #secTools + .grid{display:none}
+#secLearn + .grid,#secVocab + .grid,#secTools + .grid{animation:dtabIn .45s cubic-bezier(.2,.8,.2,1) backwards}
+@media (max-width:1099px){
+  .home .dash-tabs{
+    display:flex; position:relative; width:100%; gap:0; margin:36px 0 16px; padding:4px; border-radius:18px; scroll-margin-top:16px;
+    background:color-mix(in srgb,var(--ink) 8%,transparent); border:1px solid var(--line);
+  }
+  .dash-tabs .dt-pill{
+    position:absolute; top:4px; bottom:4px; left:0; width:var(--w,0); transform:translateX(var(--x,0)); border-radius:14px;
+    background:linear-gradient(135deg,#F2C14E,#E9A13B); box-shadow:0 8px 18px -8px rgba(233,161,59,.9);
+    transition:transform .42s cubic-bezier(.3,1.25,.5,1), width .42s cubic-bezier(.3,1.25,.5,1);
+  }
+  .dash-tabs button{
+    position:relative; z-index:1; flex:1 1 0; min-width:0; min-height:48px; padding:0 6px; font:inherit; font-size:.92rem; font-weight:800; letter-spacing:.02em; cursor:pointer;
+    border:0; border-radius:14px; background:none; color:var(--muted); transition:color .25s; -webkit-tap-highlight-color:transparent;
+  }
+  .dash-tabs button[aria-selected="true"]{color:#241803}
+  .dash-tabs button:focus-visible{outline:3px solid #6FA8FF; outline-offset:2px}
+}
+
+/* -- the first screen on a phone: a bigger picture. The village, the church and the moon fill the lower third (the windmill is out of the frame), and the sky above is calm with twinkling stars -- */
+@media (max-width:699px){
+  body[data-view="home"] .scene{width:1040px; height:auto; left:auto; right:-70px; bottom:58px}
+  body[data-view="home"] .deco::after{height:9%}
+  body[data-view="home"] .home .hero{padding-bottom:clamp(210px,31svh,270px)}
+}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-theme="light"]) .home .hero::before{animation:starTwinkle 5s ease-in-out infinite alternate}
+  @keyframes starTwinkle{from{opacity:1} to{opacity:.55}}
+}
+@media (max-width:420px){ body[data-view="home"] .home .hero-kicker{letter-spacing:.26em; gap:10px; font-size:.66rem} body[data-view="home"] .home .hero-kicker::before,body[data-view="home"] .home .hero-kicker::after{width:16px} }   /* the line "Welcome to Elliniká" stays on one line on a small phone */
+
+/* ===== 9. the first screen, like a house of luxury =====
+   A Greek Didone for the name and the line under it (GFS Didot, loaded in the head of index.html; Georgia when it is not there), wide-spaced capitals for the small texts,
+   a Greek key (meander) as the only ornament, a search that is only a line, a sharp gold-edged button, and one discreet line of facts.
+   Everything is bigger on a phone. */
+:root{--serif:"GFS Didot","Didot","Bodoni 72","Palatino Linotype",Georgia,serif}
+
+body[data-view="home"] .home .hero-kicker{margin:0 0 26px; font-size:.8rem; font-weight:600; letter-spacing:.46em; color:rgba(255,255,255,.88)}
+body[data-view="home"] .home .hero-kicker::before,body[data-view="home"] .home .hero-kicker::after{width:34px; opacity:.6}
+body[data-view="home"] .home .hero-title{font-family:var(--serif); font-weight:400; font-size:clamp(4.2rem,19.5vw,9.4rem); letter-spacing:.02em; line-height:1}
+body[data-view="home"] .home .hero-title::after{
+  width:112px; height:12px; margin:28px auto 24px; border-radius:0; background:#F2C14E; opacity:.9;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 14 H16 M2 14 V2 H14 V10 H7 V6 H10' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 14px;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 14 H16 M2 14 V2 H14 V10 H7 V6 H10' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 14px;
+}
+body[data-view="home"] .home .hero-hook{font-family:var(--serif); font-weight:400; font-size:clamp(1.3rem,4.2vw,1.75rem); line-height:1.45; letter-spacing:.03em; max-width:28ch; margin:0 0 48px; color:rgba(255,255,255,.94)}
+
+/* the search: only a line */
+.home .hero .hsearch{width:min(620px,100%)}
+.home .hero .hs-box{min-height:64px; padding:0 4px; gap:14px; border-radius:0; background:transparent; border:0; border-bottom:1px solid rgba(255,255,255,.6); box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; transition:border-color .25s, box-shadow .25s}
+.home .hero .hs-box > span{font-size:1.15rem}
+.home .hero .hs-box input{padding:20px 0; font-size:1.2rem; font-weight:400; letter-spacing:.03em}
+.home .hero .hs-box:focus-within{background:transparent; border-bottom-color:#F2C14E; box-shadow:0 1px 0 #F2C14E}
+:root[data-theme="light"] .home .hero .hs-box{background:transparent; border-color:transparent; border-bottom-color:rgba(255,255,255,.75); box-shadow:none}
+:root[data-theme="light"] .home .hero .hs-box input{color:#fff}
+:root[data-theme="light"] .home .hero .hs-box input::placeholder{color:rgba(255,255,255,.78)}
+:root[data-theme="light"] .home .hero .hs-box > span{color:rgba(255,255,255,.85)}
+:root[data-theme="light"] .home .hero .hs-box:focus-within{background:transparent; border-bottom-color:#F2C14E}
+
+/* the level button: sharp corners, a gold edge, wide-spaced capitals */
+body[data-view="home"] .home .hero .levelpill{
+  margin-top:34px; min-height:58px; padding:0 44px; justify-content:center; border-radius:0; border:1px solid #F2C14E; background:transparent; color:#fff;
+  font-size:.8rem; font-weight:600; letter-spacing:.34em; text-transform:uppercase; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; transition:background .3s, color .3s, letter-spacing .3s;
+}
+body[data-view="home"] .home .hero .levelpill:hover{background:#F2C14E; color:#1b1405; letter-spacing:.38em; transform:none}
+:root[data-theme="light"] body[data-view="home"] .home .hero .levelpill{background:transparent; border-color:#fff; color:#fff}
+:root[data-theme="light"] body[data-view="home"] .home .hero .levelpill:hover{background:#fff; color:#15386f}
+
+/* one discreet line of facts */
+.hero-meta{display:flex; flex-wrap:wrap; justify-content:center; margin:36px 0 0; font-size:.72rem; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,.7)}
+.hero-meta span + span::before{content:"\00b7"; margin:0 1em; color:#F2C14E; font-weight:800}
+:root[data-theme="light"] .hero-meta{color:rgba(255,255,255,.9)}
+.sp-gone .home .hero > :nth-child(7){animation-delay:.52s}
+
+/* a phone: everything is bigger and easier to touch */
+@media (max-width:699px){
+  body[data-view="home"] .home .hero-kicker{font-size:.78rem; letter-spacing:.34em; gap:12px}
+  body[data-view="home"] .home .hero-kicker::before,body[data-view="home"] .home .hero-kicker::after{width:18px}
+  body[data-view="home"] .home .hero-hook{margin-bottom:0}
+  .home .hero .hs-box{min-height:66px}
+  .home .hero .hs-box input{font-size:1.25rem}
+  body[data-view="home"] .home .hero .levelpill{width:100%; min-height:60px; padding:0 16px; font-size:.82rem; letter-spacing:.3em; margin-top:26px}
+  .hero-meta{margin-top:24px; font-size:.66rem; letter-spacing:.22em}
+  .hero-meta span:nth-child(3){display:none}
+  body[data-view="home"] .home .hero{padding-bottom:clamp(220px,32svh,280px)}
+}
+@media (max-width:699px) and (max-height:720px){
+  body[data-view="home"] .home .hero-title{font-size:clamp(3.4rem,16vw,4.6rem)}
+  body[data-view="home"] .home .hero-title::after{margin:18px auto 16px}
+  body[data-view="home"] .home .hero-kicker{margin-bottom:18px}
+  .hero-meta{display:none}
+  body[data-view="home"] .home .hero{padding-bottom:clamp(190px,30svh,240px)}
+}
+@media (max-width:420px){ body[data-view="home"] .home .hero-kicker{letter-spacing:.3em; font-size:.72rem} }
+@media (min-width:700px){ body[data-view="home"] .home .hero-hook{max-width:44ch} }
+@media (max-width:699px){ .home .hero .hs-box input{font-size:1.12rem} }
+
+/* ===== 10. the same luxury look everywhere ===== */
+
+/* -- 1. the other pages: the title in the Didone, a quiet banner, the Greek key in gold -- */
+header h1{font-family:var(--serif); font-weight:400; font-size:1.5rem; letter-spacing:.03em; color:var(--ink); text-shadow:none}
+.pagehero{border-radius:14px; padding:18px 18px 24px; background:color-mix(in srgb,var(--card) 82%,transparent); border:1px solid var(--line); box-shadow:none}
+.pagehero::after{background:#F2C14E; opacity:.8}
+:root[data-theme="light"] .pagehero::after{background:#9A6B00; opacity:.7}
+.ph-badge{border-radius:50%; background:color-mix(in srgb,var(--cat) 14%,transparent); border:1px solid color-mix(in srgb,var(--cat) 40%,transparent); box-shadow:none}
+.ph-t b{font-family:var(--serif); font-weight:400; font-size:1.55rem; letter-spacing:.02em; line-height:1.15}
+.ph-t span{font-size:.92rem}
+.ph-deco{opacity:.06}
+
+/* -- 2. the Today card: the word in the Didone, a gold ring for the goal, sharp buttons -- */
+.today{padding:24px; border-radius:18px; background:color-mix(in srgb,var(--card) 88%,transparent); border:1px solid var(--line); box-shadow:none}
+.today::before{background:radial-gradient(280px 170px at 0 0,color-mix(in srgb,#F2C14E 12%,transparent),transparent)}
+.today .tw-pic{width:64px; height:64px; border-radius:50%; background:transparent; border:1px solid color-mix(in srgb,#F2C14E 55%,var(--line))}
+.today .tw-txt small{font-size:.66rem; letter-spacing:.32em; color:#F2C14E}
+.today .tw-txt b{font-family:var(--serif); font-weight:400; font-size:clamp(1.7rem,6vw,2.1rem); line-height:1.12; letter-spacing:.01em}
+@media (min-width:700px){ .today{grid-template-columns:1.4fr 1fr} }
+.today .tw-txt i{color:color-mix(in srgb,#F2C14E 80%,var(--ink)); font-weight:600; letter-spacing:.04em}
+:root[data-theme="light"] .today .tw-txt small{color:#8A5E00}
+:root[data-theme="light"] .today .tw-txt i{color:#8A5E00}
+.today .tw-hear{background:transparent; box-shadow:none}
+.tgoal{display:flex; align-items:center; gap:20px}
+.tg-ring{position:relative; flex:none; width:96px; height:96px}
+.tg-ring svg{display:block; width:100%; height:100%; transform:rotate(-90deg)}
+.tg-track{fill:none; stroke:color-mix(in srgb,var(--ink) 12%,transparent); stroke-width:3.5}
+.tg-fill{fill:none; stroke:#F2C14E; stroke-width:3.5; stroke-linecap:round; transition:stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1); filter:drop-shadow(0 0 5px rgba(242,193,78,.5))}
+.tg-num{position:absolute; inset:0; display:grid; place-items:center; font-family:var(--serif); font-size:2rem}
+.tgoal.done .tg-fill{filter:drop-shadow(0 0 10px rgba(242,193,78,.95))}
+.tg-info{flex:1; min-width:0}
+.tg-info p{margin:6px 0 0; color:var(--muted); font-size:.92rem}
+.tg-info .tg-streak{color:#F2C14E}
+:root[data-theme="light"] .tg-info .tg-streak{color:#8A5E00}
+.tg-head{margin-bottom:0; gap:10px; justify-content:flex-start}
+.tg-head b{letter-spacing:.3em; font-size:.68rem}
+.tg-set{border-radius:0; background:transparent}
+.today .tbtn{min-height:50px; padding:0 22px; border-radius:0; font-size:.72rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; background:transparent; border:1px solid color-mix(in srgb,var(--ink) 32%,transparent); box-shadow:none}
+.today .tbtn:hover{transform:none; border-color:#F2C14E; box-shadow:none}
+.today .tbtn.main{background:#F2C14E; color:#1b1405; border-color:#F2C14E}
+.today .tbtn.main:hover{background:#f6cd6b}
+.tbtns{display:flex; flex-wrap:wrap; gap:10px}
+
+/* -- 4. the phone: the same calm tiles and titles as on a computer (colors stay on the icons) -- */
+@media (max-width:760px){
+  .home .sect{margin:44px 2px 16px; font-size:.74rem; font-weight:700; letter-spacing:.34em; text-transform:uppercase; color:var(--muted)}
+  .home .sect::before{display:none}
+  .home .cat,
+  .home .g-quick .cat,
+  .home .g-banner .cat{background:color-mix(in srgb,var(--card) 88%,var(--bg)); border:1px solid var(--line); box-shadow:none; color:var(--ink)}
+  .home .cat::after{display:none}
+  .home .cat .ico{box-shadow:none}
+  .home .g-quick .cat .ico,.home .g-banner .cat .ico{background:color-mix(in srgb,var(--c) 26%,transparent); backdrop-filter:none}
+  .home .g-quick .cat .txt b,.home .g-banner .cat .txt b{color:var(--ink)}
+  .home .g-quick .cat .txt span,.home .g-banner .cat .txt span{color:var(--muted)}
+  .home .g-banner .cat .txt::after{background:color-mix(in srgb,#F2C14E 22%,transparent); color:var(--ink)}
+  .home .cat:active{border-color:#F2C14E}
+  .tgoal{gap:16px} .tg-ring{width:84px; height:84px} .tg-num{font-size:1.75rem}
+}
+
+/* -- 9. the search: recent searches, words to try, the category of every result, and a list that opens over the page -- */
+.hs-head{display:flex; justify-content:space-between; align-items:center; padding:2px 4px 8px; font-size:.68rem; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--muted)}
+.hs-clear{font:inherit; font-size:.72rem; letter-spacing:.12em; text-transform:none; color:#F2C14E; background:none; border:0; cursor:pointer; padding:0 8px; min-height:36px}
+:root[data-theme="light"] .hs-clear{color:#8A5E00}
+.hs-chips{display:flex; flex-wrap:wrap; gap:8px; padding:0 2px 4px}
+.hs-chip{font:inherit; font-size:1rem; min-height:44px; padding:0 18px; color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:0; cursor:pointer; transition:border-color .2s, background .2s}
+.hs-chip:hover,.hs-chip:focus-visible{border-color:#F2C14E; background:color-mix(in srgb,#F2C14E 10%,transparent); outline:none}
+.hs-cat{flex-basis:100%; font-style:normal; font-size:.66rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#F2C14E}
+:root[data-theme="light"] .hs-cat{color:#8A5E00}
+.home .hero .hsearch{position:relative}
+.home .hero .hs-results{
+  position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:12; max-height:min(52svh,430px); overflow:auto; margin:0; text-align:left;
+  border-radius:8px; background:color-mix(in srgb,var(--card) 96%,transparent); box-shadow:0 24px 50px -20px rgba(0,0,0,.8); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+}
+.home .hero .hs-word{border-radius:6px}
+@media (max-width:699px){
+  /* on a phone the search is low on the screen: the list opens upward, over the name */
+  .home .hero .hs-results{top:auto; bottom:calc(100% + 8px); max-height:min(46svh,380px)}
+}
+
+/* the Today card on a narrow phone: smaller picture and round buttons, so the word and the buttons fit on one row */
+@media (max-width:480px){
+  .today{padding:20px}
+  .today .tword{gap:10px}
+  .today .tw-pic{width:50px; height:50px; font-size:1.7rem}
+  .today .tw-hear{width:42px; height:42px}
+  .today .tword .favstar.round{width:42px; height:42px}
+  .today .tw-txt b{font-size:1.55rem}
+}
+
+/* the "Save with Google" part of the Backup panel (js/gsync.js): inside the panel, separated by a thin line */
+.panel .gs-panel{padding:0 0 18px; margin:0 0 18px; background:none; border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:none}
+.gs-panel[hidden]{display:none}
+.gs-panel .btns{flex-wrap:wrap}
+.gs-panel .btn{flex:1 1 auto; min-height:48px}

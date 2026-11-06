@@ -1,0 +1,32 @@
+/* ---------- the footer of the home page ----------
+   A rounded panel with the app icon half out of its top edge, the name, a line, four round links, a Greek key band and the version.
+   The colours come from the theme variables, so it follows the light and the dark look. */
+.home-foot{position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; margin:36px 0 8px; padding:44px 18px 18px; text-align:center;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--gold,#F2C14E) 9%, var(--card)), var(--card) 70%);
+  border:1px solid var(--line); border-radius:26px; box-shadow:0 10px 30px -18px #000a; overflow:visible}
+.ft-emblem{position:absolute; top:-32px; left:50%; width:64px; height:64px; margin-left:-32px; border-radius:50%; object-fit:cover;
+  border:3px solid var(--gold,#F2C14E); background:#1E436A; box-shadow:0 6px 18px -6px #000b, 0 0 0 6px var(--bg, #0B0B0D)}
+.ft-name{margin:0; display:flex; flex-direction:column; align-items:center; line-height:1.15}
+.ft-name b{font-size:1.25rem; font-weight:800; letter-spacing:.02em; color:var(--ink)}
+.ft-name span{font-size:.95rem; font-weight:600; letter-spacing:.18em; color:var(--gold,#F2C14E)}
+:root[data-theme="light"] .ft-name span{color:#7F5800}
+.ft-tag{margin:0; font-size:.85rem; color:var(--muted)}
+.ft-links{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:4px}
+.ft-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; font:inherit; font-size:.85rem; font-weight:700; color:var(--ink); text-decoration:none; cursor:pointer;
+  background:color-mix(in srgb,var(--ink) 6%, transparent); border:1px solid var(--line); border-radius:999px; transition:transform .15s, border-color .15s, background .15s}
+.ft-pill svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--accent,#5C9DFF); stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.ft-pill:hover{border-color:var(--accent,#5C9DFF); background:color-mix(in srgb,var(--accent,#5C9DFF) 12%, transparent); transform:translateY(-1px)}
+.ft-pill:active{transform:scale(.97)}
+.ft-pill:focus-visible{outline:2px solid var(--gold,#F2C14E); outline-offset:2px}
+.ft-pill[hidden]{display:none}
+.ft-meander{align-self:stretch; height:14px; margin:6px 4px 0; background:var(--gold,#F2C14E); opacity:.4;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 14 H16 M2 14 V2 H14 V10 H7 V6 H10' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 14px;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 14 H16 M2 14 V2 H14 V10 H7 V6 H10' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 14px}
+:root[data-theme="light"] .ft-meander{background:#9A6B00; opacity:.45}
+.ft-love{margin:2px 0 0; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:5px; font-size:.82rem; color:var(--muted)}
+.ft-heart{width:15px; height:15px; fill:#E5484D}
+.ft-ver{margin:0; font-size:.75rem; letter-spacing:.04em; color:var(--muted); opacity:.8}
+@media (prefers-reduced-motion: no-preference){
+  .ft-heart{animation:ftbeat 2.4s ease-in-out infinite; transform-origin:center}
+  @keyframes ftbeat{0%,60%,100%{transform:scale(1)} 70%{transform:scale(1.25)} 80%{transform:scale(1)} 88%{transform:scale(1.18)}}
+}

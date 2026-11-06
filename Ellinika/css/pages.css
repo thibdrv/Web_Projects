@@ -1,0 +1,205 @@
+/* ---------- the banner of the learning pages, and the empty pages (js/router.js: renderPageHero, js/helpers.js: emptyState) ---------- */
+.pagehero{position:relative; display:flex; align-items:center; gap:14px; margin:0 0 12px; padding:14px 16px 18px; overflow:hidden; border-radius:20px;
+  background:linear-gradient(120deg, color-mix(in srgb,var(--cat) 30%, var(--card)), color-mix(in srgb,var(--cat) 7%, var(--card)) 75%);
+  border:1px solid color-mix(in srgb,var(--cat) 40%, var(--line)); box-shadow:var(--shadow-s)}
+.pagehero::after{content:""; position:absolute; left:0; right:0; bottom:0; height:8px; background:var(--cat); opacity:.5;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 7 H16 M2 7 V1 H14 V5 H7 V3 H10' fill='none' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 8px;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 7 H16 M2 7 V1 H14 V5 H7 V3 H10' fill='none' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 8px}
+.ph-badge{flex:none; width:54px; height:54px; display:grid; place-items:center; border-radius:17px; font-size:1.5rem; font-weight:800; color:var(--ink);
+  background:color-mix(in srgb,var(--cat) 20%, var(--card)); border:1px solid color-mix(in srgb,var(--cat) 45%, transparent); box-shadow:0 6px 14px -8px color-mix(in srgb,var(--cat) 80%, #000)}
+.ph-badge svg{width:34px; height:34px}
+.ph-t{display:flex; flex-direction:column; gap:2px; min-width:0}
+.ph-t b{font-size:1.12rem; line-height:1.2}
+.ph-t span{color:var(--muted); font-size:.88rem; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.ph-deco{position:absolute; right:-10px; top:-12px; width:104px; height:104px; display:grid; place-items:center; font-size:4.5rem; opacity:.1; pointer-events:none; transform:rotate(12deg)}
+.ph-deco svg{width:100%; height:100%}
+@media (max-height:520px){ .ph-t span{display:none} .pagehero{padding:10px 14px 14px} }
+
+.empty{display:flex; flex-direction:column; align-items:center; gap:10px; padding:28px 20px 24px; text-align:center; border-radius:22px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--cat) 10%, var(--card)), var(--card)); border:1px solid var(--line)}
+.empty-badge{position:relative; width:92px; height:92px; display:grid; place-items:center; border-radius:50%; font-size:2.6rem;
+  background:radial-gradient(circle at 35% 30%, color-mix(in srgb,var(--cat) 30%, var(--card)), color-mix(in srgb,var(--cat) 10%, var(--card)));
+  border:2px solid color-mix(in srgb,var(--cat) 45%, transparent); box-shadow:0 0 0 8px color-mix(in srgb,var(--cat) 8%, transparent), 0 0 0 16px color-mix(in srgb,var(--cat) 4%, transparent)}
+.empty-badge svg{width:52px; height:52px}
+.empty h3{margin:10px 0 0; font-size:1.15rem}
+.empty p{margin:0; max-width:34ch; color:var(--muted); line-height:1.45}
+.empty-tips{margin:4px 0 0; padding:0; list-style:none; counter-reset:t; display:flex; flex-direction:column; gap:8px; text-align:left; max-width:36ch}
+.empty-tips li{counter-increment:t; display:flex; gap:10px; align-items:flex-start; font-size:.92rem; line-height:1.35}
+.empty-tips li::before{content:counter(t); flex:none; width:24px; height:24px; display:grid; place-items:center; font-weight:800; font-size:.8rem; color:var(--oncat,#fff); background:var(--cat); border-radius:50%}
+.empty .btns{margin-top:6px; justify-content:center}
+@media (prefers-reduced-motion: no-preference){ .empty-badge{animation:emptyfloat 4s ease-in-out infinite} @keyframes emptyfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}} }
+
+/* ---------- flashcards (js/flashcards.js) ---------- */
+.fc-head{display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:6px}
+.fc-head b{color:var(--ink)}
+.fc-stage{position:relative; margin:14px 0 6px; perspective:1100px; touch-action:pan-y}
+.fc-stage[data-lean="right"]::after, .fc-stage[data-lean="left"]::after{position:absolute; top:10px; z-index:2; padding:6px 12px; font-weight:800; border-radius:10px; pointer-events:none}
+.fc-stage[data-lean="right"]::after{content:"✓"; right:10px; color:#0B0B0D; background:var(--good)}
+.fc-stage[data-lean="left"]::after{content:"✗"; left:10px; color:#0B0B0D; background:var(--bad)}
+.fc-card{position:relative; display:block; width:100%; min-height:250px; padding:0; font:inherit; color:var(--ink); cursor:pointer; background:none; border:0; transform-style:preserve-3d; transition:transform .45s cubic-bezier(.4,.2,.2,1), opacity .22s; -webkit-tap-highlight-color:transparent; user-select:none}
+.fc-card.turned{transform:rotateY(180deg)}
+.fc-card.go-right{transform:translateX(120%) rotate(14deg) !important; opacity:0 !important; transition:transform .22s ease-in, opacity .22s !important}
+.fc-card.go-left{transform:translateX(-120%) rotate(-14deg) !important; opacity:0 !important; transition:transform .22s ease-in, opacity .22s !important}
+.fc-face{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; text-align:center; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:22px;
+  background:linear-gradient(160deg, color-mix(in srgb,var(--cat) 14%, var(--card)), var(--card)); border:1px solid color-mix(in srgb,var(--cat) 40%, var(--line)); box-shadow:var(--shadow)}
+.fc-back{transform:rotateY(180deg)}
+.fc-card .emoji{font-size:3.4rem; line-height:1}
+.fc-card .emoji svg, .fc-card .gm-big svg{width:84px; height:84px}
+.fc-gr{font-size:2.1rem; font-weight:800; line-height:1.15}
+.fc-gr.small{font-size:1.5rem}
+.fc-lat{font-size:1.1rem; color:var(--muted)}
+.fc-en{font-size:1.35rem; font-weight:700}
+.fc-art{font-size:.8rem; font-weight:800; padding:3px 10px; border-radius:999px; border:1px solid var(--line)}
+.fc-hint{text-align:center; margin:6px 0 0; min-height:1.3em; font-size:.88rem}
+.fc-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px}
+.fc-actions[hidden]{display:none}
+.fc-again{background:color-mix(in srgb,var(--bad) 18%, var(--card)); color:var(--ink); border:1px solid var(--bad)}
+.fc-know{background:color-mix(in srgb,var(--good) 22%, var(--card)); color:var(--ink); border:1px solid var(--good)}
+.fc-done{text-align:center}
+@media (prefers-reduced-motion: reduce){
+  .fc-card{transition:none}
+  .fc-card.turned{transform:none}
+  .fc-card .fc-front{display:flex} .fc-card.turned .fc-front{display:none}
+  .fc-back{transform:none; display:none} .fc-card.turned .fc-back{display:flex}
+}
+
+/* ---------- What's new, the welcome screen (js/news.js, js/welcome.js) ---------- */
+.news{gap:4px}
+.newsdate{font-size:.8rem; font-weight:800; letter-spacing:.06em; color:var(--muted)}
+.newsnew{display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--oncat,#fff); background:var(--cat)}
+.newslist{display:flex; flex-direction:column; gap:8px; margin-top:6px}
+.newslist li{position:relative; padding-left:18px; line-height:1.4}
+.newslist li::before{content:""; position:absolute; left:2px; top:.55em; width:7px; height:7px; border-radius:50%; background:var(--cat)}
+
+.welcome{position:fixed; inset:0; z-index:90; display:grid; place-items:center; padding:16px; background:rgba(0,0,0,.6); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); opacity:0; transition:opacity .25s}
+.welcome.show{opacity:1}
+.wl-panel{position:relative; width:min(460px,100%); max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding:26px 22px 20px; text-align:center; color:var(--ink);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--gold,#F2C14E) 9%, var(--card)), var(--card) 60%); border:1px solid var(--line); border-radius:26px; box-shadow:0 24px 60px -20px #000c}
+.wl-logo{flex:none; width:72px; height:72px; border-radius:50%; border:3px solid var(--gold,#F2C14E); background:#1E436A; box-shadow:0 6px 18px -6px #000b}
+.wl-body{width:100%; display:flex; flex-direction:column; align-items:center; gap:10px}
+.wl-body h2{margin:0; font-size:1.35rem}
+.wl-body p{margin:0; color:var(--muted); line-height:1.45}
+.wl-q{font-weight:800; color:var(--ink) !important; margin-top:6px !important}
+.wl-seg{width:100%}
+.wl-goals{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%}
+.wl-goal{display:flex; flex-direction:column; align-items:center; gap:2px; padding:14px 6px; font:inherit; color:var(--ink); cursor:pointer; background:var(--card); border:2px solid var(--line); border-radius:16px; transition:border-color .15s, background .15s}
+.wl-goal b{font-size:1.5rem}
+.wl-goal span{font-size:.82rem; color:var(--muted)}
+.wl-goal[aria-pressed="true"]{border-color:var(--cat); background:color-mix(in srgb,var(--cat) 16%, var(--card))}
+.wl-choices{display:flex; flex-direction:column; gap:10px; width:100%}
+.wl-choice{display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:12px 14px; font:inherit; text-align:left; color:var(--ink); cursor:pointer; background:var(--card); border:2px solid var(--line); border-radius:16px; transition:border-color .15s, transform .15s}
+.wl-choice:hover{border-color:var(--cat); transform:translateY(-1px)}
+.wl-choice b{font-size:1rem}
+.wl-choice span{font-size:.86rem; color:var(--muted)}
+.wl-dots{display:flex; gap:7px}
+.wl-dots i{width:8px; height:8px; border-radius:50%; background:var(--line); transition:background .2s, transform .2s}
+.wl-dots i.on{background:var(--cat); transform:scale(1.3)}
+.wl-nav{display:flex; align-items:center; justify-content:flex-end; gap:10px; width:100%}
+.wl-skip{margin-right:auto; font:inherit; font-size:.88rem; color:var(--muted); background:none; border:0; cursor:pointer; text-decoration:underline}
+.welcome button:focus-visible{outline:2px solid var(--gold,#F2C14E); outline-offset:2px}
+@media (prefers-reduced-motion: reduce){ .welcome{transition:none} }
+
+/* ---------- touch and keyboard comfort (accessibility) ---------- */
+.chip{min-height:36px}
+.tg-set{min-height:36px; min-width:44px}
+.setfold{min-height:44px}
+/* a visible ring for the keyboard on every control that has no ring of its own (low weight: the rings written elsewhere win) */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{outline:2px solid var(--gold,#F2C14E); outline-offset:2px}
+
+/* ---------- the tables of articles (js/grammar5.js) ---------- */
+.arttable{overflow-x:auto}
+.arttable table{width:100%; border-collapse:collapse; text-align:center}
+.arttable th{padding:6px 8px; font-size:.78rem; font-weight:800; color:var(--muted); text-align:center}
+.arttable tbody th{text-align:left; white-space:nowrap}
+.arttable td{padding:4px}
+.artcell{width:100%; min-height:40px; font:inherit; font-size:1.05rem; color:var(--ink); cursor:pointer; background:var(--card); border:1px solid var(--line); border-radius:10px}
+.artcell:hover{border-color:var(--cat)}
+.arttable.g-m{border-left:5px solid #3F6FA8} .arttable.g-f{border-left:5px solid #C4566B} .arttable.g-n{border-left:5px solid #5E8C3A}
+
+/* a row of buttons that is hidden must really disappear (the long rows of a phone are flex boxes, which ignore the attribute hidden) */
+.row[hidden], .rowlabel[hidden]{display:none !important}
+
+/* ---------- statistics and badges (js/stats.js) ---------- */
+.sbars{position:relative; display:flex; align-items:flex-end; gap:8px; height:150px; padding:18px 4px 26px; border-bottom:1px solid var(--line)}
+.sbarcol{position:relative; flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center}
+.sbarcol i{display:block; width:100%; max-width:34px; border-radius:8px 8px 3px 3px; background:color-mix(in srgb,var(--cat) 45%, var(--card)); transition:height .4s}
+.sbarcol i.hit{background:var(--cat)}
+.sbarcol.istoday i{box-shadow:0 0 0 2px var(--ink)}
+.sbval{position:absolute; top:-2px; font-size:.72rem; font-weight:800; color:var(--muted)}
+.sbday{position:absolute; bottom:-22px; font-size:.72rem; font-weight:700; color:var(--muted); text-transform:capitalize}
+.sbarcol.istoday .sbday{color:var(--ink)}
+.sgoal{position:absolute; left:0; right:0; border-top:1.5px dashed color-mix(in srgb,var(--good) 70%, transparent); pointer-events:none; margin-bottom:26px}
+.sgoal span{position:absolute; right:0; top:-17px; font-size:.68rem; font-weight:800; color:var(--good)}
+.heat{display:grid; grid-template-rows:repeat(7, 1fr); grid-auto-flow:column; grid-auto-columns:1fr; gap:4px}
+.hm{display:block; aspect-ratio:1; border-radius:4px; background:color-mix(in srgb,var(--ink) 8%, transparent)}
+.hm.l1{background:color-mix(in srgb,var(--cat) 28%, var(--card))}
+.hm.l2{background:color-mix(in srgb,var(--cat) 50%, var(--card))}
+.hm.l3{background:color-mix(in srgb,var(--cat) 75%, var(--card))}
+.hm.l4{background:var(--cat)}
+.hm.fut{opacity:.25}
+.badges{display:grid; grid-template-columns:repeat(auto-fill, minmax(128px, 1fr)); gap:10px}
+.badge{display:flex; flex-direction:column; align-items:center; gap:3px; padding:12px 8px 10px; text-align:center; border-radius:16px; background:color-mix(in srgb,var(--ink) 4%, var(--card)); border:1px solid var(--line)}
+.badge:not(.on){opacity:.62}
+.badge b{font-size:.9rem; line-height:1.2}
+.bdesc{font-size:.76rem; color:var(--muted); line-height:1.3}
+.bdate{font-size:.72rem; font-weight:800; color:var(--muted); margin-top:2px}
+.bprog{display:block; width:80%; height:5px; border-radius:3px; background:var(--line); overflow:hidden; margin-top:4px}
+.bprog b{display:block; height:100%; background:var(--cat)}
+.medal{position:relative; display:grid; place-items:center; width:58px; height:58px; border-radius:50%; margin-bottom:4px; filter:grayscale(1)}
+.badge.on .medal{filter:none}
+.medal::before{content:""; position:absolute; inset:0; border-radius:50%; background:var(--m1); box-shadow:inset 0 0 0 3px var(--m2), inset 0 0 0 6px var(--m3), 0 5px 12px -6px #000a}
+.tier1 .medal{--m1:radial-gradient(circle at 35% 30%, #e4a778, #a8642f); --m2:#d98e55; --m3:#8c4f22}
+.tier2 .medal{--m1:radial-gradient(circle at 35% 30%, #f2f4f8, #9aa3b4); --m2:#c9d0dc; --m3:#7b8497}
+.tier3 .medal{--m1:radial-gradient(circle at 35% 30%, #ffe48a, #d09a14); --m2:#f5c940; --m3:#a97800}
+.micon{position:relative; z-index:1; font-size:1.55rem; line-height:1}
+.micon svg{width:30px; height:30px}
+@media (prefers-reduced-motion: reduce){ .sbarcol i{transition:none} }
+
+/* ---------- resume a quiz, skeleton of the dictionary, the owl's bubble (js/quiz.js, js/dictionary.js, js/owl.js) ---------- */
+.resume{display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; padding:22px 18px}
+.resume h3{margin:6px 0 0; font-size:1.2rem}
+.resume p{margin:0; color:var(--muted)}
+.resume .btns{margin-top:6px; justify-content:center}
+.dsk{display:grid; grid-template-columns:1fr 2fr; grid-template-rows:auto auto; gap:8px 12px; padding:14px; margin-bottom:8px; border-radius:14px; background:var(--card); border:1px solid var(--line)}
+.dsk i{display:block; height:14px; border-radius:7px; background:linear-gradient(90deg, var(--line) 0%, color-mix(in srgb,var(--ink) 16%, var(--line)) 50%, var(--line) 100%); background-size:220% 100%; animation:dskshine 1.2s linear infinite}
+.dsk .a{grid-row:1 / span 2; height:38px; align-self:center}
+.dsk .b{width:60%} .dsk .c{width:90%}
+@keyframes dskshine{from{background-position:120% 0} to{background-position:-100% 0}}
+@media (prefers-reduced-motion: reduce){ .dsk i{animation:none} }
+.toastowl{flex:none; display:grid; place-items:center; margin:-6px 0 -6px -6px}
+.owlsay{position:fixed; z-index:31; max-width:200px; padding:8px 12px; font-weight:800; font-size:.9rem; line-height:1.25; color:var(--ink); background:var(--card); border:2px solid var(--cat,#3B72B3); border-radius:14px 14px 4px 14px; box-shadow:var(--shadow); opacity:0; transform:translateY(6px) scale(.9); transform-origin:100% 100%; transition:opacity .25s, transform .25s; pointer-events:none}
+.owlsay.show{opacity:1; transform:none}
+.buddy.wave .owl{animation:owlwave 1.2s ease-in-out 2}
+@keyframes owlwave{0%,100%{transform:rotate(0)} 20%{transform:rotate(-9deg) translateY(-4px)} 40%{transform:rotate(8deg)} 60%{transform:rotate(-7deg) translateY(-3px)} 80%{transform:rotate(5deg)}}
+@media (prefers-reduced-motion: reduce){ .owlsay{transition:none} .buddy.wave .owl{animation:none} }
+
+/* "Report a mistake" under the answer of a quiz (js/quiz.js) */
+.reportlink{display:inline-flex; align-items:center; gap:5px; margin:6px 0 0 10px; font-size:.78rem; font-weight:700; color:var(--muted); text-decoration:none; border-bottom:1px dashed var(--line)}
+.reportlink:hover{color:var(--ink); border-bottom-color:var(--ink)}
+
+/* the written grammar lessons (js/grammar6.js) */
+.lesson{padding:0; overflow:hidden}
+.lesson summary{display:flex; flex-direction:column; gap:2px; padding:14px 16px; cursor:pointer; list-style:none}
+.lesson summary::-webkit-details-marker{display:none}
+.lesson summary::after{content:""; position:absolute; right:16px; margin-top:6px; width:9px; height:9px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg); transition:transform .2s}
+.lesson{position:relative}
+.lesson[open] summary::after{transform:rotate(-135deg)}
+.lesson summary b{font-size:1.02rem; padding-right:26px}
+.lsum{font-size:.86rem; color:var(--muted); padding-right:26px}
+.lpoints{padding:0 16px; display:flex; flex-direction:column; gap:8px; margin:0 0 10px}
+.lpoints li{line-height:1.45}
+.lesson .lines{padding:0 12px 14px}
+.ltable{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:0 16px 10px}
+.ltable b{flex-basis:100%; font-size:.8rem; color:var(--muted)}
+.ltable .artcell{width:auto; min-width:78px; padding:0 10px}
+
+/* ---------- example sentence under a quiz answer and in the dictionary (js/examples.js) ---------- */
+.exbox{margin:10px 0 0; text-align:left}
+.exlabel{display:block; margin:0 0 4px; font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.exbox .line{width:100%}
+.dexample .exbox{margin:6px 0 2px}
+
+/* ---------- transfer code (js/backup.js) ---------- */
+.codepanel{margin-top:12px; padding:12px; border-radius:14px; background:var(--card); border:1px solid var(--line)}
+.codearea{width:100%; box-sizing:border-box; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:0.78rem/1.35 ui-monospace,Consolas,monospace; word-break:break-all; resize:vertical}
+.codepanel .btns{margin-top:8px}

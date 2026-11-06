@@ -1,0 +1,86 @@
+from ic_lib import *
+
+# ---------- the tools of the screen (they take the colour of the text) ----------
+add("🔊 🔉 🔈", mono(l("M5 12 H9 L15 7 V25 L9 20 H5Z", "currentColor", 2.4) + l("M19 11 Q22 16 19 21", "currentColor", 2.4) + l("M23 8 Q28 16 23 24", "currentColor", 2.4)), True)
+add("▶ ▶️", monofill('<path d="M10 6 L26 16 L10 26Z"/>'), True)
+add("⏹", monofill('<rect x="8" y="8" width="16" height="16" rx="2.5"/>'), True)
+add("⌫", mono('<path d="M12 7 H27 V25 H12 L4 16Z"/>' + l("M16 12 L23 20 M23 12 L16 20", "currentColor", 2.4)), True)
+add("★", monofill('<path d="M16 3.5 L19.8 11.7 L28.5 12.8 L22 18.8 L23.8 27.5 L16 23.2 L8.2 27.5 L10 18.8 L3.5 12.8 L12.2 11.7Z"/>'), True)
+add("☆", mono('<path d="M16 4 L19.6 11.8 L28 12.9 L21.8 18.7 L23.5 27 L16 22.8 L8.5 27 L10.2 18.7 L4 12.9 L12.4 11.8Z"/>'), True)
+add("⭐", p("M16 3.5 L19.8 11.7 L28.5 12.8 L22 18.8 L23.8 27.5 L16 23.2 L8.2 27.5 L10 18.8 L3.5 12.8 L12.2 11.7Z", YEL))
+add("♥", monofill('<path d="M16 28 C5 20 3 13 7 8.5 C10.5 5 14.5 6.5 16 10 C17.5 6.5 21.5 5 25 8.5 C29 13 27 20 16 28Z"/>'), True)
+add("✓ ✔ ✔️", mono(l("M6 17 L13 24 L26 8", "currentColor", 3.4)), True)
+add("✗ ✕ ✖", mono(l("M8 8 L24 24 M24 8 L8 24", "currentColor", 3.4)), True)
+add("✅ ☑", g(r(3, 3, 26, 26, GRN, 6), l("M8.5 16.5 L14 22 L24 10", WHT, 3.6)))
+add("❌", g(r(3, 3, 26, 26, RED, 6), l("M10 10 L22 22 M22 10 L10 22", WHT, 3.6)))
+add("⚙", mono('<circle cx="16" cy="16" r="4.2"/>' + l("M16 3 V7 M16 25 V29 M3 16 H7 M25 16 H29 M7 7 L10 10 M22 22 L25 25 M25 7 L22 10 M10 22 L7 25", "currentColor", 3)), True)
+add("🔥", g(p("M16 2 C17 8 25 11 25 19 C25 25.5 20.5 29.5 16 29.5 C11.5 29.5 7 25.5 7 19 C7 14.5 10 12.5 11 9 C13 11 14.5 11.5 14.5 11.5 C14 8 15 5 16 2Z", ORG), p("M16 14 C17 18 21 19 21 23 C21 26 18.5 28 16 28 C13.5 28 11 26 11 23 C11 20 15 18.5 16 14Z", YEL), p("M16 21 C17 23 18.5 23.5 18.5 25.5 C18.5 27 17.3 28 16 28 C14.7 28 13.5 27 13.5 25.5 C13.5 23.5 15.5 23 16 21Z", "#FFF3B0")))
+add("🎯", g(c(16, 16, 13, WHT), c(16, 16, 13, RED), c(16, 16, 9.5, WHT), c(16, 16, 6, RED), c(16, 16, 2.6, WHT), l("M16 16 L27 5", DGRY, 2), p("M27 5 L28 9 L24 5 L28 4Z", DGRY)))
+add("⚡", p("M18.5 2 L7 18 H14 L12.5 30 L25 13.5 H17.5Z", YEL))
+add("👁", g(p("M2 16 Q16 3 30 16 Q16 29 2 16Z", WHT), c(16, 16, 6.2, BLU), c(16, 16, 3, BLK), dot(14.4, 14.4, 1.2, WHT)))
+add("🎤", g(r(11, 3, 10, 16, DGRY, 5), l("M12 8 H20 M12 12 H20", GRY, 1.4), l("M7 14 Q7 24 16 24 Q25 24 25 14", DGRY, 2.4), l("M16 24 V29 M11 29 H21", DGRY, 2.4)))
+add("🎧", g(l("M5 21 V16 Q5 5 16 5 Q27 5 27 16 V21", DGRY, 2.6), r(3, 17, 7, 11, RED, 3), r(22, 17, 7, 11, RED, 3)))
+add("📖", g(p("M16 7 Q10 4 3 6 V25 Q10 23 16 26Z", CRM), p("M16 7 Q22 4 29 6 V25 Q22 23 16 26Z", WHT), l("M6 11 Q10 10 13 11 M6 15 Q10 14 13 15 M19 11 Q22 10 26 11 M19 15 Q22 14 26 15", GRY, 1.2), l("M16 7 V26", BRN, 1.6)))
+add("💬 🗨", g(p("M4 6 H28 Q30 6 30 8 V20 Q30 22 28 22 H14 L8 28 V22 H4 Q2 22 2 20 V8 Q2 6 4 6Z", WHT), dot(9, 14, 1.8, DGRY), dot(16, 14, 1.8, DGRY), dot(23, 14, 1.8, DGRY)))
+add("🔀", mono(l("M4 9 H9 Q14 9 17 16 Q20 23 25 23 H28 M4 23 H9 Q12 23 14 20 M18 12 Q20 9 25 9 H28", "currentColor", 2.6) + l("M24 5 L28 9 L24 13 M24 19 L28 23 L24 27", "currentColor", 2.6)), True)
+add("🔁 🔄", mono(l("M5 14 V12 Q5 8 9 8 H25 M21 4 L25 8 L21 12 M27 18 V20 Q27 24 23 24 H7 M11 28 L7 24 L11 20", "currentColor", 2.6)), True)
+add("↻", mono(l("M26 16 A10 10 0 1 1 20 7 M20 2 V8 H26", "currentColor", 2.8)), True)
+add("🎉 🎊", g(p("M3 29 L9 10 L22 23Z", YEL), p("M3 29 L9 10 L12 13Z", ORG), c(21, 8, 1.8, RED), c(26, 14, 1.6, BLU), c(14, 5, 1.6, GRN), l("M20 14 Q24 10 22 6 M17 19 Q22 17 28 20", PUR, 1.6), l("M24 5 L26 3", PNK, 1.8), c(28, 25, 1.5, PNK)))
+add("💡", g(p("M16 3 C9.5 3 6 7.5 6 12.5 C6 16.5 8.5 18.5 10 21 C10.7 22.3 11 23.5 11 25 H21 C21 23.5 21.3 22.3 22 21 C23.5 18.5 26 16.5 26 12.5 C26 7.5 22.5 3 16 3Z", YEL), r(11, 25, 10, 3.5, GRY, 1.5), r(12.5, 28.5, 7, 2.5, DGRY, 1.2), l("M13 12 Q16 8 19 12", WHT, 1.6)))
+add("➕", mono(l("M16 6 V26 M6 16 H26", "currentColor", 3.6)), True)
+add("🗑", g(r(7, 9, 18, 20, LGRY, 3), r(5, 5, 22, 4.5, GRY, 2), r(12, 2.5, 8, 3.5, GRY, 1.5), l("M12 13 V25 M16 13 V25 M20 13 V25", GRY, 1.8)))
+add("✎ ✏", g(p("M5 27 L7 20 L22 5 L27 10 L12 25Z", YEL), p("M22 5 L27 10 L29 8 Q30 6 28 4 L26 2 Q24 1 22 3Z", PNK), p("M5 27 L7 20 L12 25Z", TAN), p("M5 27 L6 24 L8 26Z", DGRY)))
+add("✍", g(p("M4 26 L6 19 L20 5 L25 10 L11 24Z", YEL), p("M20 5 L25 10 L27 8 Q28 6 26 4 L24 2 Q22 1 20 3Z", PNK), l("M14 28 H28", DGRY, 2.2)))
+add("🖊 🖋", g(p("M7 25 L9 19 L23 5 L27 9 L13 23Z", DBLU), p("M23 5 L27 9 L29 7 Q30 5 28 3 L26 1 Q24 1 23 3Z", GRY), p("M7 25 L9 19 L13 23Z", TAN), l("M7 28 H18", BLK, 2)))
+add("🖍", g(p("M6 26 L8 19 L21 6 L26 11 L13 24Z", RED), p("M6 26 L8 19 L13 24Z", DRED), r(20, 4, 8, 4, GRY, 1.2)))
+add("🔍 🔎", g(c(13, 13, 8.5, "#DDF0FF"), l("M7 12 Q8 8 12 7", WHT, 1.6), l("M19.5 19.5 L28 28", DGRY, 3.6), '<circle cx="13" cy="13" r="8.5" fill="none" stroke="%s" stroke-width="3"/>' % DGRY))
+add("⤢", mono(l("M18 4 H28 V14 M28 4 L17 15 M14 28 H4 V18 M4 28 L15 17", "currentColor", 2.8)), True)
+add("⏱", g(c(16, 18, 11, WHT), c(16, 18, 11, "none"), l("M16 18 L16 11 M16 18 L21 20", DGRY, 2.4), r(13, 2.5, 6, 3, GRY, 1), l("M16 5.5 V7", GRY, 2), l("M25 8 L27 6", GRY, 2.4), '<circle cx="16" cy="18" r="11" fill="none" stroke="%s" stroke-width="2.4"/>' % DGRY))
+add("📄 📜 🧾", g(p("M7 3 H19 L26 10 V29 H7Z", WHT), p("M19 3 V10 H26Z", LGRY), l("M11 15 H22 M11 19 H22 M11 23 H18", GRY, 1.8)))
+add("❓ ❔", g(l("M10 11 Q10 5 16 5 Q22 5 22 11 Q22 15 16 17 V20", BLU, 4), c(16, 26, 2.4, BLU)))
+add("☀", g(c(16, 16, 7, YEL), l("M16 2 V6 M16 26 V30 M2 16 H6 M26 16 H30 M6 6 L9 9 M23 23 L26 26 M26 6 L23 9 M9 23 L6 26", ORG, 2.6)))
+add("🌙", p("M22 4 C13 4 7 10.5 7 18 C7 25.5 13.5 30 20.5 30 C24 30 27 28.7 29 26.5 C19 26.5 14.5 19 18 10.5 C19 8 20.5 6 22 4Z", YEL))
+add("🐢", g(e(16, 19, 11, 8, GRN), p("M8 18 Q16 7 24 18Z", DGRN), l("M12 12 L13 18 M17 11 V18 M21 12 L20 18", "#FFFFFF66", 1.2), e(28, 18, 3.4, 3, "#9CCC3A"), dot(29, 17, 0.8), r(8, 24, 4, 5, "#9CCC3A", 1.5), r(20, 24, 4, 5, "#9CCC3A", 1.5), p("M5 19 L1.5 21 L5 22Z", "#9CCC3A")))
+add("⌨", g(r(2, 8, 28, 17, DGRY, 3), "".join(r(5 + i * 4.5, 11, 3, 3, LGRY, .6) for i in range(6)), "".join(r(7 + i * 4.5, 16, 3, 3, LGRY, .6) for i in range(5)), r(9, 21, 14, 2.6, LGRY, .8)))
+add("🔤 🔡", g(r(2, 4, 28, 24, BLU, 5), '<text x="16" y="22.5" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="14" fill="#FFFFFF">abc</text>'))
+add("🔠", g(r(2, 4, 28, 24, PUR, 5), '<text x="16" y="22.5" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="14" fill="#FFFFFF">ABC</text>'))
+add("🅰 🅰️", g(r(3, 3, 26, 26, RED, 5), '<text x="16" y="23.5" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="19" fill="#FFFFFF">A</text>'))
+add("🔢", g(r(2, 4, 28, 24, GRN, 5), '<text x="16" y="22.5" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="14" fill="#FFFFFF">123</text>'))
+add("🧩", g(p("M4 10 H11 Q9 5 13 4 Q17 3 17 7 Q17 9 15 10 H26 V17 Q22 15 21 19 Q21 23 25 22 Q26 22 26 22 V28 H4Z", PUR), l("M10 18 H18", "#FFFFFF66", 1.4)))
+add("🗺", g(p("M2 7 L11 4 L21 7 L30 4 V25 L21 28 L11 25 L2 28Z", CRM), p("M11 4 V25 L21 28 V7Z", "#CDE9B5"), l("M5 12 Q8 10 9 14 M14 20 Q17 17 19 22 M24 10 L27 12", BRN, 1.4), l("M11 4 V25 M21 7 V28", GRY, 1)))
+add("📍 📌", g(p("M16 2 C10 2 6 6.5 6 12 C6 19 16 30 16 30 C16 30 26 19 26 12 C26 6.5 22 2 16 2Z", RED), c(16, 12, 4.2, WHT)))
+add("💾", g(r(3, 3, 26, 26, BLU, 3), r(8, 3, 14, 9, LGRY, 1), r(18, 4.5, 3, 6, DGRY, .8), r(7, 17, 18, 12, WHT, 1.5), l("M10 21 H22 M10 25 H19", GRY, 1.4)))
+add("📂 🗂", g(p("M2 9 Q2 6 5 6 H12 L15 10 H27 Q30 10 30 13 V25 Q30 28 27 28 H5 Q2 28 2 25Z", YEL), p("M2 14 H30 V25 Q30 28 27 28 H5 Q2 28 2 25Z", ORG)))
+add("🏷", g(p("M3 4 H16 L29 17 L17 29 L4 16Z", TAN), c(9, 10, 2.2, WHT), l("M13 20 L21 12", BRN, 1.4)))
+add("📅 📆", g(r(3, 5, 26, 24, WHT, 3), r(3, 5, 26, 8, RED, 3), r(8, 2, 3, 6, DGRY, 1.2), r(21, 2, 3, 6, DGRY, 1.2), "".join(r(6 + i * 6.5, 16 + j * 5.5, 4, 3.5, LGRY, .8) for i in range(4) for j in range(2))))
+add("🧱", g(r(2, 5, 28, 22, "#C9573A", 2), l("M2 12 H30 M2 19.5 H30 M11 5 V12 M21 12 V19.5 M11 19.5 V27 M23 5 V12", "#F2B8A4", 1.6)))
+add("📝", g(r(5, 3, 22, 26, WHT, 3), l("M10 10 H22 M10 15 H22 M10 20 H17", GRY, 1.8), p("M16 28 L18 23 L27 14 L30 17 L21 26Z", YEL), p("M27 14 L30 17 L31 16 Q32 14 30 13Z", PNK)))
+add("💪", g(p("M3 18 C3 11 8 6 14 7 C18 8 18 12 16 14 C20 14 24 12 27 14 C30 17 28 24 22 27 C14 30 5 27 3 18Z", SKN), p("M3 18 C3 14 5 11 8 9 C6 13 7 16 10 18 C8 21 7 24 8 27 C5 25 3 22 3 18Z", "#E5B88A"), l("M12 11 Q18 9 21 14", "#E5B88A", 1.6)))
+add("🏝", g(p("M2 27 Q16 22 30 27 V30 H2Z", "#F5D48A"), p("M2 28 Q8 31 14 28 T26 28 T32 28 V32 H2Z", BLU), l("M17 26 Q16 16 19 7", DBRN, 2.2), p("M19 7 Q14 3 8 6 Q14 6 19 7Z", GRN), p("M19 7 Q22 2 29 4 Q23 6 19 7Z", GRN), p("M19 7 Q27 8 29 14 Q23 10 19 7Z", DGRN), p("M19 7 Q12 9 10 15 Q15 10 19 7Z", DGRN)))
+add("🚗", g(p("M3 20 L5 14 Q6 11 9 11 H20 Q22 11 24 14 L27 15 Q30 16 30 19 V23 H3Z", RED), p("M8 14 H15 V19 H6Z", LBLU), p("M17 14 H21 L24 19 H17Z", LBLU), c(9, 24, 3.6, BLK), c(23, 24, 3.6, BLK), c(9, 24, 1.4, GRY), c(23, 24, 1.4, GRY)))
+add("🧠", g(p("M16 5 C13 2.5 9 3.5 8 6.5 C5 6.5 3 9 4 12 C2 14 2.5 18 5 19.5 C5 22 7.5 24.5 10.5 24 C12 26.5 15 27 16 25 Z", PNK), p("M16 5 C19 2.5 23 3.5 24 6.5 C27 6.5 29 9 28 12 C30 14 29.5 18 27 19.5 C27 22 24.5 24.5 21.5 24 C20 26.5 17 27 16 25 Z", "#F7A8C4"), l("M16 6 V25 M9 9 Q12 11 11 14 M8 18 Q12 17 13 20 M23 9 Q20 11 21 14 M24 18 Q20 17 19 20", "#C95F86", 1.4), r(14, 25, 4, 5, "#F28DB0", 1.5)))
+add("🎓", g(p("M2 12 L16 5 L30 12 L16 19Z", DGRY), p("M8 16 V23 Q16 28 24 23 V16 L16 20Z", DGRY), l("M28 13 V22", GLD, 1.8), c(28, 23, 1.6, GLD)))
+# the level: a laurel wreath (the Greek sign of achievement), in colour: green leaves, golden berries and a red ribbon
+import math
+def _wreath():
+    R = 11.0
+    out = []
+    for sd in (-1, 1):
+        t = math.radians(150)
+        out.append('<path d="M16 %.1f A%s %s 0 0 %d %.1f %.1f" fill="none" stroke="#2E7D32" stroke-width="1.6" stroke-linecap="round"/>' % (16 + R, R, R, 1 if sd < 0 else 0, 16 + sd * R * math.sin(t), 16 + R * math.cos(t)))
+    for sd in (-1, 1):
+        for k in range(7):
+            t = math.radians(14 + k * 21.5)
+            for j, (off, tilt) in enumerate(((-2.6, -38), (2.6, 38))):          # one leaf inside and one outside the stem
+                r = R + off
+                x, y = 16 + sd * r * math.sin(t), 16 + R * 0 + r * math.cos(t)
+                dx, dy = sd * math.cos(t), -math.sin(t)
+                th = math.degrees(math.atan2(dx, -dy)) + sd * tilt
+                col = "#4CAF50" if (k + j) % 2 == 0 else "#2E9B45"
+                out.append('<ellipse cx="%.1f" cy="%.1f" rx="1.5" ry="3.3" fill="%s" stroke="#00000030" stroke-width=".5" transform="rotate(%.0f %.1f %.1f)"/>' % (x, y, col, th, x, y))
+    for sd in (-1, 1):                                                       # golden berries at the top ends
+        t = math.radians(150)
+        out.append('<circle cx="%.1f" cy="%.1f" r="1.3" fill="#E8B923"/>' % (16 + sd * (R + 0.5) * math.sin(t), 16 + (R + 0.5) * math.cos(t)))
+    out.append('<path d="M16 27.2 L11.5 31 L14.5 27.4 Z M16 27.2 L20.5 31 L17.5 27.4 Z" fill="#D6285B"/><circle cx="16" cy="27.2" r="1.7" fill="#E5484D"/>')
+    return "".join(out)
+add("📊", _wreath())

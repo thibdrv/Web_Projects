@@ -1,0 +1,42 @@
+/* ---------- the owl (js/mascot.js) ---------- */
+.owl{display:block; overflow:visible; --owl:#9C7650; --owl2:#7D5C3A; --belly:#EBD9B4}
+:root[data-theme="light"] .owl{--owl:#8A6440; --owl2:#6B4C2E}
+.owl .o-body{fill:var(--owl)} .owl .o-ear{fill:var(--owl2)} .owl .o-wing ellipse{fill:var(--owl2)}
+.owl .o-belly{fill:var(--belly)} .owl .o-feather path{fill:none; stroke:#C9B089; stroke-width:1.8; stroke-linecap:round}
+.owl .o-eye{fill:#fff; stroke:var(--owl2); stroke-width:2.5} .owl .o-pupil{fill:#1B1B26} .owl .o-glint{fill:#fff}
+.owl .o-beak{fill:#F0A23A} .owl .o-feet path{fill:none; stroke:#F0A23A; stroke-width:3; stroke-linecap:round}
+.owl .o-cheek{fill:#F28B82; opacity:.6} .owl .o-brow{fill:none; stroke:var(--owl2); stroke-width:3.2; stroke-linecap:round}
+.owl .o-drop{fill:#6FB6F0; stroke:#2F6FB5; stroke-width:1; animation:drip 1.4s ease-in infinite}
+.owl .o-bubble circle{fill:var(--card); stroke:var(--line); stroke-width:1} .owl .o-q{fill:var(--ink); transform-origin:center}
+.owl .o-spark{fill:#F2C14E; animation:twinkle 1.3s ease-in-out infinite; transform-box:fill-box; transform-origin:center} .owl .o-spark.s2{animation-delay:.5s}
+.owl .o-cap path,.owl .o-cap rect{fill:#23233A} .owl .o-cap .o-tassel{fill:none; stroke:#F2C14E; stroke-width:2.4; stroke-linecap:round}
+/* blinking: the lid is the color of the feathers and closes now and then */
+.owl .o-lid{fill:var(--owl); transform-box:fill-box; transform-origin:50% 0; transform:scaleY(0); animation:blink 5.5s ease-in-out infinite}
+.owl.oops .o-lid{transform:scaleY(.18); animation:none}
+@keyframes blink{0%,92%,100%{transform:scaleY(0)} 95%{transform:scaleY(1)}}
+/* wings and moves */
+.owl .o-wing{transform-box:fill-box; transform-origin:50% 8%}
+.owl.happy .o-wl,.owl.cheer .o-wl{animation:flapl .7s ease-in-out 3} .owl.happy .o-wr,.owl.cheer .o-wr{animation:flapr .7s ease-in-out 3}
+.owl.cheer .o-wl{animation-iteration-count:infinite} .owl.cheer .o-wr{animation-iteration-count:infinite}
+@keyframes flapl{0%,100%{transform:rotate(0)} 50%{transform:rotate(38deg)}}
+@keyframes flapr{0%,100%{transform:rotate(0)} 50%{transform:rotate(-38deg)}}
+.owl.think .o-wr{transform:rotate(-70deg)}
+.owl.happy,.owl.cheer{animation:owlhop .6s ease-out}
+.owl.cheer{animation:owlhop .8s ease-out infinite}
+.owl.oops{animation:owlshake .5s ease}
+@keyframes owlhop{0%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)}}
+@keyframes owlshake{0%,100%{transform:rotate(0)} 25%{transform:rotate(-7deg)} 75%{transform:rotate(7deg)}}
+@keyframes drip{0%{transform:translateY(0); opacity:1} 80%{transform:translateY(10px); opacity:0} 100%{opacity:0}}
+
+/* in the answer panel: the owl on the left, the words on the right */
+.fbbox.on{flex-direction:row; align-items:center; gap:12px}
+.fbbox .owl-slot{flex:none; display:none} .fbbox.on .owl-slot{display:block}
+.fbbox .fbtext{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
+.scorecard .owl{margin-bottom:-4px}
+
+/* asleep: the lids are closed, the pupils hidden, the wings folded; the z-letters rise (css/anim.css) */
+.owl.sleep .o-lid{transform:scaleY(1); animation:none}
+.owl.sleep .o-pupil,.owl.sleep .o-glint{opacity:0}
+.owl .o-z{fill:var(--ink)}
+/* a shrug: the wings go out when the answer was wrong */
+.owl.oops .o-wl{transform:rotate(28deg)} .owl.oops .o-wr{transform:rotate(-28deg)}

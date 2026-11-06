@@ -1,0 +1,91 @@
+/* ---------- game screens and motion ----------
+   Loaded last. The colors stay the ones of the theme (--cat, --good, --bad...); this file only adds shape and movement.
+   Everything that moves is switched off by the "reduced motion" rule at the bottom. */
+
+/* the top of a round: pills for the question number, the score and the series of right answers */
+.qhead{align-items:center; gap:8px; font-size:.9rem}
+.qhead>span{padding:5px 12px; border-radius:999px; background:color-mix(in srgb,var(--ink) 7%,transparent); border:1px solid var(--line)}
+.qhead>span[hidden]{display:none}
+.qhead b{font-variant-numeric:tabular-nums}
+.qhead .combo{color:#E58A2B; font-weight:800; animation:pop .4s ease}
+.qhead b.bump{display:inline-block; animation:bump .45s ease}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.5); color:var(--good)}100%{transform:scale(1)}}
+
+/* a thicker bar that glides and shines */
+.prog{height:12px}
+.prog i{position:relative; overflow:hidden; transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.prog i::after{content:""; position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%); transform:translateX(-100%); animation:shine 2.4s ease-in-out infinite}
+@keyframes shine{0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)}}
+
+/* the question card slides in; the answers come one after the other */
+.card.qin{animation:qin .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes qin{from{opacity:0; transform:translateX(18px) scale(.98)} to{opacity:1; transform:none}}
+.opts .opt{animation:optin .36s cubic-bezier(.2,.8,.2,1) both}
+.opts .opt:nth-child(1){animation-delay:.04s} .opts .opt:nth-child(2){animation-delay:.09s}
+.opts .opt:nth-child(3){animation-delay:.14s} .opts .opt:nth-child(4){animation-delay:.19s}
+.opts .opt:nth-child(n+5){animation-delay:.24s}
+@keyframes optin{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+/* a right answer keeps a soft glow; a wrong one fades a little */
+.opt.ok{box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 28%,transparent), var(--shadow-s)}
+.opt.no{box-shadow:0 0 0 4px color-mix(in srgb,var(--bad) 22%,transparent), var(--shadow-s)}
+.opt:disabled:not(.ok):not(.no){opacity:.55}
+
+/* the answer panel under the options */
+.fbbox{display:flex; flex-direction:column; gap:6px; border-radius:16px; transition:background .2s}
+.fbbox.on{padding:14px 16px; border:1.5px solid var(--line); border-left-width:5px; animation:fbin .3s cubic-bezier(.2,.8,.2,1) both}
+.fbbox.on.good{background:var(--goodsoft); border-color:var(--good)}
+.fbbox.on.bad{background:var(--badsoft); border-color:var(--bad)}
+.fbbox.on .feedback{font-size:1.2rem; font-weight:800}
+.fbbox.on .answer{margin:0}
+@keyframes fbin{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+
+/* the Next button pulses once the answer is known */
+.btns .btn[data-q="go"]:not([hidden]){animation:nudge .5s ease .15s both}
+@keyframes nudge{0%{transform:translateY(8px); opacity:0} 100%{transform:none; opacity:1}}
+
+/* ---------- the result card: a ring that fills, stars that appear, confetti ---------- */
+.scorecard{position:relative; overflow:hidden; align-items:center; gap:12px; padding:30px 18px 24px}
+.ring{position:relative; width:150px; height:150px}
+.ring svg{width:100%; height:100%; transform:rotate(-90deg)}
+.ring circle{fill:none; stroke-width:10; stroke-linecap:round}
+.ring-bg{stroke:color-mix(in srgb,var(--ink) 12%,transparent)}
+.ring-fg{stroke:var(--cat); stroke-dasharray:var(--len); stroke-dashoffset:var(--len); animation:ringfill 1s cubic-bezier(.2,.8,.2,1) .15s forwards}
+@keyframes ringfill{to{stroke-dashoffset:var(--to)}}
+.ring-n{position:absolute; inset:0; display:flex; align-items:baseline; justify-content:center; align-content:center; flex-wrap:wrap; padding-top:46px; box-sizing:border-box; gap:2px}
+.ring-n b{font-size:2.6rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums}
+.ring-n span{font-size:1.1rem; font-weight:700; color:var(--muted)}
+.stars{display:flex; gap:6px; font-size:1.9rem; line-height:1}
+.stars i{font-style:normal; color:color-mix(in srgb,var(--ink) 22%,transparent)}
+.stars i.on{color:#F2C14E; text-shadow:0 0 12px rgba(242,193,78,.6); animation:starin .55s cubic-bezier(.2,1.4,.4,1) var(--d) both}
+@keyframes starin{from{opacity:0; transform:scale(.2) rotate(-40deg)} to{opacity:1; transform:none}}
+.scorecard .feedback{font-size:1.25rem; font-weight:800; text-align:center}
+.scorecard .feedback::before{content:""}
+.confetti{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+.confetti i{position:absolute; top:-12px; width:8px; height:14px; border-radius:2px; opacity:0; animation:fall linear forwards}
+@keyframes fall{0%{opacity:1; transform:translate(0,0) rotate(0)} 100%{opacity:0; transform:translate(var(--dx),420px) rotate(var(--r))}}
+
+/* ---------- the menu: tiles come in one after the other, and answer to the finger ---------- */
+.home .grid>.cat{animation:tilein .5s cubic-bezier(.2,.8,.2,1) both}
+.home .grid>.cat:nth-child(1){animation-delay:.05s} .home .grid>.cat:nth-child(2){animation-delay:.1s}
+.home .grid>.cat:nth-child(3){animation-delay:.15s} .home .grid>.cat:nth-child(4){animation-delay:.2s}
+.home .grid>.cat:nth-child(5){animation-delay:.25s} .home .grid>.cat:nth-child(6){animation-delay:.3s}
+.home .grid>.cat:nth-child(n+7){animation-delay:.35s}
+@keyframes tilein{from{opacity:0; transform:translateY(16px) scale(.97)} to{opacity:1; transform:none}}
+.home .cat:active{transform:scale(.97)}
+.home .cat .ico{transition:transform .25s cubic-bezier(.2,1.4,.4,1)}
+.home .cat:hover .ico{transform:scale(1.1) rotate(-4deg)}
+
+/* cards of words and buttons answer to a tap */
+.btn,.chip,.hear,.tbtn{transition:transform .12s, filter .15s, box-shadow .15s, background .15s}
+.chip:not([aria-pressed="true"]):hover{transform:translateY(-1px)}
+.chip:active,.hear:active{transform:scale(.95)}
+.dword,.acard,.line,.vcard{animation:rise .3s ease both}
+
+@media (prefers-reduced-motion: reduce){
+  .confetti{display:none}
+  .ring-fg{stroke-dashoffset:var(--to)}
+  .stars i.on{opacity:1}
+}
+/* the answer animations must win over the entrance animation of the options */
+.opts .opt.ok{animation:pop .35s ease both}
+.opts .opt.no{animation:shake .35s ease both}

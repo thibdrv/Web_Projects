@@ -1,0 +1,25 @@
+/* ---------- the drawings: light, depth and a way to test yourself (js/bodydiagram.js) ---------- */
+.bd-stage{background:radial-gradient(ellipse 80% 70% at 50% 38%, color-mix(in srgb,var(--card) 92%, #fff), color-mix(in srgb,var(--card) 86%, var(--bg)) 70%, color-mix(in srgb,var(--card) 74%, var(--cat)) 100%); box-shadow:var(--shadow), inset 0 0 40px -14px rgba(0,0,0,.35)}
+.bd-ground{fill:rgba(40,25,10,.38)}
+:root:not([data-theme="light"]) .bd-ground{fill:rgba(0,0,0,.55)}
+.bd-svg .part *{stroke-opacity:.75}
+.bd-svg .part .vol{stroke:none}
+.bd-svg .dot circle.hit{fill:transparent !important; stroke:none !important}
+.bd-svg .dot circle:not(.hit){filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.35))}
+.bd-svg .lbls text{fill:var(--ink); paint-order:stroke; stroke:var(--card); stroke-width:3.6px; stroke-linejoin:round; font-weight:800; font-family:"Commissioner",sans-serif}
+.bd-t2{width:40px; height:40px}
+.bd-t2[aria-pressed="true"]{color:var(--oncat,#fff); background:var(--cat); border-color:var(--cat)}
+.bd-testing .lbls{display:none}
+.bd-testing .bd-legend{opacity:.35; pointer-events:none}
+.part.ok{filter:drop-shadow(0 0 3px var(--good)) drop-shadow(0 0 8px var(--good))}
+.part.ok *{stroke:var(--good) !important; stroke-width:4 !important}
+.part.bad{filter:drop-shadow(0 0 3px var(--bad)) drop-shadow(0 0 8px var(--bad))}
+.part.bad *{stroke:var(--bad) !important; stroke-width:4 !important}
+.dot.ok circle:not(.hit){fill:var(--good) !important}
+.dot.bad circle:not(.hit){fill:var(--bad) !important}
+.part:focus-visible{outline:none}
+@media (prefers-reduced-motion: reduce){ .part.ok, .part.bad{filter:none} }
+
+/* the light version of a drawing, for a slow screen (js/bodydiagram.js: perfGuard) */
+.bd-lite .bd-fx, .bd-lite [style*="scGshade"], .bd-lite .vol, .bd-lite .bd-ground{display:none}
+.bd-lite .part, .bd-lite .part *, .bd-lite .under *, .bd-lite .over *{animation:none !important}

@@ -1,0 +1,133 @@
+/* ---------- home page, under the title and the picture ----------
+   Four blocks, each with its own look (the classes are on the <div class="grid ..."> of index.html):
+   g-banner  your progress: one wide colored card
+   g-start   where to begin: 4 tall tiles
+   g-tiles   all the vocabulary: small tiles, 2 to 4 per row
+   g-tools   dictionary and level test: two slim buttons
+   Each card takes its color from --c (see the .cat[data-go=...] lines of theme.css). */
+
+/* section titles: a small colored mark, the text, and a fading line */
+.home .sect{display:flex; align-items:center; gap:10px; margin:18px 2px 2px; color:var(--ink); font-size:.78rem; opacity:.92}
+.home .sect::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--gold,#F2C14E); box-shadow:0 0 0 4px color-mix(in srgb,var(--gold,#F2C14E) 22%,transparent)}
+.home .sect::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent)}
+:root[data-theme="light"] .home .sect::before{background:#B98100; box-shadow:0 0 0 4px rgba(185,129,0,.18)}
+
+/* a card: a soft tint of its color, a glow in the corner, and a lift when you point at it */
+.home .cat{
+  --tint:color-mix(in srgb,var(--c) 13%,var(--card));
+  background:linear-gradient(155deg,var(--tint),var(--card) 62%);
+  border-radius:20px; padding:16px; align-items:flex-start;
+  animation:rise .45s ease both;
+}
+.home .cat::after{inset:0; width:auto; background:radial-gradient(140px 100px at 100% 0,color-mix(in srgb,var(--c) 30%,transparent),transparent); opacity:1; pointer-events:none}
+.home .cat .ico,.home .cat .txt{position:relative; z-index:1}
+.home .cat .txt{gap:4px; min-width:0}
+.home .cat .txt span{color:var(--muted); line-height:1.35}
+.home .cat .ico{flex:none; transition:transform .2s}
+.home .cat:hover .ico{transform:rotate(-6deg) scale(1.08)}
+.home .grid>.cat:nth-child(2){animation-delay:.04s}
+.home .grid>.cat:nth-child(3){animation-delay:.08s}
+.home .grid>.cat:nth-child(4){animation-delay:.12s}
+.home .grid>.cat:nth-child(5){animation-delay:.16s}
+.home .grid>.cat:nth-child(6){animation-delay:.2s}
+.home .grid>.cat:nth-child(n+7){animation-delay:.24s}
+
+/* ---- your progress: one wide card, filled with its color ---- */
+.home .g-banner{grid-template-columns:1fr}
+.home .g-banner .cat{
+  align-items:center; gap:16px; padding:18px; border:0; color:#fff;
+  background:linear-gradient(120deg,var(--c),color-mix(in srgb,var(--c) 58%,#000));
+  box-shadow:0 16px 30px -16px color-mix(in srgb,var(--c) 80%,transparent);
+}
+.home .g-banner .cat::after{background:radial-gradient(220px 140px at 100% 0,rgba(255,255,255,.22),transparent)}
+.home .g-banner .cat .ico{width:58px; height:58px; background:rgba(255,255,255,.2); box-shadow:none; backdrop-filter:blur(2px)}
+.home .g-banner .cat .txt b{font-size:1.15rem; color:#fff}
+.home .g-banner .cat .txt span{color:rgba(255,255,255,.88)}
+.home .g-banner .cat .txt{flex:1}
+.home .g-banner .cat .txt::after{
+  content:"→"; position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.22); font-weight:800; transition:transform .2s;
+}
+.home .g-banner .cat:hover .txt::after{transform:translateY(-50%) translateX(4px)}
+.home .g-banner .cat .txt{padding-right:46px}
+
+/* ---- where to begin: tall tiles, two per row (four on a wide screen) ---- */
+.home .g-start{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:900px){ .home .g-start{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.home .g-start .cat{flex-direction:column; gap:12px; padding:16px 15px 18px; min-height:158px}
+.home .g-start .cat .ico{width:58px; height:58px; font-size:1.7rem; border-radius:18px}
+.home .g-start .cat .txt b{font-size:1.1rem}
+.home .g-start .cat .txt span{font-size:.84rem}
+
+/* ---- vocabulary: small tiles ---- */
+.home .g-tiles{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+@media (min-width:600px){ .home .g-tiles{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (min-width:900px){ .home .g-tiles{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.home .g-tiles .cat{flex-direction:column; gap:10px; padding:14px 13px 15px; border-radius:18px}
+.home .g-tiles .cat .ico{width:46px; height:46px; font-size:1.35rem; border-radius:14px}
+.home .g-tiles .cat .txt b{font-size:1rem; line-height:1.2}
+.home .g-tiles .cat .txt span{font-size:.78rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+
+/* ---- tools: two slim buttons side by side ---- */
+.home .g-tools{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.home .g-tools .cat{align-items:center; gap:12px; padding:12px 14px; border-radius:16px}
+.home .g-tools .cat .ico{width:40px; height:40px; font-size:1.2rem; border-radius:12px}
+.home .g-tools .cat .txt b{font-size:.98rem}
+.home .g-tools .cat .txt span{display:none}
+@media (min-width:600px){ .home .g-tools .cat .txt span{display:-webkit-box; font-size:.8rem; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden} }
+
+/* the light look: a bit less tint, so the cards stay clean */
+:root[data-theme="light"] .home .cat{--tint:color-mix(in srgb,var(--c) 9%,var(--card))}
+:root[data-theme="light"] .home .cat::after{background:radial-gradient(140px 100px at 100% 0,color-mix(in srgb,var(--c) 20%,transparent),transparent)}
+:root[data-theme="light"] .home .g-banner .cat::after{background:radial-gradient(220px 140px at 100% 0,rgba(255,255,255,.2),transparent)}
+
+/* ---------- the "Today" card ---------- */
+.today{
+  --c:#F2C14E; position:relative; overflow:hidden; display:grid; gap:16px; padding:18px; border-radius:22px; border:1px solid var(--line);
+  background:linear-gradient(150deg,color-mix(in srgb,var(--c) 14%,var(--card)),var(--card) 60%);
+  box-shadow:var(--shadow); animation:rise .45s ease both;
+}
+.today::before{content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(220px 140px at 100% 0,color-mix(in srgb,var(--c) 26%,transparent),transparent)}
+.today>*{position:relative}
+:root[data-theme="light"] .today{--c:#C98F0A}
+@media (min-width:700px){ .today{grid-template-columns:1.1fr 1fr; align-items:center} .today .tbtns{grid-column:1/-1} }
+.tword{display:flex; align-items:center; gap:14px}
+.tw-pic{flex:none; width:68px; height:68px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:2.3rem;
+  background:color-mix(in srgb,var(--c) 18%,var(--card)); border:1px solid color-mix(in srgb,var(--c) 40%,var(--line))}
+.tw-txt{display:flex; flex-direction:column; min-width:0; flex:1}
+.tw-txt small{font-size:.68rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.tw-txt b{font-size:1.45rem; line-height:1.15; letter-spacing:-.01em}
+.tw-txt i{font-style:normal; color:var(--accent,#5C9DFF); font-weight:700; font-size:.92rem}
+.tw-txt span{color:var(--muted); font-size:.92rem}
+.tw-hear{flex:none; width:46px; height:46px; border-radius:50%; font-size:1.2rem; cursor:pointer; border:1px solid var(--line); background:var(--card); box-shadow:var(--shadow-s); transition:transform .15s}
+.tw-hear:hover{transform:scale(1.08)} .tw-hear:active{transform:scale(.93)}
+.tg-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+.tg-head b{font-size:.78rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.tg-set{font:inherit; font-size:.8rem; font-weight:800; color:var(--ink); background:color-mix(in srgb,var(--ink) 8%,transparent); border:1px solid var(--line); border-radius:999px; padding:3px 11px; cursor:pointer}
+.tg-bar{height:12px; border-radius:999px; background:color-mix(in srgb,var(--ink) 10%,transparent); overflow:hidden}
+.tg-bar i{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#F2C14E,#E2745B); transition:width .5s ease}
+.tgoal p{margin:8px 0 0; font-size:.9rem; color:var(--muted)}
+.tbtns{display:flex; flex-wrap:wrap; gap:8px}
+.tbtn{font:inherit; font-weight:700; font-size:.9rem; color:var(--ink); cursor:pointer; padding:10px 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); box-shadow:var(--shadow-s); transition:transform .15s,box-shadow .15s}
+.tbtn:hover{transform:translateY(-1px); box-shadow:var(--shadow)}
+.tbtn.main{background:linear-gradient(120deg,#E2A93B,#D2662F); border-color:transparent; color:#fff; box-shadow:0 10px 20px -10px rgba(210,102,47,.8)}
+
+/* an odd last tile of "Start here" takes the whole row */
+.home .g-start>.cat:last-child:nth-child(odd){grid-column:1/-1; min-height:0; flex-direction:row; align-items:center}
+
+/* the fun line under the title: gold like the small title above, on a dark frosted backdrop so it reads on the picture */
+.hero-hook{display:inline-block; margin:2px 0 18px; padding:8px 16px; max-width:24ch; border-radius:16px; font-size:clamp(1.15rem,4.6vw,1.45rem); font-weight:800; line-height:1.25; letter-spacing:-.01em;
+  color:#F2C14E; background:rgba(8,12,24,.62); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  text-shadow:0 1px 0 rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.9), 0 2px 10px rgba(0,0,0,.6); box-shadow:0 6px 18px -8px rgba(0,0,0,.7)}
+
+/* the closing line at the bottom of the home page */
+.home-outro{margin:26px auto 8px; max-width:26ch; text-align:center; font-size:1.15rem; font-weight:700; line-height:1.35; color:var(--muted)}
+.home-outro::before{content:""; display:block; width:46px; height:3px; margin:0 auto 14px; border-radius:3px; background:linear-gradient(90deg,#F2C14E,#E2745B)}
+
+/* an odd last button of "Tools" takes the whole row */
+.home .g-tools>.cat:last-child:nth-child(odd){grid-column:1/-1}
+
+/* the day look: no dark box behind the fun line. A very light frosted veil, dark gold letters with a white glow, so it still reads on the bright picture */
+:root[data-theme="light"] .hero-hook{color:#6A4600; background:rgba(255,250,240,.34); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  text-shadow:0 0 6px rgba(255,255,255,.95), 0 1px 2px rgba(255,255,255,.9); box-shadow:none}

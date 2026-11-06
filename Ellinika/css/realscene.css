@@ -1,0 +1,332 @@
+/* ---------- the landscape of the home page, more realistic (drawn by the generator gen_scene.py, in the <svg class="scene"> of index.html) ----------
+   Depth: far islands in the haze, three hills one behind the other, a sea that gets lighter towards the horizon with glints on the water,
+   a whitewashed village whose houses have a lit front and a shaded side, a blue-domed church, a windmill, an olive tree and cypresses.
+   Dark look = a moonlit night (windows are lit). Light look = a bright day; at dawn and dusk the light is warm. */
+
+/* ----- the moonlit night (dark look) ----- */
+.deco,
+:root[data-theme="light"][data-tod="night"] .deco{
+  --r-sea-a:#2a4d80; --r-sea-b:#17365f; --r-sea-c:#0b1d38; --r-horizon:#8fb0e8; --r-glint:#dfe9ff;
+  --r-far-a:#3a5178; --r-far-b:#1f3254; --r-far2-a:#2b4166; --r-far2-b:#1a2b49;
+  --r-h3-a:#34455c; --r-h3-b:#1b283b;
+  --r-h2-a:#4a5d56; --r-h2-b:#2e3d3d; --r-h2-c:#1a252a;
+  --r-h1-a:#566376; --r-h1-b:#343f52; --r-h1-c:#1c2433;
+  --r-wall-a:#e6eefa; --r-wall-b:#a9b9d2; --r-side-a:#8396b4; --r-side-b:#506080; --r-corn:#ffffff;
+  --r-roof-a:#f4f8ff; --r-roof-b:#cbd7ea; --r-dome-a:#74aaf0; --r-dome-b:#2b5b9e;
+  --r-cyp-a:#33604a; --r-cyp-b:#13291f; --r-haze:#6f8bc6;
+  --r-win:#ffcf7a; --r-win-off:#27395a; --r-shut:#4079bb; --r-door:#3c70ad;
+  --r-olive-0:#4a6e56; --r-olive-1:#3c5d49; --r-olive-2:#2f4c3b; --r-leaf-0:#86a994; --r-leaf-1:#6a8f78; --r-leaf-2:#557a62;
+  --r-trunk:#6f6455; --r-trunk-hi:#9a8d78; --r-tuft:#7f9a82; --r-thatch:#54483d; --r-hull:#6b5642; --r-sail-a:#e9eef8; --r-sail-b:#b9c6dc;
+}
+/* ----- the bright day (light look) ----- */
+:root[data-theme="light"] .deco{
+  --r-sea-a:#8fd0f2; --r-sea-b:#4aa2dc; --r-sea-c:#1f6fb4; --r-horizon:#ffffff; --r-glint:#ffffff;
+  --r-far-a:#a9c4dc; --r-far-b:#86a9c8; --r-far2-a:#b7cde0; --r-far2-b:#9ab8d2;
+  --r-h3-a:#d6c28c; --r-h3-b:#b49e68;
+  --r-h2-a:#c9b27a; --r-h2-b:#a58f5b; --r-h2-c:#7e7a4a;
+  --r-h1-a:#d8c391; --r-h1-b:#b79f6c; --r-h1-c:#8c7648;
+  --r-wall-a:#ffffff; --r-wall-b:#ece7dd; --r-side-a:#d9d2c4; --r-side-b:#b3aa98; --r-corn:#ffffff;
+  --r-roof-a:#ffffff; --r-roof-b:#f1ede4; --r-dome-a:#5b9bec; --r-dome-b:#1f5aa8;
+  --r-cyp-a:#4d7a49; --r-cyp-b:#244a2d; --r-haze:#ffffff;
+  --r-win:#3c6ea8; --r-win-off:#3f6a9a; --r-shut:#2f6fb5; --r-door:#2a64a6;
+  --r-olive-0:#7f9a5a; --r-olive-1:#6a8749; --r-olive-2:#557238; --r-leaf-0:#a6bf80; --r-leaf-1:#8aa766; --r-leaf-2:#6b8a4a;
+  --r-trunk:#7b6a4e; --r-trunk-hi:#a8956f; --r-tuft:#8a7a45; --r-thatch:#9a7a4c; --r-hull:#9a6a3e; --r-sail-a:#ffffff; --r-sail-b:#e6e1d6;
+}
+/* dawn: pink and gold light; dusk: orange and violet */
+:root[data-theme="light"][data-tod="dawn"] .deco{
+  --r-sea-a:#f4b3a0; --r-sea-b:#90b2dc; --r-sea-c:#3a76b2; --r-haze:#ffc3a2; --r-horizon:#ffe2cf;
+  --r-wall-a:#fff1e6; --r-wall-b:#f0cfbd; --r-side-a:#d9a393; --r-side-b:#a9737c; --r-roof-a:#fff3ea; --r-roof-b:#f3d8c8;
+  --r-far-a:#c6a8b4; --r-far-b:#9c8fb0; --r-h1-a:#e0b88f; --r-h2-a:#d3aa80;
+}
+:root[data-theme="light"][data-tod="dusk"] .deco{
+  --r-sea-a:#e8967a; --r-sea-b:#8a7cba; --r-sea-c:#34508a; --r-haze:#ff9f78; --r-horizon:#ffc7a3;
+  --r-wall-a:#ffe3cf; --r-wall-b:#e6b39b; --r-side-a:#bb8497; --r-side-b:#7f5c86; --r-roof-a:#ffe8d8; --r-roof-b:#eec5ad;
+  --r-far-a:#a98aa8; --r-far-b:#7f729f; --r-h1-a:#cfa07f; --r-h2-a:#c19372; --r-win:#ffb55e;
+}
+
+/* ----- sky, sun and moon ----- */
+.scene .sun-glow{fill:url(#gSunGlow); pointer-events:none}
+:root:not([data-theme="light"]) .scene .sun-glow,:root[data-theme="light"][data-tod="night"] .scene .sun-glow{fill:url(#gMoonGlow)}
+.scene .sun{fill:url(#gSunDisc)}
+:root:not([data-theme="light"]) .scene .sun{fill:url(#gMoonDisc)}
+.scene .sun-halo{fill:url(#gSunGlow); opacity:.5}
+:root:not([data-theme="light"]) .scene .sun-halo{fill:url(#gMoonGlow); opacity:.6}
+:root:not([data-theme="light"]) .scene .crater{fill:#aab7d2; opacity:.42}
+.scene .clouds .cloud{fill:#fff; opacity:.9}
+.scene .star{fill:#EAF0FF}
+
+/* ----- the far islands and the haze ----- */
+.scene .haze{pointer-events:none}
+.scene .mist{pointer-events:none}
+.scene .far,.scene .far2{pointer-events:none}
+
+/* ----- the sea ----- */
+.scene .sea{fill:url(#gSea)}
+.scene .horizon{fill:var(--r-horizon); opacity:.5}
+.scene .wave{stroke:var(--r-glint); stroke-width:1.4; opacity:.5}
+.scene .glint{fill:var(--r-glint); opacity:.35; animation:glintpulse 3.6s ease-in-out var(--d,0s) infinite}
+@keyframes glintpulse{0%,100%{opacity:.12} 50%{opacity:.7}}
+.scene .boat .hull{fill:var(--r-hull)}
+.scene .boat .hull-line{fill:none; stroke:rgba(255,255,255,.55); stroke-width:1.2}
+.scene .boat .mast{fill:none; stroke:var(--r-trunk); stroke-width:1.6; stroke-linecap:round}
+.scene .boat .sail-a{fill:var(--r-sail-a); stroke:rgba(0,0,0,.18); stroke-width:.8}
+.scene .boat .sail-b{fill:var(--r-sail-b); stroke:rgba(0,0,0,.18); stroke-width:.8}
+.scene .boat .flag{fill:#d6483f}
+.scene .reflect .hull{fill:rgba(0,0,0,.45); stroke:none}
+
+/* ----- the hills (they move a little when you scroll) ----- */
+.scene .hill1{fill:url(#gHill1); transform:none}
+.scene .hill2{fill:url(#gHill2); transform:none}
+.scene .hill3{fill:url(#gHill3); transform:none}
+.scene .par3{transform:translateY(calc(var(--sy,0) * .04px))}
+.scene .par2{transform:translateY(calc(var(--sy,0) * .08px))}
+.scene .par1{transform:translateY(calc(var(--sy,0) * .12px))}
+.scene .tuft,.scene .scrub{fill:none; stroke:var(--r-tuft); stroke-width:1.1; stroke-linecap:round; opacity:.75}
+.scene .strata{fill:none; stroke:rgba(0,0,0,.24); stroke-width:1.2; stroke-linecap:round}
+:root[data-theme="light"] .scene .strata{stroke:rgba(90,66,30,.26)}
+.scene .wallstone{fill:none; stroke:var(--r-wall-b); stroke-width:2.2; stroke-dasharray:7 2.4; opacity:.5}
+
+/* ----- the olive tree ----- */
+.scene .trunk-a{fill:none; stroke:var(--r-trunk); stroke-width:10; stroke-linecap:round}
+.scene .trunk-b{fill:none; stroke:var(--r-trunk-hi); stroke-width:3.4; stroke-linecap:round; opacity:.7}
+.scene .trunk-c{fill:none; stroke:var(--r-trunk); stroke-width:5; stroke-linecap:round}
+.scene .olive-0{fill:var(--r-olive-0)} .scene .olive-1{fill:var(--r-olive-1)} .scene .olive-2{fill:var(--r-olive-2)}
+.scene .leaf-0{fill:var(--r-leaf-0)} .scene .leaf-1{fill:var(--r-leaf-1)} .scene .leaf-2{fill:var(--r-leaf-2)}
+.scene .cyp{fill:url(#gCyp)}
+
+/* ----- the windmill ----- */
+.scene .mill-body{stroke:rgba(0,0,0,.2); stroke-width:.8}
+.scene .mill-base{fill:var(--r-wall-b)}
+.scene .mill-roof{fill:var(--r-thatch); stroke:rgba(0,0,0,.25); stroke-width:.8}
+.scene .mill-roof-line{fill:none; stroke:rgba(0,0,0,.3); stroke-width:1}
+.scene .mill-door{fill:var(--r-door)}
+.scene .mill-win{fill:var(--r-win-off)}
+.scene .mill-hub{fill:var(--r-trunk)}
+.scene .sails{stroke:var(--r-sail-b); stroke-width:3.2; stroke-linecap:butt}
+
+/* ----- the village ----- */
+.scene .hside{stroke:rgba(0,0,0,.12); stroke-width:.5}
+.scene .hfront{stroke:rgba(0,0,0,.1); stroke-width:.5}
+.scene .hroof{fill:url(#gRoof)}
+.scene .hcorn{fill:var(--r-corn); opacity:.85}
+.scene .hshadow{fill:#000; opacity:.14}
+.scene .hshut{fill:var(--r-shut)}
+.scene .hwin,.scene .hwin2,.scene .arch{fill:var(--r-win-off)}
+.scene .hdoor{fill:var(--r-door)}
+.scene .house.dim{opacity:.93}
+.scene .boug.b0{fill:#c2286b} .scene .boug.b1{fill:#e5509a}
+.scene .steps{fill:none; stroke:var(--r-wall-a); stroke-width:1.6; opacity:.6; stroke-linecap:round}
+.scene .tower{stroke:rgba(0,0,0,.12); stroke-width:.5}
+.scene .dome{fill:url(#gDome)}
+.scene .dome-hi{fill:none; stroke:#fff; stroke-width:1.6; stroke-linecap:round; opacity:.5}
+.scene .church .cross{fill:none; stroke:var(--r-wall-a); stroke-width:2.4; stroke-linecap:round}
+/* at night some windows are lit */
+:root:not([data-theme="light"]) .scene .house:nth-of-type(3n) .hwin,
+:root:not([data-theme="light"]) .scene .house:nth-of-type(4n+1) .hwin2,
+:root:not([data-theme="light"]) .scene .house:nth-of-type(5n+2) .hwin,
+:root:not([data-theme="light"]) .scene .church .hwin{fill:var(--r-win)}
+:root[data-theme="light"][data-tod="dusk"] .scene .house:nth-of-type(4n) .hwin{fill:var(--r-win)}
+
+/* ----- the evil eye ----- */
+.scene .eye-hl{fill:#fff; opacity:.6}
+
+@media (prefers-reduced-motion:reduce){ .scene .glint{animation:none} }
+
+/* ----- on the home page the sea can be seen: the picture fades out lower, and on a phone it is bigger (the village is on the right, the windmill is cut off) ----- */
+body[data-view="home"] .deco{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 64%,transparent 100%); mask-image:linear-gradient(to bottom,#000 0,#000 64%,transparent 100%)}
+@media (max-width:699px){
+  body[data-view="home"] .scene{width:150%; left:auto; right:0; height:auto}
+  body[data-view="home"] .deco{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 84%,transparent 100%); mask-image:linear-gradient(to bottom,#000 0,#000 84%,transparent 100%)}
+}
+
+
+/* =====================================================================================================
+   THE DAY-NIGHT ANIMATION
+   When the look changes (light <-> dark) or the hour of the day does, the whole landscape changes slowly instead of jumping:
+   - every colour of the drawing is a registered colour variable (@property), so the browser can slide from one value to the next;
+   - the sun sinks into the sea while the moon rises (and the other way round), the stars and the clouds fade, the windows light up gradually.
+   ===================================================================================================== */
+@property --r-sea-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-sea-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-sea-c{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-horizon{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-glint{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-far-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-far-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-far2-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-far2-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h3-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h3-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h2-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h2-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h2-c{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h1-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h1-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-h1-c{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-wall-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-wall-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-side-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-side-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-corn{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-roof-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-roof-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-dome-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-dome-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-cyp-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-cyp-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-haze{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-win{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-win-off{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-shut{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-door{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-olive-0{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-olive-1{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-olive-2{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-leaf-0{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-leaf-1{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-leaf-2{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-trunk{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-trunk-hi{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-tuft{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-thatch{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-hull{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-sail-a{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-sail-b{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-cl-hi{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-cl-mid{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --r-cl-lo{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --sk1{syntax:"<color>"; inherits:true; initial-value:#000000}
+@property --sk2{syntax:"<color>"; inherits:true; initial-value:#000000}
+
+.deco{
+  transition:
+  --r-sea-a 1.8s ease,
+  --r-sea-b 1.8s ease,
+  --r-sea-c 1.8s ease,
+  --r-horizon 1.8s ease,
+  --r-glint 1.8s ease,
+  --r-far-a 1.8s ease,
+  --r-far-b 1.8s ease,
+  --r-far2-a 1.8s ease,
+  --r-far2-b 1.8s ease,
+  --r-h3-a 1.8s ease,
+  --r-h3-b 1.8s ease,
+  --r-h2-a 1.8s ease,
+  --r-h2-b 1.8s ease,
+  --r-h2-c 1.8s ease,
+  --r-h1-a 1.8s ease,
+  --r-h1-b 1.8s ease,
+  --r-h1-c 1.8s ease,
+  --r-wall-a 1.8s ease,
+  --r-wall-b 1.8s ease,
+  --r-side-a 1.8s ease,
+  --r-side-b 1.8s ease,
+  --r-corn 1.8s ease,
+  --r-roof-a 1.8s ease,
+  --r-roof-b 1.8s ease,
+  --r-dome-a 1.8s ease,
+  --r-dome-b 1.8s ease,
+  --r-cyp-a 1.8s ease,
+  --r-cyp-b 1.8s ease,
+  --r-haze 1.8s ease,
+  --r-win 1.8s ease,
+  --r-win-off 1.8s ease,
+  --r-shut 1.8s ease,
+  --r-door 1.8s ease,
+  --r-olive-0 1.8s ease,
+  --r-olive-1 1.8s ease,
+  --r-olive-2 1.8s ease,
+  --r-leaf-0 1.8s ease,
+  --r-leaf-1 1.8s ease,
+  --r-leaf-2 1.8s ease,
+  --r-trunk 1.8s ease,
+  --r-trunk-hi 1.8s ease,
+  --r-tuft 1.8s ease,
+  --r-thatch 1.8s ease,
+  --r-hull 1.8s ease,
+  --r-sail-a 1.8s ease,
+  --r-sail-b 1.8s ease,
+  --r-cl-hi 1.8s ease,
+  --r-cl-mid 1.8s ease,
+  --r-cl-lo 1.8s ease,
+  --sk1 1.8s ease,
+  --sk2 1.8s ease;
+}
+
+/* the colour of the sky above the picture (it replaces the old --sky) */
+.deco{--sk1:rgba(140,196,245,.30); --sk2:rgba(200,228,250,.07)}
+:root[data-theme="light"][data-tod="dawn"]  .deco{--sk1:rgba(255,176,128,.30); --sk2:rgba(255,226,190,.08)}
+:root[data-theme="light"][data-tod="dusk"]  .deco{--sk1:rgba(244,146,112,.30); --sk2:rgba(184,140,205,.11)}
+:root[data-theme="light"][data-tod="night"] .deco{--sk1:rgba(80,98,160,.24); --sk2:rgba(120,130,180,.06)}
+:root:not([data-theme="light"]) .deco{--sk1:rgba(40,78,140,.30); --sk2:rgba(30,50,100,.10)}
+:root:not([data-theme="light"])[data-tod="dawn"]  .deco{--sk1:rgba(126,74,100,.30); --sk2:rgba(70,50,90,.11)}
+:root:not([data-theme="light"])[data-tod="dusk"]  .deco{--sk1:rgba(150,70,64,.28); --sk2:rgba(76,40,90,.12)}
+:root:not([data-theme="light"])[data-tod="night"] .deco{--sk1:rgba(22,34,86,.37); --sk2:rgba(16,22,56,.12)}
+.deco::before{background:linear-gradient(180deg,var(--sk1),var(--sk2) 70%,transparent); transition:none}
+
+/* the colours of the clouds: white by day, pink or orange at dawn and dusk, pale blue in the moonlight */
+.deco{--r-cl-hi:#ffffff; --r-cl-mid:#f1f6fd; --r-cl-lo:#a9bdd8}
+:root[data-theme="light"][data-tod="dawn"] .deco{--r-cl-hi:#fff4e8; --r-cl-mid:#ffd9c2; --r-cl-lo:#c98fa6}
+:root[data-theme="light"][data-tod="dusk"] .deco{--r-cl-hi:#ffe6d2; --r-cl-mid:#f5b48f; --r-cl-lo:#8c6a9c}
+:root:not([data-theme="light"]) .deco,
+:root[data-theme="light"][data-tod="night"] .deco{--r-cl-hi:#9db3dc; --r-cl-mid:#62799f; --r-cl-lo:#2b3b5f}
+
+/* ----- clouds: bigger, softer, the top is lit and the bottom is in the shade; thin streaks high up ----- */
+.scene .clouds{display:inline; opacity:.96; transition:opacity 1.8s ease}
+:root:not([data-theme="light"]) .scene .clouds{display:inline}
+:is(:root:not([data-theme="light"]), :root[data-theme="light"][data-tod="night"]) .scene .clouds{opacity:.5}
+.scene .cloud{fill:none; opacity:1}
+.scene .cloud.cirrus{opacity:.8}
+.scene .cl-puff{stroke:none}
+
+/* ----- the stars come out at night and fade away by day ----- */
+.scene .stars{display:block; opacity:0; transition:opacity 1.8s ease}
+:is(:root:not([data-theme="light"]), :root[data-theme="light"][data-tod="night"]) .scene .stars{opacity:1}
+
+/* ----- the sun sinks and the moon rises ----- */
+.scene .sun-d,.scene .moon-n{transition:transform 2.2s cubic-bezier(.45,0,.25,1), opacity 1.6s ease}
+.scene .sun-d{transform:translateY(0); opacity:1}
+.scene .moon-n{transform:translateY(150px); opacity:0}
+:is(:root:not([data-theme="light"]), :root[data-theme="light"][data-tod="night"]) .scene .sun-d{transform:translateY(150px); opacity:0}
+:is(:root:not([data-theme="light"]), :root[data-theme="light"][data-tod="night"]) .scene .moon-n{transform:translateY(0); opacity:1}
+.scene .sun-rays{display:inline !important}
+.scene .sun-glow{fill:url(#gSunGlow)}
+.scene .sun{fill:url(#gSunDisc)}
+.scene .sun-halo{fill:url(#gSunGlow); opacity:.5}
+.scene .moon-glow{fill:url(#gMoonGlow); pointer-events:none}
+.scene .moon{fill:url(#gMoonDisc)}
+.scene .moon-n .crater{display:inline; fill:#aab7d2; opacity:.42}
+
+/* ----- the windows light up slowly ----- */
+.scene .hwin,.scene .hwin2,.scene .arch,.scene .mill-win{transition:fill 1.8s ease}
+.scene .house .hfront,.scene .house .hside{transition:none}
+@media (prefers-reduced-motion:reduce){ .deco,.scene .clouds,.scene .stars,.scene .sun-d,.scene .moon-n,.scene .hwin,.scene .hwin2{transition:none} }
+html[data-calm="1"] .deco{transition:none}
+
+/* ---------- more realism: a real sky, the milky way, shooting stars, film grain, a vignette, lights far away, glowing windows (tools/gen_scene.py) ---------- */
+.deco,
+:root[data-theme="light"][data-tod="night"] .deco{ --r-sky-0:#050a1e; --r-sky-1:#0c1a40; --r-sky-2:#1b3566; --r-sky-3:#33568f; --r-vig:#000008; }
+:root[data-theme="light"] .deco{ --r-sky-0:#3f89d8; --r-sky-1:#74b4ec; --r-sky-2:#b4dbf5; --r-sky-3:#e6f3fa; --r-vig:#3a2a10; }
+:root[data-theme="light"][data-tod="dawn"] .deco{ --r-sky-0:#4a5d9c; --r-sky-1:#a7799f; --r-sky-2:#f0a98f; --r-sky-3:#ffd9b0; }
+:root[data-theme="light"][data-tod="dusk"] .deco{ --r-sky-0:#33407f; --r-sky-1:#8b5f8e; --r-sky-2:#e0806f; --r-sky-3:#ffb883; }
+.scene{overflow:visible}
+.scene .sky{pointer-events:none}
+.scene .milky{display:none; pointer-events:none}
+:root:not([data-theme="light"]) .scene .milky, :root[data-theme="light"][data-tod="night"] .scene .milky{display:block}
+.scene .star.warm{fill:#FFE6C0} .scene .star.cool{fill:#C4D6FF}
+.scene .shooters{display:none; pointer-events:none}
+:root:not([data-theme="light"]) .scene .shooters, :root[data-theme="light"][data-tod="night"] .scene .shooters{display:block}
+.scene .shoot{fill:none; stroke:#fff; stroke-width:1.3; stroke-linecap:round; opacity:0; animation:shoot 23s linear 6s infinite}
+.scene .shoot.two{animation-duration:37s; animation-delay:19s}
+@keyframes shoot{0%,94%{opacity:0; transform:translate(0,0)} 95%{opacity:.95; transform:translate(var(--x),var(--y))} 100%{opacity:0; transform:translate(calc(var(--x) + 150px),calc(var(--y) + 46px))}}
+.scene .farlights{display:none; pointer-events:none}
+:root:not([data-theme="light"]) .scene .farlights, :root[data-theme="light"][data-tod="night"] .scene .farlights{display:block}
+.scene .farlight{fill:#ffd98a; opacity:.8; animation:twinkle 4s ease-in-out var(--d,0s) infinite}
+.scene .winglow{display:none; pointer-events:none; opacity:.55; filter:url(#soft)}
+:root:not([data-theme="light"]) .scene .winglow, :root[data-theme="light"][data-tod="night"] .scene .winglow{display:block}
+.scene .vig{pointer-events:none}
+.scene .grain{pointer-events:none; opacity:.09}
+.scene .grain-d{display:none}
+:root[data-theme="light"]:not([data-tod="night"]) .scene .grain-l{display:none}
+:root[data-theme="light"]:not([data-tod="night"]) .scene .grain-d{display:block; opacity:.07}
+@media (prefers-reduced-motion: reduce){ .scene .shoot, .scene .farlight{animation:none} }

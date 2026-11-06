@@ -1,0 +1,13 @@
+/* ---------- the drawings that replace every emoji (js/iconify.js, data/icons.js) ---------- */
+.ic{display:inline-block; width:1em; height:1em; vertical-align:-.15em; flex:none; overflow:visible}
+.ic.mono{color:inherit}
+.emoji .ic{vertical-align:middle}
+button .ic,.chip .ic{pointer-events:none}
+.favstar .ic{width:1.15em; height:1.15em; vertical-align:-.2em}
+.favstar[aria-pressed="true"] .ic{color:#E8B923}
+
+/* the laurel wreath of "Find your level" is drawn in colour and a bit bigger, so its leaves can be seen */
+.levelpill .ic{width:1.45em; height:1.45em; vertical-align:-.35em; margin-right:.15em}
+
+/* a little depth for the coloured icons: a soft shadow below and a thin light on top (the one-colour icons keep the colour of the text) */
+.ic:not(.mono){filter:drop-shadow(0 .05em .04em rgba(0,0,0,.28)) drop-shadow(0 -.02em 0 rgba(255,255,255,.28))}
