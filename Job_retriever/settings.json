@@ -1,0 +1,152 @@
+{
+  "categories": [
+    {
+      "name": "data",
+      "searches": [
+        "data analyst",
+        "business intelligence",
+        "reporting analyst",
+        "business analyst"
+      ],
+      "title_words": [
+        "data",
+        "analytics",
+        "business intelligence",
+        "bi analyst",
+        "bi developer",
+        "power bi",
+        "reporting analyst",
+        "business analyst",
+        "insights analyst"
+      ]
+    },
+    {
+      "name": "dev",
+      "searches": [
+        "web developer",
+        "frontend developer",
+        "full stack developer",
+        "junior developer"
+      ],
+      "title_words": [
+        "web developer",
+        "web designer",
+        "webmaster",
+        "website",
+        "developer",
+        "frontend",
+        "front-end",
+        "front end",
+        "full stack",
+        "fullstack",
+        "full-stack",
+        "javascript",
+        "react",
+        "php",
+        "wordpress",
+        "software engineer"
+      ]
+    },
+    {
+      "name": "french / sales / support",
+      "searches": [
+        "french",
+        "retention",
+        "sales",
+        "customer support",
+        "customer service"
+      ],
+      "title_words": [
+        "french",
+        "francophone",
+        "retention",
+        "sales",
+        "support",
+        "customer",
+        "client success",
+        "client relationship",
+        "account manager"
+      ]
+    }
+  ],
+  "max_experience_years": 3,
+  "excluded_languages": [
+    "greek"
+  ],
+  "seniority_words": [
+    "senior",
+    "sr",
+    "principal",
+    "director",
+    "head of",
+    "chief",
+    "vp",
+    "expert",
+    "architect",
+    "team lead",
+    "tech lead",
+    "technical lead",
+    "lead developer",
+    "lead engineer",
+    "lead analyst"
+  ],
+  "cities": [
+    "nicosia",
+    "lefkosia",
+    "larnaca",
+    "larnaka",
+    "pyla",
+    "dali",
+    "idalion",
+    "limassol",
+    "lemesos"
+  ],
+  "max_age_days": 31,
+  "exclude_words": [
+    "german",
+    "italian",
+    "spanish",
+    "portuguese",
+    "dutch",
+    "russian",
+    "polish",
+    "lithuanian",
+    "czech",
+    "hungarian",
+    "romanian",
+    "bulgarian",
+    "turkish",
+    "arabic",
+    "hebrew",
+    "korean",
+    "japanese",
+    "chinese",
+    "mandarin",
+    "swedish",
+    "norwegian",
+    "danish",
+    "finnish"
+  ],
+  "remote_locations": [
+    "anywhere",
+    "worldwide",
+    "europe",
+    "emea",
+    "eu",
+    "cyprus",
+    "remote",
+    "hybride"
+  ],
+  "max_pages": 5,
+  "job_agent_folder": "../job_agent",
+  "sources": {
+    "ergodotisi": true,
+    "cyprusjobs": true,
+    "cypruswork": true,
+    "fxcareer": true,
+    "kariera": true,
+    "remoteok": true,
+    "jobicy": true,
+    "remotive": true
+  }
+}

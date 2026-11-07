@@ -1,0 +1,10 @@
+# Personal data: each user gets their own when they run the app
+results/
+.cache/
+settings.json
+~$*.xlsx
+
+# Python
+.venv/
+__pycache__/
+*.pyc
