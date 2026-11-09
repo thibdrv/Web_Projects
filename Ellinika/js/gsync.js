@@ -9,7 +9,7 @@
    Known limits: a word removed from the favourites on one device can come back after a sync (copies are merged, not compared event by event);
    the counters of a word that was practiced on two devices keep the larger value. */
 const GSYNC = {
-  clientId: "",                                      /* "123456789-abcdef.apps.googleusercontent.com" (made in Google Cloud Console, see LISEZMOI.md). It is not a secret. */
+  clientId: "474234503300-v7oepkujib2cj0rrm8pedn79aej2j4su.apps.googleusercontent.com",                                   /* "123456789-abcdef.apps.googleusercontent.com" (made in Google Cloud Console, see LISEZMOI.md). It is not a secret. */
   scope: "openid profile email https://www.googleapis.com/auth/drive.appdata",   /* who you are (name, photo) + the hidden app folder of your Drive */
   fileName: "ellinika-progress.json"
 };
