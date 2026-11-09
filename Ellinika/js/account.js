@@ -47,6 +47,7 @@
     const when = gsWhen(st);
     box.innerHTML = `<div class="ac-who">${avatar(st, true)}<div><b>${esc(st.name || firstName(st))}</b>${st.email ? `<span>${esc(st.email)}</span>` : ""}</div></div>
       ${when ? `<p class="ac-note muted">${esc(tx("Last sync: {date}", {date:when}))}</p>` : ""}
+      ${gsLive() ? "" : `<p class="ac-note muted">${esc(tx("Automatic saving is paused: tap Sync now."))}</p>`}
       ${st.stale ? `<p class="ac-note muted">${esc(tx("Your Google copy is newer: tap Sync now."))}</p>` : ""}
       ${message ? `<p class="ac-note ${bad ? "bad" : ""}">${esc(message)}</p>` : ""}
       <div class="ac-actions"><button type="button" class="btn" data-ac="sync">${esc(tx("Sync now"))}</button>

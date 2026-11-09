@@ -86,7 +86,7 @@ function gsLoadLib(){
   return gsLib;
 }
 /* a token from Google: the sign-in window opens (it must be called by a tap) */
-function gsAsk(){
+function gsAsk(silent){
   return gsLoadLib().then(()=>new Promise((ok, no)=>{
     const st = gsState();
     const client = google.accounts.oauth2.initTokenClient({
@@ -99,9 +99,21 @@ function gsAsk(){
       },
       error_callback: e=>no(new Error((e && e.type) || "popup"))
     });
-    client.requestAccessToken();
+    client.requestAccessToken(silent ? {prompt:"none"} : {});        /* silent: no window to see when you are still signed in to Google here and already said yes; otherwise it fails and nothing is shown */
   }));
 }
+/* a new token without a tap, when possible. After a failure it waits 30 minutes, and gives up after 3 failures (until the page is opened again). */
+let gsQuietAt = 0, gsQuietFails = 0;
+async function gsQuiet(){
+  if(gsTok && gsTok.exp > Date.now()) return true;
+  if(!gsAvailable() || !gsState() || gsQuietFails >= 3 || Date.now() - gsQuietAt < 1800000) return false;
+  gsQuietAt = Date.now();
+  try{
+    await Promise.race([gsAsk(true), new Promise((_, no)=>setTimeout(()=>no(new Error("slow")), 15000))]);
+    gsQuietFails = 0; document.dispatchEvent(new Event("gsync-change")); return true;
+  }catch(e){ gsQuietFails++; return false; }
+}
+const gsLive = () => !!(gsTok && gsTok.exp > Date.now());
 const gsTokenNow = () => gsTok && gsTok.exp > Date.now() ? Promise.resolve(gsTok.value) : gsAsk();
 async function gsFetch(url, opts = {}){
   const t = await gsTokenNow();
@@ -146,9 +158,9 @@ async function gsSync(){
 
 /* every minute, while you are signed in and the token is still alive: if this browser has new progress and the Google copy was not changed by another device, save it quietly.
    (If another device changed it, the panel says so: merging into a page that is open needs a reload, so it waits for a tap on "Sync now".) */
-setInterval(async ()=>{
+async function gsPush(){
   const st = gsState();
-  if(!gsAvailable() || !st || !gsTok || gsTok.exp < Date.now() || document.visibilityState!=="visible") return;
+  if(!gsAvailable() || !st || !gsLive()) return;
   const snap = gsSnapshot(); if(gsHash(snap)===st.hash) return;
   try{
     const file = await gsFindFile();
@@ -156,7 +168,20 @@ setInterval(async ()=>{
     const w = await gsWriteFile(file && file.id, snap);
     gsSetState({...st, last:Date.now(), remoteTime:w.modifiedTime, hash:gsHash(snap), stale:false});
   }catch(e){}
+}
+setInterval(async ()=>{
+  if(document.visibilityState!=="visible" || !gsState()) return;
+  if(await gsQuiet()) gsPush();                                   /* the quiet renewal of the token (see gsQuiet) comes first, then the save */
 }, 60000);
+/* when you leave the page or switch app, save at once (if the token is still alive) */
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") gsPush(); });
+/* when the page opens: renew the token quietly; on the home page also fetch what another device saved (the page then reloads once) */
+window.addEventListener("load", ()=>setTimeout(async ()=>{
+  if(!gsState() || !(await gsQuiet())) return;
+  const home = !location.hash || location.hash==="#" || location.hash==="#home";
+  if(home && performance.now() < 25000){ try{ const r = await gsSync(); if(r.changedHere) location.reload(); }catch(e){} }
+  else gsPush();
+}, 1500));
 
 /* ----- the actions (used by the account button of js/account.js and by the panel below) ----- */
 /* sign in, then a first sync. Returns {changedHere} like gsSync. Must be called by a tap. */
