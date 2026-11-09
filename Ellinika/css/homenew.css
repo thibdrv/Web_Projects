@@ -7,7 +7,11 @@
 /* ===== 1. the opening screen =====
    "Welcome to Elliniká" (or "Bienvenue sur Elliniká") appears in big letters, stays a moment, then shrinks away and the home page is there. Nothing else.
    index.html: #splash > .sp-center; the timing is window.__introMs (head of index.html) and js/main.js; a tap or a key skips it; Settings can switch it off (gl-intro). */
-
+/* Masquer le badge Netlify */
+#netlify-badge, 
+a[href*="netlify.com"] img[alt*="Deploys by Netlify"] {
+  display: none !important;
+}
 #nl-badge{position: relative;left: 800px;}
 .splash{
   position:fixed; inset:0; z-index:300; display:grid; place-items:center; cursor:pointer; color:var(--ink);

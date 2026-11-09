@@ -7,6 +7,11 @@
    Each card takes its color from --c (see the .cat[data-go=...] lines of theme.css). */
 
 /* section titles: a small colored mark, the text, and a fading line */
+/* Masquer le badge Netlify */
+#netlify-badge, 
+a[href*="netlify.com"] img[alt*="Deploys by Netlify"] {
+  display: none !important;
+}
 .home .sect{display:flex; align-items:center; gap:10px; margin:18px 2px 2px; color:var(--ink); font-size:.78rem; opacity:.92}
 .home .sect::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--gold,#F2C14E); box-shadow:0 0 0 4px color-mix(in srgb,var(--gold,#F2C14E) 22%,transparent)}
 .home .sect::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent)}
