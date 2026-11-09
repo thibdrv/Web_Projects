@@ -7,12 +7,6 @@
 /* ===== 1. the opening screen =====
    "Welcome to Elliniká" (or "Bienvenue sur Elliniká") appears in big letters, stays a moment, then shrinks away and the home page is there. Nothing else.
    index.html: #splash > .sp-center; the timing is window.__introMs (head of index.html) and js/main.js; a tap or a key skips it; Settings can switch it off (gl-intro). */
-/* Masquer le badge Netlify */
-#netlify-badge, 
-a[href*="netlify.com"] img[alt*="Deploys by Netlify"] {
-  display: none !important;
-}
-#nl-badge{position: relative;left: 800px;}
 .splash{
   position:fixed; inset:0; z-index:300; display:grid; place-items:center; cursor:pointer; color:var(--ink);
   background:
@@ -544,3 +538,6 @@ header h1{font-family:var(--serif); font-weight:400; font-size:1.5rem; letter-sp
   .settings.in-bar .ac-btn,.settings.in-bar .ac-btn.on{width:40px; padding:0; justify-content:center}
 }
 @media (max-width:420px){ .home .hero .acct{right:54px} .ac-name{max-width:9ch} .settings.in-bar .ac-btn,.settings.in-bar .ac-btn.on{width:36px; height:36px} }
+
+/* -- hide the "Powered by Netlify" badge that Netlify adds by itself: an iframe #nl-badge-frame (not in our HTML) -- */
+#nl-badge-frame, #nl-badge, #netlify-badge, iframe[title="Powered by Netlify"]{display:none !important; visibility:hidden !important}

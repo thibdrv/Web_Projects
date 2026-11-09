@@ -2,7 +2,7 @@
    - the app files are kept at the first visit (so the app opens without internet), and replaced as soon as a newer version is online
    - the sounds are kept when they are played (or all at once from the About page) and are never fetched twice
    - the fonts of Google Fonts are kept too */
-const VERSION = "967cb9dfac";
+const VERSION = "0c914599e6";
 const SHELL = "shell-" + VERSION, AUDIO = "audio-v1", FONTS = "fonts-v1";
 const FILES = [
  "./",
