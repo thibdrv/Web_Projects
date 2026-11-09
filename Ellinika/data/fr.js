@@ -3619,4 +3619,9 @@ const FR_STRINGS = {
 "Please allow this app to store its data in your Google Drive, then try again.": "Autorise l'appli à garder ses données dans ton Google Drive, puis réessaie.",
 "Google did not accept the request ({code}). Try again later.": "Google n'a pas accepté la demande ({code}). Réessaie plus tard.",
 "If you sign in with Google, a copy of your progress is kept in a hidden folder of your own Google Drive. It is the only thing the app stores there.": "Si tu te connectes avec Google, une copie de ta progression est gardée dans un dossier caché de ton propre Google Drive. C'est la seule chose que l'appli y met.",
+"Sign in": "Se connecter",
+"Account: {name}": "Compte : {name}",
+"Backup and options": "Sauvegarde et options",
+"Google sign-in is not active yet. Come back soon!": "La connexion Google n'est pas encore active. Reviens bientôt !",
+"Signing in is optional: the app works without it.": "Se connecter est facultatif : l'appli marche aussi sans.",
 };

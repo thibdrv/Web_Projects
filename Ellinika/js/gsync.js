@@ -5,12 +5,12 @@
    "app data" folder of your Google Drive. Only this app can open that folder, and the app asks for nothing else (scope drive.appdata): it cannot see your other files.
    On another device, sign in with the same account and tap "Sync now": the two copies are merged (see gsMerge), not replaced.
    There is no server of ours: the browser talks to Google directly (Google Identity Services, "token" mode). The access token lives in memory only (about an hour).
-   The panel only appears when GSYNC.clientId is filled (see LISEZMOI.md: "Se connecter avec Google"), and when the app is opened from a web address (not from a file).
+   The panel and the sign-in only work when GSYNC.clientId is filled (see LISEZMOI.md: "Se connecter avec Google") and when the app is opened from a web address (not from a file). The account button of every page is in js/account.js.
    Known limits: a word removed from the favourites on one device can come back after a sync (copies are merged, not compared event by event);
    the counters of a word that was practiced on two devices keep the larger value. */
 const GSYNC = {
   clientId: "",                                      /* "123456789-abcdef.apps.googleusercontent.com" (made in Google Cloud Console, see LISEZMOI.md). It is not a secret. */
-  scope: "https://www.googleapis.com/auth/drive.appdata",
+  scope: "openid profile email https://www.googleapis.com/auth/drive.appdata",   /* who you are (name, photo) + the hidden app folder of your Drive */
   fileName: "ellinika-progress.json"
 };
 const GS_STATE = "elk-google";                      /* who is signed in, and when: not named "gl-" so that backups and transfer codes never carry it */
@@ -19,7 +19,10 @@ const gsKeyOk = k => GS_KEYS.includes(k) || k.startsWith("gl-best-");
 const gsAvailable = () => !!GSYNC.clientId && /^https?:$/.test(location.protocol);
 
 const gsState = () => { try{ return JSON.parse(localStorage.getItem(GS_STATE)) || null; }catch(e){ return null; } };
-const gsSetState = s => { try{ if(s) localStorage.setItem(GS_STATE, JSON.stringify(s)); else localStorage.removeItem(GS_STATE); }catch(e){} };
+const gsSetState = s => {
+  try{ if(s) localStorage.setItem(GS_STATE, JSON.stringify(s)); else localStorage.removeItem(GS_STATE); }catch(e){}
+  document.dispatchEvent(new Event("gsync-change"));          /* the account button (js/account.js) and the panel repaint themselves */
+};
 let gsTok = null, gsLib = null;                     /* gsTok: {value, exp}; gsLib: the loading of the Google script */
 
 /* ----- what is synced: the data of this browser, and how two copies are merged ----- */
@@ -121,7 +124,11 @@ async function gsWriteFile(id, data){
   const multi = `--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bd}--`;
   return (await gsFetch(`${GS_UP}files?uploadType=multipart&fields=id,modifiedTime`, {method:"POST", headers:{"Content-Type":"multipart/related; boundary=" + bd}, body:multi})).json();
 }
-async function gsWho(){ const u = (await (await gsFetch(`${GS_API}about?fields=user(displayName,emailAddress)`)).json()).user || {}; return {email:u.emailAddress || "", name:u.displayName || ""}; }
+/* who is signed in: name, first name, e-mail and the small photo of the Google account */
+async function gsWho(){
+  const u = await (await gsFetch("https://www.googleapis.com/oauth2/v3/userinfo")).json();
+  return {email:u.email || "", name:u.name || u.email || "", first:u.given_name || (u.name || "").split(" ")[0] || "", picture:u.picture || ""};
+}
 
 /* the whole sync: read the Google copy, merge, write what changed. Returns {changedHere}: true when this browser got something new (the page must then reload) */
 async function gsSync(){
@@ -151,27 +158,45 @@ setInterval(async ()=>{
   }catch(e){}
 }, 60000);
 
-/* ----- the panel ----- */
+/* ----- the actions (used by the account button of js/account.js and by the panel below) ----- */
+/* sign in, then a first sync. Returns {changedHere} like gsSync. Must be called by a tap. */
+async function gsSignIn(){
+  await gsAsk();
+  const who = await gsWho();
+  gsSetState({email:who.email, name:who.name, first:who.first, picture:who.picture, last:0});
+  return gsSync();
+}
+function gsSignOut(){
+  const t = gsTok && gsTok.value; gsTok = null; gsSetState(null);
+  try{ if(t && window.google && google.accounts) google.accounts.oauth2.revoke(t, ()=>{}); }catch(e){}
+}
+async function gsDelete(){
+  const f = await gsFindFile(); if(f) await gsFetch(`${GS_API}files/${f.id}`, {method:"DELETE"});
+  const s = gsState(); if(s) gsSetState({...s, remoteTime:"", hash:"", last:0});
+}
+/* a sentence for a failure, in the language of the app */
+function gsWhy(e){
+  const c = (e && e.message) || "";
+  if(c==="offline") return tx("Could not reach Google. Check your connection and try again.");
+  if(c==="access_denied" || c==="popup_closed" || c==="popup" || c==="popup_closed_by_user") return tx("The Google window was closed or blocked. Try again.");
+  if(c==="scope") return tx("Please allow this app to store its data in your Google Drive, then try again.");
+  return tx("Google did not accept the request ({code}). Try again later.", {code:c || "?"});
+}
+const gsWhen = st => st && st.last ? new Date(st.last).toLocaleString(LANG==="fr" ? "fr-FR" : "en-GB", {dateStyle:"medium", timeStyle:"short"}) : "";
+
+/* ----- the panel of the page "Review & progress" (Backup) ----- */
 function gsRender(host){
   if(!host) return;
   if(!gsAvailable()){ host.hidden = true; host.innerHTML = ""; return; }
   host.hidden = false;
-  const st = gsState();
+  const st = gsState(), when = gsWhen(st);
   const msg = (t, kind) => { const m = host.querySelector(".gs-msg"); if(m){ m.textContent = t || ""; m.className = "feedback gs-msg " + (t ? (kind || "good") : ""); } };
   const busy = on => host.querySelectorAll("button").forEach(b=>{ b.disabled = on; });
-  const why = e => {
-    const c = (e && e.message) || "";
-    if(c==="offline") return tx("Could not reach Google. Check your connection and try again.");
-    if(c==="access_denied" || c==="popup_closed" || c==="popup" || c==="popup_closed_by_user") return tx("The Google window was closed or blocked. Try again.");
-    if(c==="scope") return tx("Please allow this app to store its data in your Google Drive, then try again.");
-    return tx("Google did not accept the request ({code}). Try again later.", {code:c || "?"});
-  };
   const flash = st && st.flash==="updated";
   if(flash) gsSetState({...st, flash:""});
-  const when = st && st.last ? new Date(st.last).toLocaleString(LANG==="fr" ? "fr-FR" : "en-GB", {dateStyle:"medium", timeStyle:"short"}) : "";
   host.innerHTML = `<h3 class="sub" style="margin-top:0">${esc(tx("Save with Google"))}</h3>
-    <p class="muted" style="margin-top:0">${esc(tx("Sign in with your Google account to keep your progress safe and to continue on another phone or computer. It is kept in a hidden folder of your own Google Drive that only this app can open: no other file of your Drive is read."))}</p>
-    ${st ? `<p><b>${esc(tx("Signed in as {name}", {name:st.email || st.name || "Google"}))}</b>${when ? `<br><span class="muted">${esc(tx("Last sync: {date}", {date:when}))}</span>` : ""}${st.stale ? `<br><span class="muted">${esc(tx("Your Google copy is newer: tap Sync now."))}</span>` : ""}</p>
+    <p class="muted" style="margin-top:0">${esc(tx("Sign in with your Google account to keep your progress safe and to continue on another phone or computer. It is kept in a hidden folder of your own Google Drive that only this app can open: no other file of your Drive is read."))} ${esc(tx("Signing in is optional: the app works without it."))}</p>
+    ${st ? `<p><b>${esc(tx("Signed in as {name}", {name:st.name || st.email || "Google"}))}</b>${st.email && st.name ? ` <span class="muted">(${esc(st.email)})</span>` : ""}${when ? `<br><span class="muted">${esc(tx("Last sync: {date}", {date:when}))}</span>` : ""}${st.stale ? `<br><span class="muted">${esc(tx("Your Google copy is newer: tap Sync now."))}</span>` : ""}</p>
       <div class="btns"><button class="btn" type="button" data-gs="sync">${esc(tx("Sync now"))}</button>
       <button class="btn ghost" type="button" data-gs="out">${esc(tx("Sign out"))}</button>
       <button class="btn ghost" type="button" data-gs="del">${esc(tx("Delete my copy in Google"))}</button></div>`
@@ -184,25 +209,15 @@ function gsRender(host){
       const r = await fn();
       if(r && r.changedHere){ msg(tx("Your progress was updated from your Google account.")); setTimeout(()=>location.reload(), 600); return; }
       gsRender(host); msg(doneText);
-    }catch(e){ busy(false); msg(why(e), "bad"); }
+    }catch(e){ busy(false); msg(gsWhy(e), "bad"); }
   };
   const btn = k => host.querySelector(`[data-gs="${k}"]`);
-  if(btn("in")) btn("in").onclick = ()=>run(async ()=>{
-    await gsAsk(); const who = await gsWho();
-    gsSetState({email:who.email, name:who.name, last:0});
-    return gsSync();
-  }, tx("Done: your progress is saved in your Google account."));
-  if(btn("sync")) btn("sync").onclick = ()=>run(gsSync, tx("Done: your progress is saved in your Google account."));
-  if(btn("out")) btn("out").onclick = ()=>{
-    const t = gsTok && gsTok.value; gsTok = null; gsSetState(null);
-    try{ if(t && window.google && google.accounts) google.accounts.oauth2.revoke(t, ()=>{}); }catch(e){}
-    gsRender(host); msg(tx("Signed out. Your progress stays on this device."));
-  };
+  const saved = tx("Done: your progress is saved in your Google account.");
+  if(btn("in")) btn("in").onclick = ()=>run(gsSignIn, saved);
+  if(btn("sync")) btn("sync").onclick = ()=>run(gsSync, saved);
+  if(btn("out")) btn("out").onclick = ()=>{ gsSignOut(); gsRender(host); msg(tx("Signed out. Your progress stays on this device.")); };
   if(btn("del")) btn("del").onclick = ()=>{
     if(!confirm(tx("Delete the copy of your progress stored in your Google Drive? Your progress on this device stays."))) return;
-    run(async ()=>{
-      const f = await gsFindFile(); if(f) await gsFetch(`${GS_API}files/${f.id}`, {method:"DELETE"});
-      const s = gsState(); gsSetState({...s, remoteTime:"", hash:"", last:0});
-    }, tx("The copy in your Google Drive was deleted."));
+    run(gsDelete, tx("The copy in your Google Drive was deleted."));
   };
 }

@@ -497,3 +497,44 @@ header h1{font-family:var(--serif); font-weight:400; font-size:1.5rem; letter-sp
 .gs-panel[hidden]{display:none}
 .gs-panel .btns{flex-wrap:wrap}
 .gs-panel .btn{flex:1 1 auto; min-height:48px}
+
+/* -- the account button ("Sign in with Google", then your name): js/account.js, inside #settings, next to the settings button -- */
+.acct{position:relative; z-index:41}
+.home .hero .acct{position:absolute; top:0; right:54px}               /* on the home page: just left of the settings button (the box #settings is fixed at the top right) */
+.settings.in-bar{display:flex; align-items:center; gap:8px}           /* in the top bar of the other pages: in a row, before the settings button */
+.settings.in-bar .acct{position:relative; top:auto; right:auto}
+.ac-btn{
+  display:flex; align-items:center; gap:9px; height:44px; padding:0 18px 0 12px; font:inherit; font-size:.82rem; font-weight:700; letter-spacing:.02em; color:var(--ink); cursor:pointer; white-space:nowrap;
+  background:var(--card); border:1px solid var(--line); border-radius:999px; box-shadow:0 6px 16px -8px rgba(0,0,0,.6); transition:border-color .2s, background .2s, transform .15s;
+}
+.ac-btn.on{padding:0 16px 0 7px}
+.ac-btn:hover{border-color:#F2C14E}
+.ac-btn:active{transform:scale(.96)}
+.ac-btn:focus-visible{outline:2px solid #F2C14E; outline-offset:2px}
+.ac-btn:disabled{opacity:.7; cursor:progress}
+.ac-g{width:20px; height:20px; flex:none}
+.ac-av{width:30px; height:30px; flex:none; border-radius:50%; object-fit:cover; background:color-mix(in srgb,#F2C14E 30%,var(--card))}
+.ac-av.big{width:46px; height:46px}
+.ac-init{display:grid; place-items:center; font-weight:800; color:var(--ink)}
+.ac-av.big.ac-init{font-size:1.2rem}
+.ac-name{max-width:14ch; overflow:hidden; text-overflow:ellipsis}
+.settings.in-bar .ac-btn{height:40px}
+.ac-menu{
+  position:absolute; top:calc(100% + 8px); right:0; width:min(300px,calc(100vw - 28px)); padding:16px; text-align:left; border-radius:14px;
+  background:var(--card); border:1px solid var(--line); box-shadow:0 24px 50px -20px rgba(0,0,0,.8); font-size:.92rem;
+}
+.ac-menu[hidden]{display:none}
+.ac-who{display:flex; align-items:center; gap:12px}
+.ac-who b{display:block; font-size:1rem}
+.ac-who span{display:block; font-size:.8rem; color:var(--muted); overflow-wrap:anywhere}
+.ac-note{margin:10px 0 0; line-height:1.4}
+.ac-note.muted{color:var(--muted)}
+.ac-note.bad{color:var(--bad,#ff8a8a)}
+.ac-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.ac-actions .btn{flex:1 1 auto; min-height:44px}
+.ac-link{flex-basis:100%; padding:8px 0 0; font-size:.82rem; color:var(--muted); text-align:center; text-decoration:underline}
+@media (max-width:520px){
+  .settings.in-bar .ac-name{display:none}
+  .settings.in-bar .ac-btn,.settings.in-bar .ac-btn.on{width:40px; padding:0; justify-content:center}
+}
+@media (max-width:420px){ .home .hero .acct{right:54px} .ac-name{max-width:9ch} .settings.in-bar .ac-btn,.settings.in-bar .ac-btn.on{width:36px; height:36px} }
