@@ -14,13 +14,16 @@ function viewTitle(name){
   return gr ? tx(en)+" · "+gr : tx(en);
 }
 /* the ⚙️ button lives in the hero of the home page, and in the top bar of every other page */
+/* on a computer (from 761 px) the account and settings buttons sit at the right of the top bar (#tbRight); on a phone (up to 760 px) the menu bar is at the very top of the screen and the account button and the settings button sit in it, before Home, Learn, Practice... (css/homenew.css, section 11) */
+const PHONE_BAR = window.matchMedia("(max-width:760px)");
 function dockSettings(name){
-  const s = $("settings"), want = name==="home" ? document.querySelector(".hero") : document.querySelector("header");
-  if(s.parentElement!==want){ if(name==="home") want.prepend(s); else want.appendChild(s); }
-  s.classList.toggle("in-bar", name!=="home");
+  const phone = PHONE_BAR.matches, s = $("settings"), want = phone ? $("bnav") : $("tbRight");
+  if(s.parentElement!==want){ if(phone) want.prepend(s); else want.appendChild(s); }
+  s.classList.remove("in-bar");
   s.classList.toggle("open", name==="settings"); $("setBtn").setAttribute("aria-expanded", name==="settings");
   if(name!=="settings") viewBeforeSettings = name;
 }
+PHONE_BAR.addEventListener("change", () => dockSettings(currentView));      /* the screen is turned or resized across 760 px: the buttons move to the right place */
 /* a banner at the top of every learning page: the drawing of its tile on the home page, its name and its line, in the colour of the category (css/pages.css) */
 function renderPageHero(name){
   document.querySelectorAll(".pagehero").forEach(h=>h.remove());

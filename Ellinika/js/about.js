@@ -8,9 +8,10 @@ const ABOUT = {
   author: "",    /* for example "Made by Anna" */
   contact: "",   /* for example "Contact: see the About page" (do not write an address here: it would be public) */
   mail: "dGhpYmF1ZC5kZXJ2aWxsZUBvdXRsb29rLmZy",
-  version: "1.0.0",     /* change these two lines at every update (the date is day/month/year) */
-  date: "05/11/26"
+  date: "09/11/26"      /* the date of the last update, day/month/year: change it at every update (there is no version number) */
 };
+/* the date as shown on the page: 09/11/26 -> 09/11/2026 */
+const aboutDate = () => ABOUT.date.replace(/^(\d\d\/\d\d\/)(\d\d)$/, "$120$2");
 const aboutEmail = () => { try{ return ABOUT.mail ? atob(ABOUT.mail) : ""; }catch(e){ return ""; } };
 /* opens the mail program with a message to the author (the address is put together here, at the tap) */
 function openMail(subject, body){
@@ -19,11 +20,11 @@ function openMail(subject, body){
 }
 /* the footer of the home page: the version and the "Report a mistake" link */
 (function(){
-  const v = $("footVer"); if(v) v.textContent = ABOUT.version + " · " + ABOUT.date;
+  const v = $("footVer"); if(v) v.textContent = aboutDate();
   const m = $("footMail"); if(m){ m.href = "#about"; m.onclick = e=>{ if(ABOUT.mail){ e.preventDefault(); openMail("Elliniká: a bug or a mistake"); } }; }
 })();
 function openAbout(){
-  $("aboutVersion").textContent = tx("Version") + " " + ABOUT.version + " · " + ABOUT.date;
+  $("aboutVersion").textContent = aboutDate();
   [["aboutWho", ABOUT.author], ["aboutContact", ABOUT.contact]].forEach(([id, text])=>{
     const p = $(id); p.textContent = text; p.hidden = !text;
   });

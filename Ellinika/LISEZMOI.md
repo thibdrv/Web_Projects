@@ -372,9 +372,9 @@ Dans Vocabulaire : 3 groupes (For men 15, For women 13, For babies 11) avec les 
 - **Fichier de relecture** (`relecture-grec.html`) refait : 1710 lignes en 17 sections, avec toutes les nouveautés (cuisine, recettes, mots en plus, mots des dessins, génitif, verbes, usages, chansons, chypriote).
 
 
-## Page « À propos » (version 1.0.0 du 01/11/26)
+## Page « À propos »
 
-- La carte « Still in development » explique que l'appli est en cours de construction, que le grec doit être relu par un locuteur natif (avec un bouton vers `relecture-grec.html`, ouvert dans un nouvel onglet), et que tout ce qui est anormal, faux ou manquant peut être signalé par mail (`ABOUT.email` dans `js/about.js`). Le numéro de version et la date ne changent pas (`ABOUT.version`, `ABOUT.date`).
+- La carte « Still in development » explique que l'appli est en cours de construction, que le grec doit être relu par un locuteur natif (avec un bouton vers `relecture-grec.html`, ouvert dans un nouvel onglet), et que tout ce qui est anormal, faux ou manquant peut être signalé par mail (`ABOUT.email` dans `js/about.js`). Il n'y a plus de numéro de version : seule la date de la dernière mise à jour (`ABOUT.date` dans `js/about.js`, à changer à chaque mise à jour) s'affiche, en pied de page et sur cette page.
 - Si tu mets l'appli en ligne, garde `relecture-grec.html` à côté de `index.html` pour que le lien marche.
 - `relecture-grec.html` existe maintenant en **anglais, français et grec** (boutons EN / FR / ΕΛ en haut). Le bouton de « À propos » l'ouvre dans la langue de l'appli (`?lang=en` ou `?lang=fr`). Pour la refaire : `gen_review2.py` + `tr_review.py` (les traductions des textes de la fiche sont dans ce dernier).
 
@@ -475,7 +475,7 @@ Fichiers : `manifest.webmanifest` (nom, couleurs, icônes), `icons/` (fabriquée
 
 ## Pied de page de l'accueil (plus soigné)
 
-- `css/footer.css` + le bloc `<footer class="home-foot">` de `index.html` : un panneau arrondi avec l'icône de l'appli qui dépasse du bord (anneau doré), le nom **Elliniká / Ελληνικά**, la ligne « projet personnel », quatre boutons ronds (**À propos**, **Raccourcis clavier** sur PC seulement, **Installer l'appli**, **Signaler une erreur** qui ouvre un e-mail), une frise de clés grecques, « Fait avec ♥ pour apprendre le grec » (le cœur bat doucement, sauf si l'animation est réduite) et la version (`ABOUT.version` et `ABOUT.date` de `js/about.js`). Il suit les thèmes clair et sombre et les deux langues. Les vagues animées au-dessus restent.
+- `css/footer.css` + le bloc `<footer class="home-foot">` de `index.html` : un panneau arrondi avec l'icône de l'appli qui dépasse du bord (anneau doré), le nom **Elliniká / Ελληνικά**, la ligne « projet personnel », quatre boutons ronds (**À propos**, **Raccourcis clavier** sur PC seulement, **Installer l'appli**, **Signaler une erreur** qui ouvre un e-mail), une frise de clés grecques, « Fait avec ♥ pour apprendre le grec » (le cœur bat doucement, sauf si l'animation est réduite) et la date de la dernière mise à jour (`ABOUT.date` de `js/about.js`, sans numéro de version). Il suit les thèmes clair et sombre et les deux langues. Les vagues animées au-dessus restent.
 
 ## Famille et Animaux séparés, belle-famille ajoutée
 

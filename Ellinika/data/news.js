@@ -3,6 +3,11 @@
 //  - Each entry has a title and a list of changes, in English and in French.
 const NEWS = {
   "entries": [
+    {"date": "09/11/26", "title": {"en": "Sign in with Google, and a menu at the top", "fr": "Connexion Google, et un menu en haut"}, "items": [
+      {"en": "Sign in with Google (optional): your progress is saved in a hidden folder of your own Google Drive, and you can pick it up on another device. The button is next to the settings button. Without signing in, everything works as before.", "fr": "Connexion avec Google (facultative) : ta progression est gardée dans un dossier caché de ton propre Google Drive, et tu la retrouves sur un autre appareil. Le bouton est à côté de celui des réglages. Sans connexion, tout marche comme avant."},
+      {"en": "On a phone the menu (Home, Learn, Practice, Dictionary, More) is now at the very top of the screen, together with the account and settings buttons.", "fr": "Sur téléphone, le menu (Accueil, Apprendre, S'entraîner, Dictionnaire, Plus) est maintenant tout en haut de l'écran, avec les boutons du compte et des réglages."},
+      {"en": "The owl at the bottom of the home page is gone, and the footer only shows the date of the last update (no version number any more).", "fr": "La chouette en bas de l'accueil a disparu, et le pied de page n'affiche plus que la date de la dernière mise à jour (plus de numéro de version)."}
+    ]},
     {"date": "05/11/26", "title": {"en": "Big update", "fr": "Grosse mise à jour"}, "items": [
       {"en": "A livelier home page: the menu (side or bottom) now follows the page and lights the section you read, tiles that pop in, bright Practice cards, and a welcome animation when the app opens (you can switch it off in the Settings).", "fr": "Un accueil plus vivant : le menu (côté ou bas) suit la page et allume la section que tu lis, des tuiles qui apparaissent en douceur, des cartes Pratique plus vives, et une animation de bienvenue à l'ouverture de l'appli (tu peux la couper dans les Réglages)."},
       {"en": "A simpler opening screen: \"Welcome to Elliniká\" in big letters, which then shrinks away.", "fr": "Un écran d'ouverture plus simple : « Bienvenue sur Elliniká » en grandes lettres, qui se réduit ensuite."},

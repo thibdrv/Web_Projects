@@ -539,5 +539,393 @@ header h1{font-family:var(--serif); font-weight:400; font-size:1.5rem; letter-sp
 }
 @media (max-width:420px){ .home .hero .acct{right:54px} .ac-name{max-width:9ch} .settings.in-bar .ac-btn,.settings.in-bar .ac-btn.on{width:36px; height:36px} }
 
-/* -- hide the "Powered by Netlify" badge that Netlify adds by itself: an iframe #nl-badge-frame (not in our HTML) -- */
-#nl-badge-frame, #nl-badge, #netlify-badge, iframe[title="Powered by Netlify"]{display:none !important; visibility:hidden !important}
+/* ===== 11. a phone: the menu bar is at the very top of the screen =====
+   Before, Home / Learn / Practice / Dictionary / More were a bar at the bottom. They are now glued to the top edge (no gap), together with the account button and the settings button
+   (js/router.js, dockSettings, moves #settings into #bnav on a phone). Nothing is left at the bottom of the screen. */
+@media (max-width:760px){
+  :root{--topbar:58px}
+  body{padding-top:var(--topbar)}
+  .bnav{
+    top:0; bottom:auto; height:calc(var(--topbar) + env(safe-area-inset-top)); align-items:center; justify-content:space-between; gap:2px;
+    padding:env(safe-area-inset-top) calc(6px + env(safe-area-inset-right)) 0 calc(6px + env(safe-area-inset-left));
+    border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:0 10px 26px -16px rgba(0,0,0,.7), 0 -1px 0 rgba(255,255,255,.05) inset;
+  }
+  .bnav > button{flex:1 1 0; min-width:0; padding:3px 0 2px; gap:2px; font-size:10px; letter-spacing:0}
+  .bnav > button i{width:40px; height:26px; border-radius:13px}
+  .bnav > button svg{width:21px; height:21px}
+  /* the account button and the settings button: two round buttons at the left of the bar */
+  .bnav .settings{position:static; display:flex; flex:none; align-items:center; gap:4px; margin:0 4px 0 0; z-index:auto}
+  .bnav .acct{position:static}
+  .bnav .settings .setbtn,.bnav .settings .ac-btn{
+    flex:none; flex-direction:row; justify-content:center; gap:0; width:38px; height:38px; min-width:0; padding:0; border-radius:50%; font-size:1.05rem;
+    color:var(--ink); background:var(--card); border:1px solid var(--line); box-shadow:none;
+  }
+  .bnav .settings .setbtn svg{width:20px; height:20px}
+  .bnav .settings .ac-name{display:none}
+  .bnav .settings .ac-g{width:19px; height:19px}
+  .bnav .settings .ac-av{width:28px; height:28px}
+  .bnav .ac-menu{position:absolute; top:calc(100% + 8px); left:8px; right:8px; width:auto}
+  /* nothing at the bottom any more: less room kept there, the keyboard does not hide the bar */
+  main{padding-bottom:32px}
+  html{scroll-padding-bottom:24px; scroll-padding-top:calc(var(--topbar) + env(safe-area-inset-top) + 8px)}
+  body.typing .bnav{transform:none}
+  .gloss-pop{bottom:14px}
+  /* the title bar of the inner pages (back button + title) sticks just under the menu bar */
+  header{top:calc(var(--topbar) + env(safe-area-inset-top)); padding-top:10px}
+  .bd-card{top:calc(var(--topbar) + env(safe-area-inset-top) + 68px)}
+  /* home page: the first screen is the screen minus the bar; the picture sits on the real bottom edge */
+  body[data-view="home"] .home .hero{min-height:calc(100svh - var(--topbar) - 8px); padding-top:28px}
+  body[data-view="home"] .scene{bottom:0}
+}
+@media (max-width:380px){                      /* a small phone (360 px): a little tighter, so that "Dictionnaire" is not cut */
+  .bnav{padding-left:calc(4px + env(safe-area-inset-left)); padding-right:calc(4px + env(safe-area-inset-right))}
+  .bnav > button{font-size:9px; letter-spacing:-.02em}
+  .bnav .settings{gap:3px; margin-right:2px}
+  .bnav .settings .setbtn,.bnav .settings .ac-btn{width:34px; height:34px}
+  .bnav .settings .ac-av{width:26px; height:26px}
+}
+
+/* ===== 12. the first screen, in the style of a luxury house =====
+   A wall of plaster with the long shadows of a colonnade and of an olive branch, and an arched opening in the middle with a fine gold line (drawn in index.html: .lux inside .deco).
+   Night look (default): a black wall, gold light. Day look: a sunlit ivory wall. Nothing else is drawn.
+   On top: the name "Elliniká" at the top center, a magnifier at the top left (the search opens from it), and in the middle "Welcome to Elliniká", one line, one underlined link.
+   The colors are variables (--lx-* for the drawing, --hx-* for the words), so that the day look only changes values. */
+.lux{display:none}
+body[data-view="home"] .scene{display:none}
+body[data-view="home"] .skyfx{display:none}
+body[data-view="home"] .deco{background:none; background-color:transparent; -webkit-mask-image:none; mask-image:none}
+body[data-view="home"] .deco::before,body[data-view="home"] .deco::after{content:none}
+:root:not([data-theme="light"]) body[data-view="home"] .home .hero::before,:root[data-theme="light"][data-tod="night"] body[data-view="home"] .home .hero::before{content:none !important}
+@media (min-width:900px){ body[data-view="home"] .deco{left:var(--rail,0px)} }
+
+body[data-view="home"] .lux{
+  display:block; position:absolute; inset:0; overflow:hidden; pointer-events:none;
+  --lx-wall-a:#2e251b; --lx-wall-b:#0c0a08; --lx-arch-a:rgba(240,204,136,.2); --lx-arch-b:rgba(240,204,136,.04);
+  --lx-shadow:rgba(0,0,0,.5); --lx-shadow2c:rgba(0,0,0,.55); --lx-hair:#d9b45a;
+}
+body[data-view="home"] .lux .lx-shadow2 ellipse{fill:var(--lx-shadow2c)}
+:root[data-theme="light"] body[data-view="home"] .lux{
+  --lx-wall-a:#f6efe2; --lx-wall-b:#e6dbc7; --lx-arch-a:rgba(255,252,244,.85); --lx-arch-b:rgba(255,248,232,.35);
+  --lx-shadow:rgba(92,66,34,.16); --lx-shadow2c:rgba(80,58,30,.26); --lx-hair:#a98128;
+}
+.lux-art{position:absolute; inset:0; width:100%; height:100%}
+.lux-art .lx-shadow polygon{fill:var(--lx-shadow)}
+.lux-art .lx-hair{fill:none; stroke:var(--lx-hair); stroke-width:1.2; vector-effect:non-scaling-stroke; opacity:.85}
+.lux-art .lx-hair2{opacity:.35}
+.lux-grain{position:absolute; inset:0; opacity:.05; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.sp-gone .lux{animation:luxIn 1.8s ease .05s backwards}
+@keyframes luxIn{from{opacity:0}}
+
+/* the words */
+body[data-view="home"] .home .hero{--hx-ink:#F3EBDD; --hx-soft:rgba(243,235,221,.72); --hx-gold:#D9B45A}
+:root[data-theme="light"] body[data-view="home"] .home .hero{--hx-ink:#1C1915; --hx-soft:rgba(28,25,21,.68); --hx-gold:#9A7418}
+.hero-brand{display:none}
+body[data-view="home"] .home .hero{justify-content:center; align-items:center; text-align:center; min-height:calc(100vh - 8px); min-height:calc(100svh - 8px); padding:76px 24px 84px}
+/* top center: the name of the house */
+body[data-view="home"] .home .hero .hero-brand{
+  display:block; position:absolute; top:30px; left:0; right:0; margin:0; font-family:var(--serif); font-size:clamp(1.3rem,2.4vw,1.7rem); font-weight:400;
+  letter-spacing:.5em; text-indent:.5em; text-transform:uppercase; color:var(--hx-ink); white-space:nowrap
+}
+/* top left: only a magnifier; a tap opens the search field */
+.home .hero .hsearch{position:absolute; top:22px; left:calc(50% - (100vw - var(--rail,0px)) / 2 + 22px); width:auto; max-width:calc(100vw - 44px); margin:0; z-index:6}
+.home .hero .hs-box,:root[data-theme="light"] .home .hero .hs-box{display:flex; align-items:center; gap:0; min-height:46px; padding:0; border:0; border-bottom:1px solid transparent; background:transparent; transition:border-color .3s}
+.home .hero .hs-box > span,:root[data-theme="light"] .home .hero .hs-box > span{display:grid; place-items:center; width:46px; height:46px; margin-left:-12px; cursor:pointer; color:var(--hx-ink)}
+.home .hero .hs-box > span svg{width:27px; height:27px; stroke-width:1.5}
+.home .hero .hs-box input,:root[data-theme="light"] .home .hero .hs-box input{width:0; min-width:0; padding:0; opacity:0; font-size:1rem; color:var(--hx-ink); transition:width .35s cubic-bezier(.2,.8,.2,1), opacity .25s}
+.home .hero .hs-box input::placeholder,:root[data-theme="light"] .home .hero .hs-box input::placeholder{color:var(--hx-soft)}
+.home .hero .hsearch:focus-within .hs-box,:root[data-theme="light"] .home .hero .hsearch:focus-within .hs-box{border-bottom-color:var(--hx-gold)}
+.home .hero .hsearch:focus-within .hs-box input{width:min(330px,calc(100vw - 110px)); padding:10px 0; opacity:1}
+.home .hero .hs-results{left:0; right:auto; top:calc(100% + 10px); bottom:auto; width:min(420px,calc(100vw - 44px)); max-height:min(56svh,430px)}
+@media (max-width:699px){ .home .hero .hs-results{top:calc(100% + 10px); bottom:auto; max-height:min(56svh,430px)} }
+/* the middle: "Welcome to Elliniká" */
+body[data-view="home"] .home .hero .hero-kicker,:root[data-theme="light"] body[data-view="home"] .home .hero .hero-kicker{
+  display:block; max-width:8.6em; margin:0 auto 26px; font-family:var(--serif); font-size:clamp(2.9rem,6.6vw,5.4rem); font-weight:400; letter-spacing:.03em; text-indent:0;
+  text-transform:none; line-height:1.08; color:var(--hx-ink); text-shadow:none
+}
+body[data-view="home"] .home .hero .hero-kicker::before{content:""; display:block; width:46px; height:1px; margin:0 auto 26px; background:var(--hx-gold)}
+body[data-view="home"] .home .hero .hero-kicker::after{display:none}
+.home .hero .hero-title{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}      /* "Ελληνικά" stays for screen readers only */
+body[data-view="home"] .home .hero .hero-hook,:root[data-theme="light"] body[data-view="home"] .home .hero .hero-hook{
+  margin:0 0 38px; max-width:40ch; font-family:inherit; font-size:clamp(.95rem,1.4vw,1.08rem); font-weight:400; letter-spacing:.02em; line-height:1.6; color:var(--hx-soft); text-shadow:none
+}
+body[data-view="home"] .home .hero .levelpill,:root[data-theme="light"] body[data-view="home"] .home .hero .levelpill{
+  width:auto; min-height:0; margin:0; padding:0 0 8px; border:0; border-bottom:1px solid var(--hx-gold); border-radius:0; background:transparent; color:var(--hx-ink); text-shadow:none;
+  font-size:.76rem; font-weight:600; letter-spacing:.3em; text-indent:.3em; text-transform:uppercase; transition:opacity .25s, letter-spacing .35s
+}
+body[data-view="home"] .home .hero .levelpill:hover,:root[data-theme="light"] body[data-view="home"] .home .hero .levelpill:hover{background:transparent; color:var(--hx-ink); opacity:.7; letter-spacing:.36em}
+.home .hero .hero-scroll{display:none}
+/* the facts, very small, at the foot of the screen */
+.home .hero .hero-meta,:root[data-theme="light"] .home .hero .hero-meta{position:absolute; left:0; right:0; bottom:30px; margin:0; font-size:.62rem; letter-spacing:.26em; color:var(--hx-soft)}
+.home .hero .hero-meta span + span::before{color:var(--hx-gold)}
+
+@media (max-width:760px){
+  body[data-view="home"] .home .hero{min-height:calc(100svh - var(--topbar,0px) - 8px); padding:70px 22px 60px}
+  body[data-view="home"] .home .hero .hero-brand{top:22px; font-size:1.2rem}
+  .home .hero .hsearch{top:14px; left:calc(50% - 50vw + 14px)}
+  body[data-view="home"] .home .hero .hero-kicker,:root[data-theme="light"] body[data-view="home"] .home .hero .hero-kicker{font-size:clamp(2.7rem,13.5vw,3.5rem); max-width:6.4em}
+  .home .hero .hero-meta,:root[data-theme="light"] .home .hero .hero-meta{display:none}
+}
+body[data-view="home"] .home .hero:has(.hsearch:focus-within) .hero-brand{opacity:0}      /* the open search field takes the place of the name */
+
+/* ===== 13. the bar at the top of a phone, redone =====
+   Left: the account button and the settings button. Middle: the name "Elliniká" (a tap goes to the home page), small. Right: the magnifier (search) and the three dots (all the categories).
+   Home / Learn / Practice / Dictionary are no longer in the bar: everything is in the three dots, and the name is the Home button. A computer keeps its side menu. */
+.bnav > .bn-brand,.bnav > .bn-search{display:none}      /* only the phone bar shows them (the side menu of a computer has its own buttons) */
+@media (max-width:760px){
+  :root{--topbar:54px}
+  .bnav{justify-content:space-between; gap:0}
+  .bnav > button:not(.bn-brand):not(.bn-search):not([data-nav="more"]){display:none}
+  .bnav .settings{order:1; gap:2px; margin:0}
+  .bnav > .bn-brand{order:2; display:flex; flex:1 1 auto; justify-content:center; align-items:center; min-width:0; height:44px; padding:0; gap:0; background:transparent; border:0; border-radius:0; box-shadow:none; color:var(--ink)}
+  .bnav > .bn-brand span{max-width:none; overflow:visible; font-family:var(--serif); font-size:.92rem; font-weight:400; letter-spacing:.36em; text-indent:.36em; text-transform:uppercase; color:var(--ink)}
+  .bnav > .bn-search{order:3}
+  .bnav > button[data-nav="more"]{order:4}
+  .bnav > .bn-search,.bnav > button[data-nav="more"]{display:grid; place-items:center; flex:none; width:40px; height:44px; padding:0; gap:0; background:transparent; border:0; border-radius:0; box-shadow:none; color:var(--ink)}
+  .bnav > .bn-search svg{width:24px; height:24px}
+  .bnav > button[data-nav="more"] i,.bnav > button[data-nav="more"] span{display:none}
+  .bnav > button[data-nav="more"]::before{content:""; width:4px; height:4px; border-radius:50%; background:currentColor; box-shadow:-8px 0 0 currentColor, 8px 0 0 currentColor}
+  .bnav > button[data-nav="more"][aria-expanded="true"]{color:var(--gold,#F2C14E)}
+  /* the account and settings buttons: plain icons, no circle, the same size as the two on the right */
+  .bnav .settings .setbtn,.bnav .settings .ac-btn{width:40px; height:44px; border:0; border-radius:0; background:transparent; box-shadow:none}
+  .bnav .settings .ac-av{width:30px; height:30px}
+  /* the home page: the name and the magnifier of the screen are now in the bar */
+  body[data-view="home"] .home .hero .hero-brand,body[data-view="home"] .home .hero .hsearch{display:none}
+  body[data-view="home"] .home .hero{padding-top:40px}
+}
+@media (max-width:380px){
+  .bnav > .bn-brand span{font-size:.82rem; letter-spacing:.3em; text-indent:.3em}
+  .bnav .settings .setbtn,.bnav .settings .ac-btn,.bnav > .bn-search,.bnav > button[data-nav="more"]{width:36px}
+}
+
+/* ===== 13b. the bar of the phone, sides swapped: menu (three lines) and magnifier on the left, the name in the middle, account and settings on the right ===== */
+@media (max-width:760px){
+  .bnav > button[data-nav="more"]{order:1}
+  .bnav > .bn-search{order:2}
+  .bnav > .bn-brand{order:3}
+  .bnav .settings{order:4}
+  .bnav > button[data-nav="more"]{position:relative}
+  .bnav > button[data-nav="more"]::before,.bnav > button[data-nav="more"]::after{content:""; position:absolute; left:50%; top:50%; width:22px; height:1.5px; border-radius:1px; background:currentColor; box-shadow:0 -7px 0 currentColor, 0 7px 0 currentColor; transform:translate(-50%,-50%); transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, opacity .2s}
+  .bnav > button[data-nav="more"]::after{box-shadow:none; opacity:0}
+  .bnav > button[data-nav="more"][aria-expanded="true"]::before{box-shadow:none; transform:translate(-50%,-50%) rotate(45deg)}
+  .bnav > button[data-nav="more"][aria-expanded="true"]::after{opacity:1; transform:translate(-50%,-50%) rotate(-45deg)}
+  .bnav > .bn-search svg{width:26px; height:26px}
+  .bnav > .bn-search .bn-glint{stroke:var(--gold,#F2C14E)}
+}
+
+/* ===== 14. responsive repairs ===== */
+/* the arch: a real shape, as wide as the screen allows, never cut by its sides */
+.lux-arch{position:absolute; left:50%; top:23%; bottom:-2px; width:clamp(380px,32vw,470px); transform:translateX(-50%); border:1px solid var(--lx-hair); border-bottom:0; border-radius:999px 999px 0 0; background:linear-gradient(to bottom,var(--lx-arch-a),var(--lx-arch-b))}
+.lux-arch::before{content:""; position:absolute; inset:12px 12px 0; border:1px solid var(--lx-hair); border-bottom:0; border-radius:999px 999px 0 0; opacity:.35}
+/* the magnifier of the home page must not sit on the round button that hides the side menu (computer): when the menu is hidden, it moves to the right of that button */
+@media (min-width:900px){ body.rail-off .home .hero .hsearch{left:calc(50% - (100vw - var(--rail,0px)) / 2 + 100px)} }
+@media (max-width:760px){
+  .lux-arch{top:21%; width:calc(100% - 32px)}
+  /* the icons of the bar are smaller than the name, so that the name leads */
+  .bnav > .bn-brand span{font-size:1rem}
+  .bnav > button[data-nav="more"]::before,.bnav > button[data-nav="more"]::after{width:18px; box-shadow:0 -6px 0 currentColor, 0 6px 0 currentColor}
+  .bnav > .bn-search svg{width:21px; height:21px}
+  .bnav .settings .ac-g{width:16px; height:16px}
+  .bnav .settings .ac-av{width:24px; height:24px}
+  .bnav .settings .setbtn svg{width:18px; height:18px}
+}
+@media (max-width:380px){ .bnav > .bn-brand span{font-size:.9rem; letter-spacing:.3em; text-indent:.3em} }
+
+/* ===== 15. computer: the top strip of the home page on one line =====
+   The round button of the side menu (44 px, top 12 px), the magnifier, the name and the account / settings buttons all have their center at the same height (34 px from the top),
+   and the magnifier is the same round button as the others. */
+@media (min-width:761px){
+  .home .hero .hsearch{top:12px}
+  .home .hero .hs-box,:root[data-theme="light"] .home .hero .hs-box{box-sizing:border-box; height:44px; min-height:44px; padding:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:color-mix(in srgb,var(--card) 90%,transparent); box-shadow:0 6px 16px -8px rgba(0,0,0,.6); transition:border-color .3s, background .3s}
+  .home .hero .hs-box > span,:root[data-theme="light"] .home .hero .hs-box > span{flex:none; width:42px; height:42px; margin:0; color:var(--ink)}
+  .home .hero .hs-box > span svg{width:20px; height:20px; stroke-width:1.5}
+  .home .hero .hs-box:hover{border-color:color-mix(in srgb,var(--hx-gold) 60%,var(--line))}
+  .home .hero .hsearch:focus-within .hs-box,:root[data-theme="light"] .home .hero .hsearch:focus-within .hs-box{border-color:var(--hx-gold); box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
+  .home .hero .hsearch:focus-within .hs-box input{width:min(300px,calc(100vw - 150px)); padding:0 18px 0 2px}
+  .home .hero .hs-results{top:calc(100% + 8px)}
+  body.rail-off .home .hero .hsearch{left:calc(50% - (100vw - var(--rail,0px)) / 2 + 72px)}
+  body[data-view="home"] .home .hero .hero-brand{top:12px; height:44px; line-height:44px}
+}
+
+/* ===== 16. computer: the magnifier stays fixed, like the button of the side menu =====
+   It stays at the top left of the screen while you scroll. It is only there when the side menu is hidden (right of the round menu button): when you open the menu it slides away, when you close the menu it comes back. */
+@media (min-width:900px){
+  body.rail-off .home .hero .hsearch,body:not(.rail-off) .home .hero .hsearch{position:fixed; top:calc(12px + env(safe-area-inset-top)); left:70px; z-index:42; max-width:calc(100vw - 150px); transition:opacity .3s ease, transform .4s var(--ease,cubic-bezier(.4,0,.2,1)), visibility 0s}
+  body:not(.rail-off) .home .hero .hsearch{opacity:0; visibility:hidden; transform:translateX(-18px); pointer-events:none; transition:opacity .25s ease, transform .4s var(--ease,cubic-bezier(.4,0,.2,1)), visibility 0s linear .4s}
+}
+
+/* ===== 17. the opening screen and the welcome screen, in the style of the home page =====
+   The same black plaster wall with the long shadows of a colonnade, the same gold arch, the Didone, gold hairlines and square corners. Day look: the ivory wall.
+   (the opening screen is #splash, index.html; the welcome screen with the questions is built by js/welcome.js: .welcome > .wl-panel) */
+:root{--wl-a:#2e251b; --wl-b:#0c0a08; --wl-stripe:rgba(0,0,0,.5); --wl-arch:rgba(240,204,136,.18); --wl-gold:#D9B45A; --wl-ink:#F3EBDD; --wl-soft:rgba(243,235,221,.72); --wl-hair:rgba(243,235,221,.24)}
+:root[data-theme="light"]{--wl-a:#f6efe2; --wl-b:#e6dbc7; --wl-stripe:rgba(92,66,34,.16); --wl-arch:rgba(255,252,244,.8); --wl-gold:#9A7418; --wl-ink:#1C1915; --wl-soft:rgba(28,25,21,.68); --wl-hair:rgba(28,25,21,.24)}
+.splash,.welcome{
+  background:repeating-linear-gradient(105deg, transparent 0 150px, var(--wl-stripe) 154px 266px, transparent 270px 300px), linear-gradient(135deg,var(--wl-a),var(--wl-b));
+  -webkit-backdrop-filter:none; backdrop-filter:none; color:var(--wl-ink)
+}
+
+/* -- the opening screen: the arch rises, "Welcome to" and the name appear inside it, then everything shrinks away -- */
+.splash::before{content:""; position:absolute; left:50%; top:23%; bottom:-2px; width:clamp(380px,32vw,470px); transform:translateX(-50%); border:1px solid var(--wl-gold); border-bottom:0; border-radius:999px 999px 0 0; background:linear-gradient(to bottom,var(--wl-arch),transparent); animation:spArch 1.1s cubic-bezier(.2,.8,.2,1) both}
+.splash::after{content:""; position:absolute; left:50%; top:calc(23% + 12px); bottom:-2px; width:calc(clamp(380px,32vw,470px) - 24px); transform:translateX(-50%); border:1px solid var(--wl-gold); border-bottom:0; border-radius:999px 999px 0 0; opacity:.35; animation:spArch 1.1s cubic-bezier(.2,.8,.2,1) .1s both}
+@keyframes spArch{from{clip-path:inset(100% 0 0 0)} to{clip-path:inset(0 0 0 0)}}
+@media (max-width:760px){
+  .splash::before{top:21%; width:calc(100% - 32px)}
+  .splash::after{top:calc(21% + 12px); width:calc(100% - 56px)}
+}
+.sp-center{position:relative; z-index:1; gap:20px}
+.sp-center::before{content:""; display:block; width:46px; height:1px; background:var(--wl-gold)}
+.sp-hello,:root[data-theme="light"] .sp-hello{font-size:clamp(.7rem,2.6vw,.8rem); font-weight:600; letter-spacing:.42em; text-indent:.42em; color:var(--wl-gold)}
+.splash-logo{font-size:clamp(3.2rem,9vw,5.2rem); letter-spacing:.04em; color:var(--wl-ink)}
+.splash-logo i,:root[data-theme="light"] .splash-logo i{color:var(--wl-gold)}
+@media (prefers-reduced-motion:reduce){ .splash::before,.splash::after{animation:none} }
+
+/* -- the welcome screen (the questions of the first visit): a plain frame on the wall -- */
+.welcome{padding:16px}
+.wl-panel{
+  width:min(480px,100%); gap:14px; padding:44px 30px 26px; border-radius:0; border:1px solid color-mix(in srgb,var(--wl-gold) 55%,transparent); background:transparent; box-shadow:none; color:var(--wl-ink);
+  outline:1px solid color-mix(in srgb,var(--wl-gold) 28%,transparent); outline-offset:-9px
+}
+.wl-panel::before{content:""; position:absolute; top:-5px; left:50%; width:9px; height:9px; margin-left:-4.5px; transform:rotate(45deg); background:var(--wl-gold)}
+.wl-logo{display:none}
+.wl-body{gap:12px}
+.wl-body h2{font-family:var(--serif); font-weight:400; font-size:clamp(1.8rem,6vw,2.3rem); line-height:1.15; letter-spacing:.02em; color:var(--wl-ink)}
+.wl-body p{color:var(--wl-soft); font-size:.98rem; line-height:1.55}
+.wl-body p.wl-q{margin-top:10px !important; font-size:.7rem; font-weight:600; letter-spacing:.32em; text-indent:.32em; text-transform:uppercase; color:var(--wl-gold) !important}
+.welcome .seg,.welcome .wl-seg{gap:0; padding:0; border-radius:0; background:transparent; border:1px solid color-mix(in srgb,var(--wl-gold) 50%,transparent)}
+.welcome .seg button{border-radius:0; padding:14px 6px; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--wl-soft)}
+.welcome .seg button:hover{color:var(--wl-ink)}
+.welcome .seg button[aria-pressed="true"]{background:var(--wl-gold); color:#17120a; box-shadow:none}
+.wl-goal,.wl-choice{border-radius:0; border:1px solid var(--wl-hair); background:transparent; color:var(--wl-ink)}
+.wl-goal b{font-family:var(--serif); font-weight:400; font-size:1.9rem}
+.wl-goal span,.wl-choice span{color:var(--wl-soft)}
+.wl-choice b{font-family:var(--serif); font-weight:400; font-size:1.2rem; letter-spacing:.01em}
+.wl-goal:hover,.wl-choice:hover{border-color:var(--wl-gold); transform:none}
+.wl-goal[aria-pressed="true"]{border-color:var(--wl-gold); background:color-mix(in srgb,var(--wl-gold) 14%,transparent)}
+.wl-dots{gap:12px; margin-top:6px}
+.wl-dots i{width:7px; height:7px; border-radius:0; transform:rotate(45deg); background:transparent; border:1px solid var(--wl-gold)}
+.wl-dots i.on{background:var(--wl-gold); transform:rotate(45deg)}
+.wl-skip{color:var(--wl-soft); letter-spacing:.04em}
+.welcome .btn,.welcome .btn.ghost{flex:none; padding:13px 26px; border-radius:0; border:1px solid var(--wl-gold); background:transparent; color:var(--wl-ink); box-shadow:none; font-size:.78rem; font-weight:600; letter-spacing:.22em; text-transform:uppercase}
+.welcome .btn.ghost{border-color:var(--wl-hair)}
+.welcome .btn:hover,.welcome .btn.ghost:hover{background:var(--wl-gold); border-color:var(--wl-gold); color:#17120a; filter:none}
+.welcome button:focus-visible{outline:2px solid var(--wl-gold); outline-offset:3px}
+
+/* ===== 18. a smooth entrance: once the opening screen has gone, the side menu (or the top bar of a phone), the round menu button, the magnifier, the name and the settings glide in one after the other ===== */
+@keyframes topIn{from{opacity:0; transform:translateY(-12px)}}
+@keyframes railIn{from{opacity:0; transform:translateX(-26px)}}
+@keyframes barIn{from{opacity:0; transform:translateY(-16px)}}
+@media (prefers-reduced-motion:no-preference){
+  .sp-gone .rail-toggle{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .2s backwards}
+  .sp-gone .settings{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .55s backwards}
+  .sp-gone .home .hero > .hsearch{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .4s backwards}
+  .sp-gone .home .hero > .hero-brand{animation:topIn 1s cubic-bezier(.2,.8,.2,1) .3s backwards}
+}
+@media (prefers-reduced-motion:no-preference) and (min-width:900px){ .sp-gone .bnav{animation:railIn .9s cubic-bezier(.2,.8,.2,1) .05s backwards} }
+@media (prefers-reduced-motion:no-preference) and (max-width:760px){
+  .sp-gone .bnav{animation:barIn .8s cubic-bezier(.2,.8,.2,1) .1s backwards}
+  .sp-gone .bnav > button[data-nav="more"]{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .3s backwards}
+  .sp-gone .bnav > .bn-search{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .4s backwards}
+  .sp-gone .bnav > .bn-brand{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .5s backwards}
+  .sp-gone .bnav .settings{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .6s backwards}
+}
+
+/* ===== 19. more gradients on the first screen, and a soft passage to the second ===== */
+/* the bottom of the first screen melts into the color of the page (no more hard edge), with a warm glow behind the arch and darker corners for depth */
+body[data-view="home"] .lux{--lx-glow2:rgba(217,180,90,.15); --lx-vig:rgba(0,0,0,.5)}
+:root[data-theme="light"] body[data-view="home"] .lux{--lx-glow2:rgba(255,255,255,.75); --lx-vig:rgba(122,92,52,.16)}
+body[data-view="home"] .lux::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(to bottom, transparent 50%, color-mix(in srgb,var(--bg) 18%,transparent) 63%, color-mix(in srgb,var(--bg) 55%,transparent) 77%, color-mix(in srgb,var(--bg) 90%,transparent) 89%, var(--bg) 96%),
+    radial-gradient(130% 95% at 50% 38%, transparent 52%, var(--lx-vig) 100%),
+    radial-gradient(58% 46% at 50% 34%, var(--lx-glow2), transparent 72%)
+}
+
+/* ===== 20. the footer of the home page, in the style of the first screen =====
+   The page melts into the same black plaster wall (day look: ivory) with a warm light from above, the shadows of the colonnade, and the gold as the only color.
+   The name in spaced capitals, four plain text links, one Greek key, one line of thanks. No rounded panel, no round icon. */
+html{overflow-x:clip}
+.home-outro{margin:64px auto 0; max-width:24ch; font-family:var(--serif); font-weight:400; font-size:clamp(1.5rem,4.4vw,2.1rem); line-height:1.3; letter-spacing:.01em; color:var(--ink)}
+.home-outro::before{width:46px; height:1px; margin:0 auto 22px; border-radius:0; background:var(--wl-gold,#D9B45A)}
+.foot-sea{display:none}
+.home-foot{
+  position:relative; isolation:isolate; display:flex; flex-direction:column; align-items:center; gap:18px; margin:70px 0 -40px; padding:120px 18px calc(54px + env(safe-area-inset-bottom)); text-align:center;
+  background:none; border:0; border-radius:0; box-shadow:none; overflow:visible; color:var(--wl-ink,#F3EBDD)
+}
+/* the wall: it starts as the color of the page and slowly becomes the plaster (full width of the screen) */
+.home-foot::before,.home-foot::after{content:""; position:absolute; top:0; bottom:0; left:calc(50% - (100vw - var(--rail,0px)) / 2); right:calc(50% - (100vw - var(--rail,0px)) / 2); z-index:-1; pointer-events:none}
+.home-foot::before{background:
+  radial-gradient(46% 38% at 50% 34%, color-mix(in srgb,var(--wl-gold,#D9B45A) 17%,transparent), transparent 72%),
+  linear-gradient(to bottom, var(--bg) 0, color-mix(in srgb,var(--bg) 55%,var(--wl-a,#2e251b)) 22%, var(--wl-a,#2e251b) 52%, var(--wl-b,#0c0a08) 100%)}
+.home-foot::after{background:repeating-linear-gradient(105deg, transparent 0 150px, var(--wl-stripe,rgba(0,0,0,.5)) 154px 266px, transparent 270px 300px); -webkit-mask-image:linear-gradient(to bottom,transparent 8%,#000 55%); mask-image:linear-gradient(to bottom,transparent 8%,#000 55%)}
+/* a gold diamond on a fine line at the top, like the frame of the first screen */
+.home-foot > .ft-emblem{display:none}
+.ft-name{gap:10px}
+.ft-name b{font-family:var(--serif); font-weight:400; font-size:clamp(1.5rem,5vw,2rem); letter-spacing:.5em; text-indent:.5em; text-transform:uppercase; color:var(--wl-ink,#F3EBDD)}
+.ft-name span,:root[data-theme="light"] .ft-name span{font-size:.72rem; font-weight:600; letter-spacing:.42em; text-indent:.42em; color:var(--wl-gold,#D9B45A)}
+.ft-name::before{content:""; display:block; width:9px; height:9px; margin:0 auto 6px; transform:rotate(45deg); background:var(--wl-gold,#D9B45A)}
+.ft-tag{margin:0; font-size:.86rem; letter-spacing:.06em; color:var(--wl-soft,rgba(243,235,221,.72))}
+/* the four links: plain words, small spaced capitals, a gold line appears under the one you point at */
+.ft-links{gap:10px 34px; margin-top:10px}
+.ft-pill{padding:6px 0; gap:0; font-size:.7rem; font-weight:600; letter-spacing:.26em; text-transform:uppercase; color:var(--wl-ink,#F3EBDD); background:none; border:0; border-bottom:1px solid transparent; border-radius:0; transition:border-color .3s, color .3s, letter-spacing .3s}
+.ft-pill svg{display:none}
+.ft-pill:hover{background:none; transform:none; border-bottom-color:var(--wl-gold,#D9B45A); color:var(--wl-ink,#F3EBDD); letter-spacing:.3em}
+.ft-pill:focus-visible{outline:2px solid var(--wl-gold,#D9B45A); outline-offset:4px}
+.ft-meander{align-self:center; width:min(220px,60%); margin:14px 0 0; background:var(--wl-gold,#D9B45A); opacity:.5}
+:root[data-theme="light"] .ft-meander{background:var(--wl-gold,#9A7418); opacity:.55}
+.ft-love{margin:4px 0 0; gap:8px; font-size:.7rem; letter-spacing:.24em; text-transform:uppercase; color:var(--wl-soft,rgba(243,235,221,.72))}
+.ft-heart{width:12px; height:12px; fill:var(--wl-gold,#D9B45A)}
+.ft-ver{font-size:.66rem; letter-spacing:.3em; color:var(--wl-soft,rgba(243,235,221,.72)); opacity:.7}
+@media (max-width:760px){
+  .home-foot{margin-bottom:-32px; padding-top:100px}
+  .ft-links{gap:8px 26px}
+}
+
+/* ===== 21. the top bar of a computer, like the site of a luxury house (Prada): always there ===== */
+/* Left: Menu (side menu) and Search. Middle: the name. Right: your account and the settings. Transparent over the first screen; it takes a frosted background once the page is scrolled, and on every other page. */
+.topbar{display:none}
+@media (min-width:761px){
+  :root{--bar-h:64px}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:0; right:0; z-index:45; height:calc(var(--bar-h) + env(safe-area-inset-top)); padding:env(safe-area-inset-top) 22px 0;
+    color:var(--ink); background:transparent; border-bottom:1px solid transparent; transition:background .35s ease, border-color .35s ease, -webkit-backdrop-filter .35s, backdrop-filter .35s
+  }
+  body.scrolled .topbar,body:not([data-view="home"]) .topbar{background:color-mix(in srgb,var(--bg) 84%,transparent); border-bottom-color:color-mix(in srgb,var(--line) 70%,transparent); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
+  .tb-left,.tb-right{display:flex; align-items:center; gap:6px; flex:1 1 0; min-width:0}
+  .tb-right{justify-content:flex-end}
+  .tb-btn{display:flex; align-items:center; gap:10px; height:44px; padding:0 12px; font:inherit; font-size:.7rem; font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:inherit; background:transparent; border:0; border-radius:0; cursor:pointer; transition:opacity .25s}
+  .tb-btn:hover{opacity:.7}
+  .tb-btn:focus-visible,.tb-brand:focus-visible{outline:2px solid var(--gold,#F2C14E); outline-offset:3px}
+  .tb-btn svg{flex:none}
+  .tb-btn .bn-glint{stroke:var(--gold,#F2C14E)}
+  .tb-brand{position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 8px); height:48px; padding:0 8px; transform:translateX(-50%); font-family:var(--serif); font-size:clamp(1.25rem,2.2vw,1.65rem); font-weight:400; letter-spacing:.5em; text-indent:.5em; text-transform:uppercase; color:var(--ink); background:transparent; border:0; cursor:pointer; white-space:nowrap}
+  .tb-burger{position:relative; flex:none; display:block; width:22px; height:14px}
+  .tb-burger i{position:absolute; left:0; width:100%; height:1.5px; border-radius:1px; background:currentColor; transition:transform .4s var(--ease,cubic-bezier(.4,0,.2,1)), opacity .25s, top .4s var(--ease,cubic-bezier(.4,0,.2,1))}
+  .tb-burger i:nth-child(1){top:0} .tb-burger i:nth-child(2){top:6px} .tb-burger i:nth-child(3){top:12px}
+  .tb-right .settings{position:static; display:flex; align-items:center; gap:4px; z-index:auto}
+  .tb-right .acct{position:relative}
+  .tb-right .ac-btn,.tb-right .setbtn{height:44px; border-radius:999px; box-shadow:none}
+  .tb-right .setbtn{width:44px; background:transparent; border:0}
+  .tb-right .setbtn svg{width:21px; height:21px}
+  /* the round buttons that were scattered over the page are replaced by this bar */
+  .rail-toggle,.qs-open{display:none !important}
+  body[data-view="home"] .home .hero .hero-brand,body[data-view="home"] .home .hero .hsearch,.home .hero .hsearch{display:none !important}
+  /* other pages: room for the bar, the title row sticks under it */
+  body:not([data-view="home"]){padding-top:calc(var(--bar-h) + 4px)}
+  header{top:calc(var(--bar-h) + env(safe-area-inset-top))}
+  html{scroll-padding-top:calc(var(--bar-h) + 20px)}
+  .bd-card{top:calc(var(--bar-h) + 76px)}
+}
+@media (min-width:900px){
+  .bnav{top:calc(var(--bar-h) + env(safe-area-inset-top)); padding-top:22px}
+  body:not(.rail-off) .tb-burger i:nth-child(1){top:6px; transform:rotate(45deg)}
+  body:not(.rail-off) .tb-burger i:nth-child(2){opacity:0; transform:scaleX(.2)}
+  body:not(.rail-off) .tb-burger i:nth-child(3){top:6px; transform:rotate(-45deg)}
+}
+@media (min-width:761px) and (max-width:1099px){ .tb-lbl{display:none} .tb-btn{padding:0 10px} }
+/* a smooth entrance, one after the other (see section 18) */
+@media (prefers-reduced-motion:no-preference) and (min-width:761px){
+  .sp-gone .topbar{animation:barIn .8s cubic-bezier(.2,.8,.2,1) .05s backwards}
+  .sp-gone .tb-menu{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .25s backwards}
+  .sp-gone .tb-search{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .35s backwards}
+  .sp-gone .tb-brand{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .45s backwards}
+}

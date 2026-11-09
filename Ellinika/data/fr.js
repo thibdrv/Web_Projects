@@ -3624,4 +3624,5 @@ const FR_STRINGS = {
 "Backup and options": "Sauvegarde et options",
 "Google sign-in is not active yet. Come back soon!": "La connexion Google n'est pas encore active. Reviens bientôt !",
 "Signing in is optional: the app works without it.": "Se connecter est facultatif : l'appli marche aussi sans.",
+"Automatic saving is paused: tap Sync now.": "La sauvegarde automatique est en pause : touche « Synchroniser maintenant ».",
 };

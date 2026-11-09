@@ -98,7 +98,7 @@ function quizClear(id){ const all = quizStates(); if(all[id]){ delete all[id]; t
 function reportLink(quizId, q){
   const plain = h => String(h||"").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&").replace(/\s+/g," ").trim();
   const a = document.createElement("a"); a.className = "reportlink";
-  const body = [`Page: ${typeof viewTitle==="function" ? viewTitle(currentView) : currentView}`, `Game: ${quizId}`, `Question: ${plain(q.prompt).slice(0,300)}`, `Answer shown: ${plain(q.reveal).slice(0,300)}`, `App: ${ABOUT.version} ${ABOUT.date}, ${LANG}`, "", "What is wrong?", ""].join("\n");
+  const body = [`Page: ${typeof viewTitle==="function" ? viewTitle(currentView) : currentView}`, `Game: ${quizId}`, `Question: ${plain(q.prompt).slice(0,300)}`, `Answer shown: ${plain(q.reveal).slice(0,300)}`, `App: ${aboutDate()}, ${LANG}`, "", "What is wrong?", ""].join("\n");
   a.href = "#"; a.onclick = e=>{ e.preventDefault(); openMail("Elliniká: a mistake in a question", body); };
   a.title = tx("Tell the author about a mistake in this question");
   a.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg> ${esc(tx("Report a mistake"))}`;

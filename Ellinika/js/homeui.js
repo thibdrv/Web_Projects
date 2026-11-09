@@ -189,6 +189,14 @@ document.querySelectorAll("#bnav [data-nav]").forEach(b=>b.onclick = ()=>{
   else if(k==="dictionary"){ if(currentView!=="dictionary") location.hash = "dictionary"; }
   else if(k==="more") moreOpen() ? closeMore() : openMore();
 });
+/* the top bar of a computer: Menu (hides or shows the side menu; from 761 to 899 px, where there is no side menu, it opens the list of categories), Search (the quick search), the name (home) */
+if($("tbMenu")){
+  $("tbMenu").onclick = ()=>{ if(matchMedia("(min-width:900px)").matches) toggleRail(); else if(moreOpen()) closeMore(); else openMore(); };
+  $("tbSearch").onclick = ()=>{ if(moreOpen()) closeMore(); const q = $("qsOpen"); if(q) q.click(); };
+  $("tbBrand").onclick = ()=>{ if(moreOpen()) closeMore(); if(currentView!=="home") location.hash = "home"; else { window.scrollTo({top:0, behavior:"smooth"}); setTimeout(()=>{ if(window.scrollY>2) window.scrollTo(0,0); }, 600); } };
+}
+/* on a phone the magnifier of the bar opens the quick search (the one of the other pages) */
+if($("bnSearch")) $("bnSearch").onclick = ()=>{ if(moreOpen()) closeMore(); const q = $("qsOpen"); if(q) q.click(); };
 /* the keyboard of a phone needs the room: the bar steps aside while a text box has the focus */
 const isTextBox = el => el && el.matches && el.matches('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),textarea,select');
 document.addEventListener("focusin", e=>{ if(isTextBox(e.target)) document.body.classList.add("typing"); });
