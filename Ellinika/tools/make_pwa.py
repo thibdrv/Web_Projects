@@ -8,7 +8,7 @@
 import hashlib, json, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"audio", "original", "tools", "__pycache__", ".git", ".claude"}
-SKIP_FILES = {"sw.js", "audio-list.json", "LISEZMOI.md", "relecture-grec.html"}
+SKIP_FILES = {"sw.js", "audio-list.json", "LISEZMOI.md", "relecture-grec.html", "privacy.html"}
 EXT = {".html", ".css", ".js", ".json", ".webmanifest", ".png", ".svg", ".ico"}
 
 def shell_files():
