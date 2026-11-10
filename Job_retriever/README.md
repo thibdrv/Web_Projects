@@ -95,6 +95,33 @@ Ouvre `app.py` une fois avant, pour que l'installation soit faite. La recherche 
 - L'API gratuite de Remotive ne donne plus qu'une dizaine d'offres récentes, donc elle trouve rarement quelque chose.
 - LinkedIn, Indeed et Glassdoor ne sont pas inclus.
 
+## Version en ligne (gratuite)
+
+La même recherche existe en site web : `webapp.py` (serveur Flask) et le dossier `web`. Le serveur **ne garde rien** : les réglages, les offres, les statuts et la liste des offres déjà vues restent dans le navigateur du visiteur, partent avec chaque recherche et reviennent avec les nouvelles offres. Le fichier Excel est fabriqué à la demande par le bouton « Télécharger le fichier Excel ». « Importer un ancien jobs.xlsx » permet de retrouver ses offres sur un autre appareil.
+
+**Essayer chez soi** : `pip install -r requirements-web.txt` puis `python webapp.py`, et ouvrir <http://127.0.0.1:8000>.
+
+**Mettre en ligne sur Render (gratuit)** :
+1. Mets le projet sur GitHub.
+2. Sur [render.com](https://render.com) : **New +** → **Blueprint** → choisis le dépôt. Le fichier `render.yaml` fait le reste (formule gratuite, image `Dockerfile`).
+3. Une fois déployé, Render donne une adresse en `onrender.com`.
+
+Ce qu'il faut savoir sur la formule gratuite :
+- Le site s'endort après 15 minutes sans visite : la première visite suivante met environ une minute à se réveiller. Une recherche en cours le garde éveillé.
+- Une recherche tourne sur le serveur pendant 5 à 15 minutes : la page doit rester ouverte.
+- Pour que le service ne soit pas détourné, il y a au plus 2 recherches en même temps pour tout le monde (`MAX_RUNNING`), une recherche par visiteur toutes les 5 minutes (`COOLDOWN_SECONDS`), et chaque recherche est limitée à 12 recherches de mots-clés, 5 pages par site et 20 minutes. Les réglages envoyés par un visiteur sont vérifiés et bornés ; le texte des offres n'est jamais affiché comme du HTML.
+- Les sites lus voient l'adresse du serveur, pas la tienne. Certains peuvent refuser un hébergeur : le message « erreur, ignoré » apparaît alors dans le journal et les autres sites continuent. À vérifier après le premier déploiement.
+
+N'importe quel autre hébergeur de conteneurs (Fly.io, Railway, un VPS avec Docker) convient : `docker build -t retrieve-job .` puis `docker run -p 8000:8000 retrieve-job`. Garde un seul processus : les recherches en cours sont gardées en mémoire.
+
+## Tests
+
+```
+python -m unittest discover -s tests -t .
+```
+
+(Les tests de la version web demandent `pip install -r requirements-web.txt`; sans Flask ils sont sautés.)
+
 ## Utilisation responsable
 
 Cet outil est fait pour un usage personnel : chercher ses propres offres, quelques fois par jour au plus. Il lit des pages publiques en laissant des pauses entre elles. Respecte les conditions d'utilisation des sites lus, et ne t'en sers pas pour copier leurs offres en masse ou les republier.

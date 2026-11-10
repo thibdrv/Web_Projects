@@ -1,0 +1,3 @@
+# Same line endings on every machine (the Dockerfile and scripts must be LF on the server)
+* text=auto eol=lf
+*.xlsx binary

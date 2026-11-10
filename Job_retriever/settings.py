@@ -85,18 +85,32 @@ DEFAULTS = {
 }
 
 
+def defaults() -> dict:
+    """A fresh copy of the default settings."""
+    return json.loads(json.dumps(DEFAULTS))
+
+
 def load() -> dict:
-    """The saved settings, with defaults filled in for anything missing."""
-    settings = json.loads(json.dumps(DEFAULTS))  # deep copy
-    if SETTINGS_FILE.exists():
-        saved = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-        settings.update({key: value for key, value in saved.items() if key in DEFAULTS})
-        settings["sources"] = {name: bool(saved.get("sources", {}).get(name, True)) for name in SITE_NAMES}
+    """The saved settings, with defaults filled in for anything missing.
+
+    A settings.json that cannot be read gives the defaults: the app must always start."""
+    settings = defaults()
+    try:
+        saved = json.loads(SETTINGS_FILE.read_text(encoding="utf-8")) if SETTINGS_FILE.exists() else {}
+    except (OSError, ValueError):
+        return settings
+    if not isinstance(saved, dict):
+        return settings
+    settings.update({key: value for key, value in saved.items() if key in DEFAULTS})
+    saved_sources = saved.get("sources") if isinstance(saved.get("sources"), dict) else {}
+    settings["sources"] = {name: bool(saved_sources.get(name, True)) for name in SITE_NAMES}
     return settings
 
 
 def save(settings: dict) -> None:
-    SETTINGS_FILE.write_text(json.dumps(settings, indent=2, ensure_ascii=False), encoding="utf-8")
+    temporary = SETTINGS_FILE.with_name(SETTINGS_FILE.name + ".tmp")
+    temporary.write_text(json.dumps(settings, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(temporary, SETTINGS_FILE)  # never a half-written settings.json
 
 
 def open_file(path: Path) -> None:

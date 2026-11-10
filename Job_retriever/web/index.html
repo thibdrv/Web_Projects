@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retrieve Job</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Retrieve Job</h1>
+    <p>Cherche les offres d'emploi qui te correspondent sur plusieurs sites et range-les dans un fichier Excel.
+      Gratuit, sans compte. Tes réglages et tes résultats restent dans <strong>ton navigateur</strong> :
+      le serveur ne garde rien.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab active" data-tab="types">Types de poste</button>
+        <button type="button" role="tab" class="tab" data-tab="filters">Expérience, villes et filtres</button>
+        <button type="button" role="tab" class="tab" data-tab="sites">Sites</button>
+      </div>
+      <form id="form" autocomplete="off">
+        <div id="tab-types" class="panel"></div>
+        <div id="tab-filters" class="panel" hidden></div>
+        <div id="tab-sites" class="panel" hidden></div>
+      </form>
+    </section>
+
+    <section class="bar">
+      <button type="button" id="search" class="primary">Lancer la recherche</button>
+      <button type="button" id="download" disabled>Télécharger le fichier Excel</button>
+      <button type="button" id="import-button">Importer un ancien jobs.xlsx</button>
+      <input type="file" id="import" accept=".xlsx" hidden>
+      <button type="button" id="reset">Paramètres par défaut</button>
+      <button type="button" id="wipe" class="danger">Effacer mes données</button>
+    </section>
+    <p id="notice" class="notice" role="status" hidden></p>
+
+    <pre id="log" class="log" aria-live="polite" hidden></pre>
+
+    <section class="card" id="results" hidden>
+      <div class="results-head">
+        <h2>Offres <span id="count"></span></h2>
+        <input type="search" id="filter-text" placeholder="Filtrer (titre, entreprise, ville…)">
+        <select id="filter-category" aria-label="Catégorie"><option value="">Toutes les catégories</option></select>
+      </div>
+      <p class="hint">Les offres de la dernière recherche sont en jaune. Écris dans « Statut » (Postulé, Pas intéressé…) :
+        c'est gardé dans ce navigateur et dans le fichier téléchargé.</p>
+      <div class="table-wrap"><table id="table"></table></div>
+    </section>
+
+    <section class="card help">
+      <h2>Bon à savoir</h2>
+      <ul>
+        <li>Une recherche dure quelques minutes (la première est la plus longue). Garde cette page ouverte.</li>
+        <li>Pour retrouver tes offres sur un autre appareil : télécharge le fichier, puis « Importer un ancien jobs.xlsx » sur l'autre.</li>
+        <li>Les offres trouvées il y a plus d'un mois sont retirées, sauf celles où tu as écrit un Statut.</li>
+        <li>La lecture de l'expérience et des langues se base sur le texte de l'offre : elle peut se tromper. Vérifie la colonne Expérience.</li>
+        <li>Outil à usage personnel : respecte les conditions d'utilisation des sites lus.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Render "Blueprint": deploys the web app for free from this repository (New + > Blueprint).
+services:
+  - type: web
+    name: retrieve-job
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: MAX_RUNNING        # searches at the same time, for all visitors
+        value: "2"
+      - key: COOLDOWN_SECONDS   # minimum wait between two searches from the same visitor
+        value: "300"

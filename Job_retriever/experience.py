@@ -8,9 +8,10 @@ _NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
                  "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
 _NUMBER = r"(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten)"
 # "3+ years", "3-5 years", "three years", "5 yrs", and in Greek "3 χρόνια", "3 έτη"
+# Groups: 1 and 2 are the number and the end of a range ("3-5"), 3 and 4 the same in Greek.
 _YEARS = re.compile(
-    rf"\b{_NUMBER}\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*\d{{1,2}}\s*\+?\s*)?(?:years?|yrs?)\b"
-    r"|(\d{1,2})\s*\+?\s*(?:(?:-|–)\s*\d{1,2}\s*)?(?:χρόνια|χρόνων|έτη|ετών)",
+    rf"\b{_NUMBER}\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*(\d{{1,2}})\s*\+?\s*)?(?:years?|yrs?)\b"
+    r"|(\d{1,2})\s*\+?\s*(?:(?:-|–)\s*(\d{1,2})\s*)?(?:χρόνια|χρόνων|έτη|ετών)",
     re.IGNORECASE)
 _ABOUT_EXPERIENCE = re.compile(r"experience|εμπειρ", re.IGNORECASE)
 # "our company has 20 years of experience" is about the employer, not about you
@@ -25,8 +26,8 @@ def years_required(text: str) -> int | None:
         before = text[max(0, match.start() - 40):match.start()]
         if not _ABOUT_EXPERIENCE.search(around) or _ABOUT_EMPLOYER.search(before):
             continue
-        number = match.group(1) or match.group(2)
-        years = int(number) if number.isdigit() else _NUMBER_WORDS[number.lower()]
+        # "3-5 years" asks for up to 5: the top of the range counts
+        years = max(int(n) if n.isdigit() else _NUMBER_WORDS[n.lower()] for n in match.groups() if n)
         if years <= 15:  # larger numbers are company ages, not requirements
             found.append(years)
     return max(found) if found else None
@@ -46,6 +47,24 @@ _OPTIONAL = re.compile(r"advantage|a plus|\bplus\b|asset|preferred|preferabl|des
 _ABOUT_OTHERS = re.compile(r"[\s-]*(?:speaking\s+)?(?:market|customer|client|communit|audience|partner|team"
                            r"|government|company|companies|subsidiar)", re.IGNORECASE)
 _SENTENCE_END = r"[.!?;•·]"
+_LANGUAGES = (r"english|french|greek|russian|german|italian|spanish|arabic|hebrew|turkish|polish|ukrainian"
+              r"|bulgarian|romanian")
+
+
+def _is_optional(after: str) -> bool:
+    """True when what follows the language name makes it a plus ("Greek is an advantage").
+
+    "Greek is required, English is a plus" is not optional: the plus belongs to English.
+    """
+    for match in _OPTIONAL.finditer(after):
+        if re.match(rf"\s+(?:{_LANGUAGES})\b", after[match.end():], re.IGNORECASE):
+            continue  # "ideally English": the word is about the next language
+        other_before = re.search(rf"\b(?:{_LANGUAGES})\b", after[:match.start()], re.IGNORECASE)
+        joint = re.match(rf"\s*(?:,|/|&|and|or)\s*(?:{_LANGUAGES})\b", after, re.IGNORECASE)
+        if other_before and not joint:
+            continue  # another language came first, and it is not "Greek and English are a plus"
+        return True
+    return False
 
 
 def requires_language(title: str, text: str, language: str) -> bool:
@@ -65,6 +84,6 @@ def requires_language(title: str, text: str, language: str) -> bool:
         after = re.split(_SENTENCE_END, text[match.end():match.end() + 120])[0]
         if _ABOUT_OTHERS.match(after):
             continue
-        if _ABOUT_LANGUAGE.search(before + match.group() + after[:40]) and not _OPTIONAL.search(after):
+        if _ABOUT_LANGUAGE.search(before + match.group() + after[:40]) and not _is_optional(after):
             return True
     return False

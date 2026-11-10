@@ -54,7 +54,7 @@ def cyprusjobs(session, keyword: str, settings: Settings) -> list[Job]:
                 title=clean(_text(card, ".v2-job-card-row__title")),
                 company=meta[0],
                 location=meta[1],
-                url=link["href"],
+                url=urljoin("https://www.cyprusjobs.com", link["href"]),
                 posted=meta[2],
             ))
         if not cards or not _has_page(html, page + 1):
@@ -75,7 +75,7 @@ def kariera(session, keyword: str, settings: Settings) -> list[Job]:
             title=clean(link.get_text()),
             company=clean(_text(card, ".job-company")),
             location=clean(_text(card, ".job-location")),
-            url=link["href"],
+            url=urljoin("https://kariera.com.cy", link["href"]),
             posted=clean(_text(card, ".job-date-ago")),
         ))
     return jobs
@@ -96,7 +96,7 @@ def cypruswork(session, keyword: str, settings: Settings) -> list[Job]:
                 title=clean(link.get_text()),
                 company=clean(_text(card, ".employer-title")),
                 location=clean(_text(card, ".job-location")),
-                url=link["href"],
+                url=urljoin("https://www.cypruswork.com", link["href"]),
                 posted=_iso_date(clean(_text(card, ".job-deadline")), "%B %d, %Y"),  # e.g. "October 15, 2026"
             ))
         if not cards or f"/jobs/page/{page + 1}/" not in html:
@@ -122,7 +122,7 @@ def fxcareer(session, keyword: str, settings: Settings) -> list[Job]:
                 title=clean(link.get_text()),
                 company=clean(_text(card, ".job-emp")).removeprefix("Employer:").strip(),
                 location=clean(_text(card, ".location")),
-                url=link["href"],
+                url=urljoin("https://www.fxcareer.eu", link["href"]),
                 posted=posted.removeprefix("Posted").strip(),  # "15 minutes ago"
             ))
         if not cards or not _has_page(html, page + 1):

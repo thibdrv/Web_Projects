@@ -8,3 +8,6 @@ settings.json
 .venv/
 __pycache__/
 *.pyc
+
+# Local tooling
+.claude/
