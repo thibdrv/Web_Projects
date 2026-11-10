@@ -10,3 +10,5 @@ services:
         value: "2"
       - key: COOLDOWN_SECONDS   # minimum wait between two searches from the same visitor
         value: "300"
+      - key: CONTACT_EMAIL      # shown in the Contact section; leave empty to hide the section
+        sync: false             # Render asks for the value when the Blueprint is created

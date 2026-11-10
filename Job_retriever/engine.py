@@ -12,6 +12,7 @@ from datetime import date
 from typing import Callable
 
 import settings as app_settings
+from messages import UserError, tr
 from experience import JUNIOR_WORDS, requires_language, years_required
 from sources import BROWSE_SOURCES, REMOTE_SOURCES, SOURCES
 from sources.common import Job, Settings, canonical_url, has_word, new_session, page_text
@@ -30,10 +31,11 @@ class SearchResult:
 
 
 def run_search(config: dict, known_links: set[str], log: Callable[[str], None] = print,
-               cancel: threading.Event | None = None) -> SearchResult:
+               cancel: threading.Event | None = None, lang: str = "fr") -> SearchResult:
     """Looks for offers. known_links are the offers already seen (they are skipped).
 
-    Raises ValueError when there is nothing to search and Cancelled when `cancel` is set."""
+    The journal lines sent to `log` are in `lang` ("fr" or "en").
+    Raises UserError when there is nothing to search and Cancelled when `cancel` is set."""
     cancel = cancel or threading.Event()
     lock = threading.Lock()
 
@@ -54,16 +56,16 @@ def run_search(config: dict, known_links: set[str], log: Callable[[str], None] =
     excluded = config["seniority_words"] + config["exclude_words"]
     enabled = [name for name, on in config["sources"].items() if on and (name in SOURCES or name in BROWSE_SOURCES)]
     if not searches or not enabled:
-        raise ValueError("Rien à chercher : ajoute au moins un type de poste avec une recherche, "
-                         "et coche au moins un site.")
+        raise UserError("nothing_to_search")
 
     seen = {canonical_url(link) for link in known_links}
     candidates: list[Job] = []
     failed: list[str] = []
 
-    say(f"1. Recherche des offres sur {len(enabled)} sites en même temps\n")
+    say(tr(lang, "searching", count=len(enabled)))
     with ThreadPoolExecutor(max_workers=len(enabled)) as pool:
-        futures = {pool.submit(_search_site, name, searches, settings, say, cancel): name for name in enabled}
+        futures = {pool.submit(_search_site, name, searches, settings, say, cancel, lang): name
+                   for name in enabled}
         for future in as_completed(futures):
             name = futures[future]
             found_count = kept = 0
@@ -89,19 +91,18 @@ def run_search(config: dict, known_links: set[str], log: Callable[[str], None] =
                     seen.add(job.url)
                     candidates.append(job)
                     kept += 1
-            say(f"  => {name} terminé : {found_count} offres lues, {kept} nouvelles qui correspondent")
+            say(tr(lang, "site_done", site=name, read=found_count, kept=kept))
     if cancel.is_set():
         raise Cancelled
 
     max_years = int(config["max_experience_years"])
-    languages = [lang for lang in config["excluded_languages"] if lang.strip()]
-    say(f"\n2. Lecture des offres : expérience demandée ({max_years} ans maximum)"
-        + (f" et langues exigées ({', '.join(languages)})" if languages else "")
-        + f", pour {len(candidates)} offre(s)\n")
+    languages = [language for language in config["excluded_languages"] if language.strip()]
+    say(tr(lang, "reading", years=max_years, count=len(candidates),
+           languages=tr(lang, "reading_languages", languages=", ".join(languages)) if languages else ""))
     by_site: dict[str, list[Job]] = {}
     for job in candidates:
         by_site.setdefault(job.source, []).append(job)
-    progress = _Progress(len(candidates), say)
+    progress = _Progress(len(candidates), lambda done, total: say(tr(lang, "progress", done=done, total=total)))
     with ThreadPoolExecutor(max_workers=max(1, len(by_site))) as pool:
         results = [result for site_results in pool.map(
             lambda jobs: _read_offers(jobs, max_years, languages, progress, cancel), by_site.values())
@@ -112,46 +113,45 @@ def run_search(config: dict, known_links: set[str], log: Callable[[str], None] =
     kept_jobs.sort(key=candidates.index)  # back in the order they were found
     rejected = Counter(reason for _, reason in results if reason)
     checked = [job.url for job, _ in results if job.experience != "page non lue"]  # failed pages: retried next time
-    say(f"  {len(kept_jobs)} gardées, {rejected['expérience']} écartées pour l'expérience, "
-        f"{rejected['langue']} pour la langue")
+    say(tr(lang, "summary", kept=len(kept_jobs), experience=rejected["expérience"], language=rejected["langue"]))
     return SearchResult(kept_jobs, checked, failed, rejected)
 
 
-def _search_site(name: str, searches: list[str], settings: Settings, say, cancel: threading.Event
-                 ) -> list[tuple[str, list[Job] | Exception]]:
+def _search_site(name: str, searches: list[str], settings: Settings, say, cancel: threading.Event,
+                 lang: str) -> list[tuple[str, list[Job] | Exception]]:
     """Every search on one site, one after the other, with its own connection (sites run side by side)."""
     session = new_session()
     results = []
-    for search in (["toutes ses offres"] if name in BROWSE_SOURCES else searches):
+    for search in ([tr(lang, "all_offers")] if name in BROWSE_SOURCES else searches):
         if cancel.is_set():
             break
         try:
             found = (BROWSE_SOURCES[name](session, settings) if name in BROWSE_SOURCES
                      else SOURCES[name](session, search, settings))
-            say(f"  {name} / {search} : {len(found)} offres")
+            say(tr(lang, "site_offers", site=name, search=search, count=len(found)))
         except Exception as exc:
             found = exc
-            say(f"  {name} / {search} : erreur, ignoré ({exc})")
+            say(tr(lang, "site_error", site=name, search=search, error=exc))
         results.append((search, found))
     return results
 
 
 class _Progress:
-    """Counts the offers read across all sites and says so every 10."""
+    """Counts the offers read across all sites and reports every 10: report(done, total)."""
 
-    def __init__(self, total: int, say):
+    def __init__(self, total: int, report):
         self.total = total
         self.done = 0
-        self._say = say
+        self._report = report
         self._lock = threading.Lock()
 
     def step(self) -> None:
         with self._lock:
             self.done += 1
-            report = self.done % 10 == 0 or self.done == self.total
+            due = self.done % 10 == 0 or self.done == self.total
             done = self.done
-        if report:
-            self._say(f"  {done}/{self.total} lues")
+        if due:
+            self._report(done, self.total)
 
 
 def _read_offers(jobs: list[Job], max_years: int, languages: list[str], progress: _Progress,

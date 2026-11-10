@@ -6,7 +6,7 @@ WORKDIR /app
 COPY requirements.txt requirements-web.txt ./
 RUN pip install --no-cache-dir -r requirements-web.txt
 
-COPY engine.py excel_io.py experience.py settings.py webapp.py ./
+COPY engine.py excel_io.py experience.py messages.py settings.py webapp.py ./
 COPY sources ./sources
 COPY web ./web
 

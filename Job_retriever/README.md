@@ -106,6 +106,10 @@ La même recherche existe en site web : `webapp.py` (serveur Flask) et le dossie
 2. Sur [render.com](https://render.com) : **New +** → **Blueprint** → choisis le dépôt. Le fichier `render.yaml` fait le reste (formule gratuite, image `Dockerfile`).
 3. Une fois déployé, Render donne une adresse en `onrender.com`.
 
+La page est en **français et en anglais** (boutons FR / EN en haut ; au premier passage, la langue du navigateur est utilisée). Le journal de recherche et le fichier Excel téléchargé suivent la langue choisie, et un fichier Excel en anglais peut être réimporté. Les textes sont dans `web/i18n.js` (page) et `messages.py` (serveur) : pour ajouter une langue, il suffit d'y ajouter un bloc, un test vérifie que toutes les clés existent partout.
+
+**Rubrique Contact.** Si la variable d'environnement `CONTACT_EMAIL` est renseignée (sur Render : service → **Environment** → **Add Environment Variable**), la page affiche un lien « Contact » et un bouton « Écrire un e-mail » qui ouvre l'application e-mail avec le sujet et les dernières lignes du journal déjà écrits (le visiteur peut les relire avant d'envoyer). L'adresse n'est pas écrite dans le code ni dans le HTML : elle est envoyée par le serveur à la page. Sans la variable, la rubrique n'apparaît pas.
+
 Ce qu'il faut savoir sur la formule gratuite :
 - Le site s'endort après 15 minutes sans visite : la première visite suivante met environ une minute à se réveiller. Une recherche en cours le garde éveillé.
 - Une recherche tourne sur le serveur pendant 5 à 15 minutes : la page doit rester ouverte.

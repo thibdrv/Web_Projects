@@ -1,5 +1,6 @@
 """Reading and writing the offers as an Excel file (jobs.xlsx), for the command line and the web app."""
 import os
+import re
 import shutil
 from datetime import date
 from pathlib import Path
@@ -13,6 +14,38 @@ COLUMNS = [("Trouvée le", 12), ("Catégorie", 24), ("Titre", 55), ("Entreprise"
            ("Publiée", 14), ("Expérience", 14), ("Site", 13), ("Lien", 60), ("Statut", 18)]
 HEADERS = [header for header, _ in COLUMNS]
 NEW_OFFER_FILL = PatternFill("solid", start_color="FFFF00")  # yellow
+
+
+# Rows are always stored with the French headers and values; the English file is a translation of them.
+HEADERS_EN = {"Trouvée le": "Found on", "Catégorie": "Category", "Titre": "Title", "Entreprise": "Company",
+              "Ville": "City", "Publiée": "Posted", "Expérience": "Experience", "Site": "Site", "Lien": "Link",
+              "Statut": "Status"}
+_FRENCH_HEADERS = {english: french for french, english in HEADERS_EN.items()}
+_EXPERIENCE_EN = {"non précisé": "not specified", "page non lue": "page not read"}
+
+
+def localize(header: str, value: str, lang: str) -> str:
+    """The value as shown in the given language ("2+ ans" -> "2+ years")."""
+    if lang != "en" or not isinstance(value, str):
+        return value
+    if header == "Expérience":
+        match = re.fullmatch(r"(\d+)\+ ans", value)
+        return f"{match.group(1)}+ years" if match else _EXPERIENCE_EN.get(value, value)
+    if header == "Entreprise":
+        return value.replace("(pour un client)", "(for a client)")
+    return value
+
+
+def delocalize(header: str, value: str) -> str:
+    """Back to the stored French value, for a file saved in English."""
+    if header == "Expérience":
+        match = re.fullmatch(r"(\d+)\+ years", value)
+        if match:
+            return f"{match.group(1)}+ ans"
+        return {english: french for french, english in _EXPERIENCE_EN.items()}.get(value, value)
+    if header == "Entreprise":
+        return value.replace("(for a client)", "(pour un client)")
+    return value
 
 
 def job_to_row(job: Job, day: str | None = None) -> dict:
@@ -37,31 +70,35 @@ def drop_expired(rows: list[dict], keep_days: int) -> tuple[list[dict], int]:
 
 
 def read_rows(source) -> list[dict]:
-    """The offers in an Excel file (a path or an open file), in the order they are now."""
+    """The offers in an Excel file (a path or an open file), in the order they are now.
+
+    A file saved in English is read too: its rows come back with the French headers and values."""
     workbook = load_workbook(source, read_only=True, data_only=True)
     try:
         rows = workbook.active.iter_rows(values_only=True)
-        headers = [str(h) if h is not None else "" for h in next(rows, [])]
+        headers = [_FRENCH_HEADERS.get(str(h), str(h)) if h is not None else "" for h in next(rows, [])]
         if "Lien" not in headers:  # not one of our files
             return []
-        return [{h: ("" if v is None else str(v)) for h, v in zip(headers, row) if h in HEADERS}
+        return [{h: delocalize(h, "" if v is None else str(v)) for h, v in zip(headers, row) if h in HEADERS}
                 for row in rows if any(v is not None for v in row)]
     finally:
         workbook.close()
 
 
-def build_workbook(rows: list[dict]) -> Workbook:
-    """One sheet with a filter on every column; rows with "_new" set are highlighted in yellow."""
+def build_workbook(rows: list[dict], lang: str = "fr") -> Workbook:
+    """One sheet with a filter on every column; rows with "_new" set are highlighted in yellow.
+
+    lang "en" writes English headers and values."""
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = "Offres"
-    sheet.append(HEADERS)
+    sheet.title = "Jobs" if lang == "en" else "Offres"
+    sheet.append([HEADERS_EN[header] for header in HEADERS] if lang == "en" else HEADERS)
     for cell, (_, width) in zip(sheet[1], COLUMNS):
         cell.font = Font(bold=True)
         sheet.column_dimensions[cell.column_letter].width = width
     link_column = HEADERS.index("Lien") + 1
     for row in rows:
-        sheet.append([row.get(header, "") for header in HEADERS])
+        sheet.append([localize(header, row.get(header, ""), lang) for header in HEADERS])
         for cell in sheet[sheet.max_row]:
             if isinstance(cell.value, str) and cell.value.startswith("="):
                 cell.data_type = "s"  # a title like "=HYPERLINK(...)" stays text, never a formula

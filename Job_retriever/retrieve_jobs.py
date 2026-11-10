@@ -16,6 +16,7 @@ from pathlib import Path
 import settings as app_settings
 from engine import run_search
 from excel_io import build_workbook, drop_expired, job_to_row, read_rows, save_workbook
+from messages import UserError, tr
 from sources.common import canonical_url
 
 HERE = Path(__file__).resolve().parent
@@ -47,8 +48,8 @@ def main() -> int:
     known |= _job_agent_links(config["job_agent_folder"])
     try:
         result = run_search(config, known, log=_say)
-    except ValueError as exc:
-        print(exc)
+    except UserError as exc:
+        print(tr("fr", exc.key, **exc.params))
         return 1
 
     new_rows = [dict(job_to_row(job), _new=True) for job in result.jobs]

@@ -40,7 +40,8 @@ class WebApp(unittest.TestCase):
         job = Job(source="Test", title="Data Analyst", company="Acme", location="Limassol",
                   url="https://example.test/1", category="data", experience="junior")
 
-        def fake_search(config, known, log, cancel):
+        def fake_search(config, known, log, cancel, lang):
+            self.assertEqual(lang, "en")
             self.assertEqual(config["job_agent_folder"], "")  # the server's disk is never read
             self.assertIn("https://example.test/old", known)
             log("hello")
@@ -48,7 +49,8 @@ class WebApp(unittest.TestCase):
 
         old = {"Titre": "Old", "Lien": "https://example.test/old", "Statut": "Postulé", "Trouvée le": "2999-01-01"}
         with mock.patch.object(engine, "run_search", fake_search):
-            response = self.client.post("/api/search", json={"settings": {}, "rows": [old, "junk"], "checked": []})
+            response = self.client.post("/api/search?lang=en",
+                                        json={"settings": {}, "rows": [old, "junk"], "checked": []})
             self.assertEqual(response.status_code, 202)
             body = self.wait_for(response.get_json()["id"])
         self.assertEqual(body["status"], "done")
@@ -86,7 +88,7 @@ class WebApp(unittest.TestCase):
             webapp.MAX_RUNNING = 2
 
     def test_cancel(self):
-        def slow(config, known, log, cancel):
+        def slow(config, known, log, cancel, lang):
             cancel.wait(5)
             raise engine.Cancelled
 
@@ -94,6 +96,39 @@ class WebApp(unittest.TestCase):
             run_id = self.client.post("/api/search", json={"settings": {}}).get_json()["id"]
             self.client.post(f"/api/runs/{run_id}/cancel")
             self.assertEqual(self.wait_for(run_id)["status"], "cancelled")
+
+    def test_errors_speak_the_visitors_language(self):
+        french = self.client.post("/api/search", data="nope").get_json()["error"]
+        english = self.client.post("/api/search?lang=en", data="nope").get_json()["error"]
+        unknown = self.client.post("/api/search?lang=xx", data="nope").get_json()["error"]
+        self.assertEqual((french, english, unknown), ("Requête invalide.", "Invalid request.", french))
+
+    def test_journal_lines_follow_the_language(self):
+        config = webapp.clean_config({"sources": {name: False for name in webapp.app_settings.SITE_NAMES}})
+        with mock.patch.object(webapp.engine, "SOURCES", {}), mock.patch.object(webapp.engine, "BROWSE_SOURCES", {}):
+            for lang, expected in (("fr", "Rien à chercher"), ("en", "Nothing to search")):
+                run = webapp.Run("test", lang)
+                webapp._work(run, config, [], [])
+                self.assertEqual(run.status, "error")
+                self.assertTrue(run.error.startswith(expected), run.error)
+
+    def test_contact_address_comes_from_the_environment(self):
+        self.assertEqual(self.client.get("/api/config").get_json()["contact"], webapp.CONTACT_EMAIL)
+        with mock.patch.object(webapp, "CONTACT_EMAIL", "help@example.test"):
+            self.assertEqual(self.client.get("/api/config").get_json()["contact"], "help@example.test")
+
+    def test_english_xlsx_has_english_headers_and_reads_back_in_french(self):
+        rows = [{"Titre": "Analyst", "Entreprise": "X (pour un client)", "Expérience": "3+ ans",
+                 "Lien": "https://example.test/1", "Statut": "Applied"}]
+        response = self.client.post("/api/xlsx?lang=en", json={"rows": rows})
+        from openpyxl import load_workbook
+        sheet = load_workbook(io.BytesIO(response.data)).active
+        self.assertEqual([c.value for c in sheet[1]][:3], ["Found on", "Category", "Title"])
+        self.assertEqual(sheet["G2"].value, "3+ years")
+        imported = self.client.post("/api/import", data={"file": (io.BytesIO(response.data), "jobs.xlsx")})
+        back = imported.get_json()["rows"][0]
+        self.assertEqual((back["Expérience"], back["Entreprise"], back["Statut"]),
+                         ("3+ ans", "X (pour un client)", "Applied"))
 
     def test_xlsx_download_and_import(self):
         rows = [{"Titre": "=1+1", "Lien": "https://example.test/1", "Statut": "Postulé", "_new": True}]

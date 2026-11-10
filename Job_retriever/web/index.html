@@ -9,18 +9,25 @@
 </head>
 <body>
   <header class="top">
-    <h1>Retrieve Job</h1>
-    <p>Cherche les offres d'emploi qui te correspondent sur plusieurs sites et range-les dans un fichier Excel.
-      Gratuit, sans compte. Tes réglages et tes résultats restent dans <strong>ton navigateur</strong> :
-      le serveur ne garde rien.</p>
+    <div class="top-row">
+      <h1>Retrieve Job</h1>
+      <nav class="top-nav">
+        <a href="#contact" id="nav-contact" data-i18n="nav_contact" hidden>Contact</a>
+        <div class="lang" role="group" data-i18n-aria="lang_aria" aria-label="Langue">
+          <button type="button" class="lang-btn" data-lang="fr" aria-pressed="true">FR</button>
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </nav>
+    </div>
+    <p data-i18n="intro"></p>
   </header>
 
   <main>
     <section class="card">
       <div class="tabs" role="tablist">
-        <button type="button" role="tab" class="tab active" data-tab="types">Types de poste</button>
-        <button type="button" role="tab" class="tab" data-tab="filters">Expérience, villes et filtres</button>
-        <button type="button" role="tab" class="tab" data-tab="sites">Sites</button>
+        <button type="button" role="tab" class="tab active" data-tab="types" data-i18n="tab_types"></button>
+        <button type="button" role="tab" class="tab" data-tab="filters" data-i18n="tab_filters"></button>
+        <button type="button" role="tab" class="tab" data-tab="sites" data-i18n="tab_sites"></button>
       </div>
       <form id="form" autocomplete="off">
         <div id="tab-types" class="panel"></div>
@@ -30,12 +37,12 @@
     </section>
 
     <section class="bar">
-      <button type="button" id="search" class="primary">Lancer la recherche</button>
-      <button type="button" id="download" disabled>Télécharger le fichier Excel</button>
-      <button type="button" id="import-button">Importer un ancien jobs.xlsx</button>
+      <button type="button" id="search" class="primary"></button>
+      <button type="button" id="download" data-i18n="btn_download" disabled></button>
+      <button type="button" id="import-button" data-i18n="btn_import"></button>
       <input type="file" id="import" accept=".xlsx" hidden>
-      <button type="button" id="reset">Paramètres par défaut</button>
-      <button type="button" id="wipe" class="danger">Effacer mes données</button>
+      <button type="button" id="reset" data-i18n="btn_reset"></button>
+      <button type="button" id="wipe" class="danger" data-i18n="btn_wipe"></button>
     </section>
     <p id="notice" class="notice" role="status" hidden></p>
 
@@ -43,26 +50,33 @@
 
     <section class="card" id="results" hidden>
       <div class="results-head">
-        <h2>Offres <span id="count"></span></h2>
-        <input type="search" id="filter-text" placeholder="Filtrer (titre, entreprise, ville…)">
-        <select id="filter-category" aria-label="Catégorie"><option value="">Toutes les catégories</option></select>
+        <h2><span data-i18n="results_title"></span> <span id="count"></span></h2>
+        <input type="search" id="filter-text" data-i18n-placeholder="filter_placeholder">
+        <select id="filter-category"><option value="" data-i18n="all_categories"></option></select>
       </div>
-      <p class="hint">Les offres de la dernière recherche sont en jaune. Écris dans « Statut » (Postulé, Pas intéressé…) :
-        c'est gardé dans ce navigateur et dans le fichier téléchargé.</p>
+      <p class="hint" data-i18n="results_hint"></p>
       <div class="table-wrap"><table id="table"></table></div>
     </section>
 
     <section class="card help">
-      <h2>Bon à savoir</h2>
+      <h2 data-i18n="help_title"></h2>
       <ul>
-        <li>Une recherche dure quelques minutes (la première est la plus longue). Garde cette page ouverte.</li>
-        <li>Pour retrouver tes offres sur un autre appareil : télécharge le fichier, puis « Importer un ancien jobs.xlsx » sur l'autre.</li>
-        <li>Les offres trouvées il y a plus d'un mois sont retirées, sauf celles où tu as écrit un Statut.</li>
-        <li>La lecture de l'expérience et des langues se base sur le texte de l'offre : elle peut se tromper. Vérifie la colonne Expérience.</li>
-        <li>Outil à usage personnel : respecte les conditions d'utilisation des sites lus.</li>
+        <li data-i18n="help_1"></li>
+        <li data-i18n="help_2"></li>
+        <li data-i18n="help_3"></li>
+        <li data-i18n="help_4"></li>
+        <li data-i18n="help_5"></li>
       </ul>
     </section>
+
+    <section class="card" id="contact" hidden>
+      <h2 data-i18n="contact_title"></h2>
+      <p data-i18n="contact_text"></p>
+      <p><a class="button primary" id="contact-link" href="#" data-i18n="contact_button"></a></p>
+      <p class="hint" data-i18n="contact_note"></p>
+    </section>
   </main>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
