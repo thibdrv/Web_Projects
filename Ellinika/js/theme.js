@@ -65,10 +65,11 @@ setVoiceSlow(voiceRate!==1);
 
 /* the text size (A A A), the easy-read look and the festive scenery: kept in gl-size, gl-ease and gl-fest */
 function applySize(z){
-  z = [1, 1.15, 1.3].includes(+z) ? +z : 1;
+  z = +z>=0.8 && +z<=1.31 ? Math.round(+z*100)/100 : 1;
   document.documentElement.style.fontSize = z===1 ? "" : (z*100)+"%";
   try{ localStorage.setItem("gl-size", z); }catch(e){}
   document.querySelectorAll("[data-size-set]").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.sizeSet===z));
+  if(window.__icoFromText && window.__sizeFromUser) window.__icoFromText(z);
 }
 function applyEase(on){
   if(on) document.documentElement.dataset.ease = "1"; else delete document.documentElement.dataset.ease;
@@ -80,7 +81,7 @@ function applyFest(mode){
   document.querySelectorAll("[data-fest-set]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.festSet===(mode==="off" ? "off" : "auto")));
   try{ renderFest(); }catch(e){}   /* ambient.js loads after this file: the first call may come too early, the page draws it again later */
 }
-document.querySelectorAll("[data-size-set]").forEach(b=>b.onclick = ()=>applySize(b.dataset.sizeSet));
+document.querySelectorAll("[data-size-set]").forEach(b=>b.onclick = ()=>{ window.__sizeFromUser = true; applySize(b.dataset.sizeSet); window.__sizeFromUser = false; });
 document.querySelectorAll("[data-ease-set]").forEach(b=>b.onclick = ()=>applyEase(b.dataset.easeSet==="1"));
 document.querySelectorAll("[data-fest-set]").forEach(b=>b.onclick = ()=>applyFest(b.dataset.festSet));
 applySize((()=>{ try{ return localStorage.getItem("gl-size"); }catch(e){ return 1; } })());

@@ -3625,4 +3625,10 @@ const FR_STRINGS = {
 "Google sign-in is not active yet. Come back soon!": "La connexion Google n'est pas encore active. Reviens bientôt !",
 "Signing in is optional: the app works without it.": "Se connecter est facultatif : l'appli marche aussi sans.",
 "Automatic saving is paused: tap Sync now.": "La sauvegarde automatique est en pause : touche « Synchroniser maintenant ».",
+"Scroll": "Défiler",
+"Size": "Taille",
+"Size of icons and text": "Taille des icônes et du texte",
+"Smaller icons and text": "Icônes et texte plus petits",
+"Bigger icons and text": "Icônes et texte plus grands",
+"Size of icons and text (computer)": "Taille des icônes et du texte (ordinateur)",
 };

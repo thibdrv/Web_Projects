@@ -127,6 +127,13 @@ function openMore(){
   clearTimeout(moreTimer); sheet.classList.remove("closing"); sheet.querySelector(".sheet-panel").style.transform = "";
   buildMoreList();
   sheet.hidden = false; document.body.classList.add("sheet-open");
+  /* on a phone the list opens as a circle that grows from the menu button (and closes back into it): where is the button, and how far is the farthest corner */
+  if(matchMedia("(max-width:760px)").matches){
+    const btn = document.querySelector('#bnav [data-nav="more"]'), panel = sheet.querySelector(".sheet-panel"), pr = panel.getBoundingClientRect(), br = btn.getBoundingClientRect();
+    const ox = br.left + br.width/2 - pr.left, oy = br.top + br.height/2 - pr.top;
+    const rr = Math.max(Math.hypot(ox, oy), Math.hypot(pr.width - ox, oy), Math.hypot(ox, pr.height - oy), Math.hypot(pr.width - ox, pr.height - oy));
+    panel.style.setProperty("--ox", ox + "px"); panel.style.setProperty("--oy", oy + "px"); panel.style.setProperty("--rr", Math.ceil(rr) + 4 + "px");
+  }
   document.querySelector('#bnav [data-nav="more"]').setAttribute("aria-expanded","true");
   navUpdate(currentView);
   try{ sheet.querySelector(".sheet-x").focus({preventScroll:true}); }catch(e){}
@@ -136,7 +143,7 @@ function openMore(){
   const head = document.querySelector("#moreSheet .sheet-head"), panel = document.querySelector("#moreSheet .sheet-panel");
   let y0 = 0, dy = 0, t0 = 0, drag = false;
   head.addEventListener("pointerdown", e=>{
-    if(e.target.closest("button")) return;
+    if(e.target.closest("button") || matchMedia("(max-width:760px)").matches) return;      /* (on a phone the list hangs from the top: no dragging) */
     drag = true; y0 = e.clientY; dy = 0; t0 = Date.now(); panel.style.transition = "none";
     try{ head.setPointerCapture(e.pointerId); }catch(err){}
   });

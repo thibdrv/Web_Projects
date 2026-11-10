@@ -929,3 +929,101 @@ html{overflow-x:clip}
   .sp-gone .tb-search{animation:topIn .8s cubic-bezier(.2,.8,.2,1) .35s backwards}
   .sp-gone .tb-brand{animation:topIn .9s cubic-bezier(.2,.8,.2,1) .45s backwards}
 }
+
+/* ===== 22. a first screen of 80 %, with a scroll arrow =====
+   The first screen no longer fills the whole height: the beginning of the next block shows under it, so it is clear that the page goes on. At its foot, a vertical line and an arrow
+   (and the word "Scroll"); a tap on it goes to the rest of the page (js/homefx.js, heroScroll). */
+body[data-view="home"] .deco{height:80vh; height:80svh}
+body[data-view="home"] .home .hero{min-height:calc(80vh - 8px); min-height:calc(80svh - 8px); padding-bottom:118px}
+@media (max-width:760px){ body[data-view="home"] .home .hero{min-height:calc(80svh - var(--topbar,0px) - 8px); padding-bottom:108px} }
+.home .hero .hero-scroll{
+  display:flex !important; flex-direction:column; align-items:center; gap:6px; position:absolute; left:0; right:0; bottom:18px; width:max-content; height:auto; margin:0 auto; padding:6px 14px;
+  color:var(--hx-soft,rgba(243,235,221,.72)); background:transparent; border:0; border-radius:0; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; cursor:pointer; transition:color .25s
+}
+.home .hero .hero-scroll:hover{color:var(--hx-gold,#D9B45A); background:transparent}
+.home .hero .hero-scroll:focus-visible{outline:2px solid var(--hx-gold,#D9B45A); outline-offset:4px}
+.hs-lbl{font-size:.62rem; font-weight:600; letter-spacing:.34em; text-indent:.34em; text-transform:uppercase}
+.hs-line{display:block; width:1px; height:34px; background:linear-gradient(to bottom,transparent,var(--hx-gold,#D9B45A))}
+.home .hero .hero-scroll svg{display:block; margin-top:-4px; color:var(--hx-gold,#D9B45A)}
+@media (prefers-reduced-motion:no-preference){
+  .home .hero .hero-scroll svg{animation:scrollArrow 1.9s ease-in-out infinite}
+  .sp-gone .home .hero > .hero-scroll{animation:heroIn 1s cubic-bezier(.2,.8,.2,1) .9s backwards}
+}
+@keyframes scrollArrow{0%,100%{transform:translateY(0); opacity:.55} 50%{transform:translateY(6px); opacity:1}}
+/* the facts move to the right corner on a computer, so that the arrow keeps the middle */
+@media (min-width:761px){ .home .hero .hero-meta,:root[data-theme="light"] .home .hero .hero-meta{left:auto; right:34px; bottom:28px; text-align:right} }
+/* the next block starts closer, so that its beginning shows */
+@media (min-width:761px){ .home .dash-top #secToday,.home #secToday{margin-top:40px} }
+
+/* ===== 23. first screen: the facts centered at the foot, the scroll cue upright on the left =====
+   "A1 → B2 · 4 000+ words · Greece & Cyprus" stays on one line in the middle. "Scroll", its line and its arrow stand vertically at the left edge of the screen (the word is turned, like the side words of a luxury site). */
+.home .hero .hero-meta,:root[data-theme="light"] .home .hero .hero-meta{display:flex; position:absolute; left:0; right:0; bottom:30px; margin:0; justify-content:center; flex-wrap:nowrap; white-space:nowrap; text-align:center}
+.home .hero .hero-scroll{left:calc(50% - (100vw - var(--rail,0px)) / 2 + 28px); right:auto; bottom:26px; margin:0; width:auto; padding:6px 8px; gap:10px}
+.hs-lbl{writing-mode:vertical-rl; transform:rotate(180deg); text-indent:0; letter-spacing:.4em}
+@media (max-width:760px){
+  .home .hero .hero-scroll{left:calc(50% - 50vw + 38px); bottom:24px}
+  .home .hero .hero-meta,:root[data-theme="light"] .home .hero .hero-meta{display:flex; bottom:26px; font-size:.58rem; letter-spacing:.2em}
+}
+
+/* ===== 24. phone: the list of categories grows out of the menu button; the word Scroll stands upright ===== */
+.hs-lbl{writing-mode:vertical-rl; text-orientation:upright; transform:none; letter-spacing:.18em; text-indent:0; line-height:1}
+@keyframes sheetReveal{from{clip-path:circle(0 at var(--ox,26px) var(--oy,-27px))} to{clip-path:circle(var(--rr,1400px) at var(--ox,26px) var(--oy,-27px))}}
+@keyframes sheetHide{from{clip-path:circle(var(--rr,1400px) at var(--ox,26px) var(--oy,-27px))} to{clip-path:circle(0 at var(--ox,26px) var(--oy,-27px))}}
+@media (max-width:760px){
+  .sheet{inset:calc(var(--topbar,54px) + env(safe-area-inset-top)) 0 0 0; align-items:flex-start}      /* under the bar: the button that turns into a cross stays in view */
+  .sheet-panel{max-height:calc(100svh - var(--topbar,54px) - env(safe-area-inset-top) - 10px); border-radius:0 0 26px 26px; border-top:0; border-bottom:1px solid var(--line); box-shadow:0 30px 60px -24px rgba(0,0,0,.8); will-change:clip-path; animation:sheetReveal .8s cubic-bezier(.45,.05,.25,1) both}
+  .sheet.closing .sheet-panel{animation:sheetHide .42s cubic-bezier(.55,0,.8,.3) both}
+  .sheet-head{cursor:default; touch-action:auto}
+  .sheet-head::before{display:none}
+}
+
+/* ===== 25. the side menu of a computer, in the style of the rest of the site =====
+   No pills and no colored squares: fine line icons, small spaced capitals, a thin gold line on the page you are on, a hairline on the right edge. (The "More" button is now "All".) */
+@media (min-width:900px){
+  .bnav{
+    gap:4px; padding:26px 0 20px; border-right:1px solid color-mix(in srgb,var(--line) 70%,transparent); box-shadow:none;
+    background:color-mix(in srgb,var(--bg) 90%,transparent); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)
+  }
+  .bnav > button{position:relative; gap:10px; padding:16px 4px 14px; font-size:.56rem; font-weight:600; letter-spacing:.24em; text-indent:.24em; text-transform:uppercase; color:var(--muted); border-radius:0; transition:color .3s}
+  .bnav > button i{display:grid; place-items:center; width:auto; height:auto; background:none !important; box-shadow:none !important; border-radius:0; color:inherit; transition:color .3s, transform .3s}
+  .bnav > button svg{width:26px; height:26px}
+  .bnav > button:hover{background:none; color:var(--ink)}
+  .bnav > button:hover i{transform:translateY(-1px)}
+  .bnav > button.on{color:var(--ink)}
+  .bnav > button.on i{color:var(--wl-gold,#D9B45A)}
+  .bnav > button.on::before{content:""; position:absolute; left:0; top:20%; bottom:20%; width:2px; background:var(--wl-gold,#D9B45A); animation:railMark .4s cubic-bezier(.2,.8,.2,1) both}
+  .bnav > button:focus-visible{outline:2px solid var(--wl-gold,#D9B45A); outline-offset:-4px}
+  .bnav > button[aria-expanded="true"] svg{transform:none}
+  /* the icon size: a fine line, tiny capitals, plain signs */
+  .bnav .railsize{gap:6px; padding:12px 6px; margin:auto 10px 6px; border-radius:0; background:none; border:0; border-top:1px solid color-mix(in srgb,var(--line) 80%,transparent); border-bottom:1px solid color-mix(in srgb,var(--line) 80%,transparent)}
+  .railsize .rs-label{font-size:.5rem; font-weight:600; letter-spacing:.3em; text-indent:.3em; color:var(--muted)}
+  .bnav .railsize button{height:28px; min-width:24px; border-radius:0; font-weight:400; font-size:1.05rem; color:var(--ink)}
+  .bnav .railsize button.icoval{font-size:.6rem; letter-spacing:.06em; color:var(--muted)}
+  .bnav .railsize button:hover{background:none; color:var(--wl-gold,#D9B45A)}
+  .bnav button[data-nav="more"]{margin-top:0}
+}
+@keyframes railMark{from{transform:scaleY(0)} to{transform:scaleY(1)}}
+
+/* ===== 26. the side menu of a computer opens and closes more smoothly =====
+   - the room it takes (--rail) now moves step by step with the menu, so the page slides along with it, instead of the picture jumping and the text following
+   - the menu glides in with a soft curve, and its buttons appear one after the other (they leave quickly, together)
+   - the three lines of the top bar turn into a cross at the same pace */
+@property --rail{syntax:"<length>"; inherits:true; initial-value:96px}
+:root{--rail-ease:cubic-bezier(.22,1,.36,1); --rail-ease-in:cubic-bezier(.65,0,.35,1)}
+@media (min-width:900px){
+  body{transition:--rail .7s var(--rail-ease)}
+  body.rail-off{transition:--rail .6s var(--rail-ease-in)}
+  .bnav{will-change:transform; transition:transform .7s var(--rail-ease), box-shadow .5s ease, visibility 0s}
+  body.rail-off .bnav{transition:transform .6s var(--rail-ease-in), box-shadow .3s ease, visibility 0s linear .6s}
+  .bnav > [data-nav="home"]{--k:0} .bnav > [data-nav="learn"]{--k:1} .bnav > [data-nav="practice"]{--k:2} .bnav > [data-nav="dictionary"]{--k:3} .bnav > .railsize{--k:4} .bnav > [data-nav="more"]{--k:5}
+  .bnav > button[data-nav]:not(.bn-brand),.bnav > .railsize{
+    opacity:1; transform:none;
+    transition:color .3s, opacity .6s var(--rail-ease) calc(var(--k,0) * 55ms + 170ms), transform .8s var(--rail-ease) calc(var(--k,0) * 55ms + 170ms)
+  }
+  body.rail-off .bnav > button[data-nav]:not(.bn-brand),body.rail-off .bnav > .railsize{opacity:0; transform:translateX(-20px); transition-delay:0s,0s,0s; transition-duration:.3s,.3s,.4s}
+  .tb-burger i{transition:transform .6s var(--rail-ease), opacity .3s, top .6s var(--rail-ease)}
+}
+@media (prefers-reduced-motion:reduce){ body,body.rail-off{transition:none !important} .bnav,body.rail-off .bnav,.bnav > *{transition:none !important} }
+
+/* the words of the side menu keep the same small size whatever the text size (the menu is 96 px wide) */
+@media (min-width:900px){ .bnav > button{font-size:9px} .railsize .rs-label{font-size:8px} .bnav .railsize button{font-size:16px} .bnav .railsize button.icoval{font-size:10px} }

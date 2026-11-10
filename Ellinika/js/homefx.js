@@ -23,16 +23,25 @@
   const ICO_MIN = 0.7, ICO_MAX = 1.7;
   const range = $("icoRange"), out = $("icoOut"), val = $("icoVal");
   function icoNow(){ const v = parseFloat(root.style.getPropertyValue("--icos")); return v>=ICO_MIN && v<=ICO_MAX ? v : 1; }
-  function setIcos(v, save){
+  /* one size for the icons and the text: the buttons - and + of the side menu and the slider of the Settings change both together.
+     Icons x0.7 to x1.7; text 85 % to 130 % (half as much as the icons: 1.2 for the icons = 110 % for the text). The three A of the Settings give the same sizes (115 % = icons x1.3). */
+  function setIcos(v, save, textDone){
     v = Math.round(Math.min(ICO_MAX, Math.max(ICO_MIN, v))*10)/10;
     if(v===1) root.style.removeProperty("--icos"); else root.style.setProperty("--icos", v);
     if(save){ try{ localStorage.setItem("gl-icos", v); }catch(e){} }
+    if(save && !textDone){
+      const z = Math.min(1.3, Math.round((1 + (v - 1)*0.5)*20)/20);
+      root.style.fontSize = z===1 ? "" : (z*100) + "%";
+      try{ localStorage.setItem("gl-size", z); }catch(e){}
+      document.querySelectorAll("[data-size-set]").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.sizeSet===z));
+    }
     const pct = Math.round(v*100) + "%";
     if(range) range.value = Math.round(v*100);
     if(out) out.textContent = pct;
     if(val) val.textContent = pct;
   }
   setIcos(icoNow(), false);
+  window.__icoFromText = z => setIcos(1 + (z - 1)*2, true, true);      /* the three A of the Settings (theme.js) move the icons too */
   if($("icoMinus")) $("icoMinus").onclick = ()=>setIcos(icoNow() - 0.1, true);
   if($("icoPlus")) $("icoPlus").onclick = ()=>setIcos(icoNow() + 0.1, true);
   if(val) val.onclick = ()=>setIcos(1, true);
