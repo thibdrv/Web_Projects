@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 10 250 320" role="img" aria-label="Astronaute en sortie extravéhiculaire">
+  <!-- Astronaute en combinaison de sortie dans l'espace, dessiné à la main (original) -->
+  <defs>
+    <!-- Tissu blanc : lumière du soleil en haut à gauche, ombre en bas à droite -->
+    <linearGradient id="tissu" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.35" stop-color="#f1f4f7"/>
+      <stop offset="0.72" stop-color="#c3cdd6"/>
+      <stop offset="1" stop-color="#7f8d9b"/>
+    </linearGradient>
+    <linearGradient id="tissuV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#e3e9ee"/>
+      <stop offset="1" stop-color="#9eabb7"/>
+    </linearGradient>
+    <linearGradient id="ombre" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#dde4ea"/>
+      <stop offset="1" stop-color="#6f7e8d"/>
+    </linearGradient>
+    <linearGradient id="gant" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b9c2ca"/>
+      <stop offset="0.5" stop-color="#8d98a3"/>
+      <stop offset="1" stop-color="#4d5762"/>
+    </linearGradient>
+    <linearGradient id="botte" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9aa5af"/>
+      <stop offset="0.55" stop-color="#5f6b77"/>
+      <stop offset="1" stop-color="#2d353e"/>
+    </linearGradient>
+    <linearGradient id="sac" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dfe5ea"/>
+      <stop offset="1" stop-color="#8794a0"/>
+    </linearGradient>
+    <linearGradient id="anneau" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfd8df"/>
+      <stop offset="1" stop-color="#6c7a87"/>
+    </linearGradient>
+    <!-- Casque : coque blanche -->
+    <radialGradient id="coque" cx="0.35" cy="0.28" r="0.85">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#e6ebf0"/>
+      <stop offset="1" stop-color="#8e9ba8"/>
+    </radialGradient>
+    <!-- Visière dorée -->
+    <radialGradient id="visiere" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#f3d27a"/>
+      <stop offset="0.28" stop-color="#b98a2e"/>
+      <stop offset="0.62" stop-color="#4d360f"/>
+      <stop offset="1" stop-color="#150e05"/>
+    </radialGradient>
+    <!-- Reflet de la Terre dans la visière -->
+    <linearGradient id="reflet" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#58b2ff" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#1f6fd1" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0b3d91" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="decoupeVisiere"><ellipse cx="130" cy="82" rx="36" ry="32"/></clipPath>
+    <!-- Lueur bleue de la Terre sur le côté ombré -->
+    <linearGradient id="lueur" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6fb8ff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#6fb8ff" stop-opacity="0.55"/>
+    </linearGradient>
+    <filter id="flou" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+
+  <!-- ====== Jambes ====== -->
+  <g transform="translate(110 198) rotate(7)">
+    <rect x="-17" y="0" width="34" height="58" rx="14" fill="url(#tissu)"/>
+    <rect x="-18" y="52" width="36" height="12" rx="5" fill="url(#anneau)"/>
+    <rect x="-16" y="62" width="32" height="50" rx="12" fill="url(#tissu)"/>
+    <path d="M-17 108 h34 l3 18 q0 12 -14 12 h-12 q-14 0 -14 -12 z" fill="url(#botte)"/>
+    <rect x="-17" y="104" width="34" height="7" rx="3" fill="url(#anneau)"/>
+    <rect x="-17" y="0" width="34" height="58" rx="14" fill="url(#lueur)"/>
+  </g>
+  <g transform="translate(152 198) rotate(-5)">
+    <rect x="-17" y="0" width="34" height="58" rx="14" fill="url(#tissu)"/>
+    <rect x="-18" y="52" width="36" height="12" rx="5" fill="url(#anneau)"/>
+    <rect x="-16" y="62" width="32" height="50" rx="12" fill="url(#tissu)"/>
+    <path d="M-17 108 h34 l3 18 q0 12 -14 12 h-12 q-14 0 -14 -12 z" fill="url(#botte)"/>
+    <rect x="-17" y="104" width="34" height="7" rx="3" fill="url(#anneau)"/>
+    <rect x="-17" y="0" width="34" height="58" rx="14" fill="url(#lueur)"/>
+  </g>
+
+  <!-- ====== Sac à dos (système de survie) ====== -->
+  <rect x="88" y="108" width="84" height="96" rx="16" fill="url(#sac)"/>
+  <rect x="96" y="116" width="68" height="14" rx="5" fill="#9aa6b2" opacity="0.7"/>
+
+  <!-- ====== Bras gauche (à gauche de l'image) ====== -->
+  <g transform="translate(96 132) rotate(38)">
+    <rect x="-15" y="-6" width="30" height="58" rx="14" fill="url(#tissu)"/>
+    <!-- écusson bleu sur le haut du bras -->
+    <circle cx="-1" cy="16" r="8" fill="#0b3d91"/>
+    <circle cx="-1" cy="16" r="8" fill="none" stroke="#ffffff" stroke-width="1.4"/>
+    <ellipse cx="-1" cy="16" rx="4.6" ry="1.6" fill="none" stroke="#00ae9d" stroke-width="1.2" transform="rotate(-28 -1 16)"/>
+    <rect x="-16" y="48" width="32" height="10" rx="5" fill="url(#anneau)"/>
+    <g transform="translate(0 54) rotate(-34)">
+      <rect x="-13.5" y="0" width="27" height="50" rx="12" fill="url(#tissu)"/>
+      <rect x="-15" y="44" width="30" height="9" rx="4" fill="#5b8fd0"/>
+      <rect x="-15" y="44" width="30" height="9" rx="4" fill="url(#anneau)" opacity="0.45"/>
+      <path d="M-13 52 h26 q4 4 3 16 q-1 12 -8 18 q-6 6 -14 2 q-10 -6 -9 -20 q0 -10 2 -16 z" fill="url(#gant)"/>
+      <path d="M-6 70 v12 M0 72 v14 M6 70 v12" stroke="#3b444d" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>
+    </g>
+  </g>
+
+  <!-- ====== Torse ====== -->
+  <path d="M92 134 Q92 106 122 104 L142 104 Q172 106 172 134 L174 196 Q174 208 160 210 L104 210 Q90 208 90 196 Z" fill="url(#tissu)"/>
+  <path d="M92 134 Q92 106 122 104 L142 104 Q172 106 172 134 L174 196 Q174 208 160 210 L104 210 Q90 208 90 196 Z" fill="url(#lueur)"/>
+  <!-- ceinture -->
+  <rect x="90" y="196" width="84" height="14" rx="6" fill="url(#anneau)"/>
+  <!-- boîtier de commande sur la poitrine -->
+  <rect x="106" y="138" width="52" height="38" rx="6" fill="#dfe5ea" stroke="#7d8996" stroke-width="1.2"/>
+  <rect x="112" y="144" width="40" height="13" rx="2.5" fill="#16222d"/>
+  <rect x="114" y="146" width="22" height="3" rx="1.5" fill="#35d0c0"/>
+  <rect x="114" y="151" width="30" height="2.4" rx="1.2" fill="#5aa9ff" opacity="0.85"/>
+  <circle cx="115" cy="166" r="3" fill="#f08a24"/>
+  <circle cx="125" cy="166" r="3" fill="#ffffff" stroke="#7d8996" stroke-width="0.8"/>
+  <circle cx="135" cy="166" r="3" fill="#2b6cc4"/>
+  <circle cx="145" cy="166" r="3" fill="#d94a3d"/>
+  <!-- tuyaux d'alimentation -->
+  <path d="M104 150 q-12 10 -4 26" fill="none" stroke="#9aa6b2" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M160 150 q12 10 4 26" fill="none" stroke="#7f8d9b" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- ====== Bras droit ====== -->
+  <g transform="translate(166 132) rotate(-62)">
+    <rect x="-15" y="-6" width="30" height="58" rx="14" fill="url(#ombre)"/>
+    <rect x="-16" y="48" width="32" height="10" rx="5" fill="url(#anneau)"/>
+    <g transform="translate(0 54) rotate(24)">
+      <rect x="-13.5" y="0" width="27" height="50" rx="12" fill="url(#ombre)"/>
+      <rect x="-15" y="44" width="30" height="9" rx="4" fill="#5b8fd0"/>
+      <rect x="-15" y="44" width="30" height="9" rx="4" fill="url(#anneau)" opacity="0.45"/>
+      <path d="M-13 52 h26 q4 4 3 16 q-1 12 -8 18 q-6 6 -14 2 q-10 -6 -9 -20 q0 -10 2 -16 z" fill="url(#gant)"/>
+      <path d="M-6 70 v12 M0 72 v14 M6 70 v12" stroke="#3b444d" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>
+    </g>
+  </g>
+
+  <!-- ====== Casque ====== -->
+  <!-- collerette -->
+  <ellipse cx="132" cy="112" rx="36" ry="9" fill="url(#anneau)"/>
+  <!-- coque -->
+  <circle cx="132" cy="76" r="50" fill="url(#coque)"/>
+  <!-- petites lampes sur le dessus -->
+  <rect x="102" y="32" width="14" height="9" rx="3" fill="#39434d" transform="rotate(-24 109 36)"/>
+  <rect x="148" y="30" width="14" height="9" rx="3" fill="#39434d" transform="rotate(20 155 34)"/>
+  <!-- cadre de la visière -->
+  <ellipse cx="130" cy="82" rx="40" ry="36" fill="#c6d0d9"/>
+  <ellipse cx="130" cy="82" rx="37.5" ry="33.5" fill="#8b98a5"/>
+  <!-- visière dorée -->
+  <ellipse cx="130" cy="82" rx="36" ry="32" fill="url(#visiere)"/>
+  <g clip-path="url(#decoupeVisiere)">
+    <!-- reflet de la Terre en bas -->
+    <ellipse cx="130" cy="124" rx="54" ry="36" fill="url(#reflet)"/>
+    <!-- reflet du ciel noir et d'une étoile -->
+    <circle cx="150" cy="70" r="1.4" fill="#ffffff" opacity="0.85"/>
+    <circle cx="118" cy="98" r="1" fill="#ffffff" opacity="0.6"/>
+    <!-- éclat du soleil -->
+    <ellipse cx="112" cy="64" rx="13" ry="6" fill="#fff7dc" opacity="0.85" transform="rotate(-32 112 64)" filter="url(#flou)"/>
+    <ellipse cx="112" cy="64" rx="6" ry="2.6" fill="#ffffff" transform="rotate(-32 112 64)"/>
+  </g>
+  <!-- ombre portée du casque sur la collerette -->
+  <path d="M104 106 q28 14 56 0 l0 6 q-28 12 -56 0 z" fill="#000" opacity="0.18"/>
+</svg>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#003247">
+  <title>Quiz</title>
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Fond : la Terre vue depuis l'orbite, calculée en direct (js/terre.js).
+       La photo de nébuleuse (.fond) ne sert que de repli si WebGL est indisponible. -->
+  <div id="espace" aria-hidden="true">
+    <div class="fond"></div>
+    <canvas id="terre"></canvas>
+  </div>
+
+  <img id="iss" src="images/iss-bacteries-Photoroom.png" alt="" aria-hidden="true">
+
+  <main id="carte">
+    <img id="astronaute" src="images/astronaute.svg" alt="" aria-hidden="true">
+
+    <header>
+      <div class="marque">
+        <img class="logo" src="images/logo.svg" alt="" width="40" height="40">
+        <h1>Question<span>.js</span></h1>
+      </div>
+
+      <div class="outils">
+        <!-- Language switch / Sélecteur de langue -->
+        <div id="langues" role="group" aria-label="Language / Langue">
+          <button type="button" class="lang" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button>
+          <button type="button" class="lang" data-lang="fr" lang="fr" title="Français" aria-pressed="false">FR</button>
+        </div>
+
+        <div id="compteur">
+          <span class="pill-label" data-i18n="bonnesReponses">Correct answers</span>
+          <strong id="nb-bonnes">0</strong><span id="nb-total">/ 10</span>
+        </div>
+      </div>
+    </header>
+
+    <section id="quiz">
+      <div class="bloc-gauche">
+        <div id="suivi">
+          <p id="numero"></p>
+          <div id="progression" role="progressbar" data-i18n-aria-label="progression" aria-label="Quiz progress" aria-valuemin="0" aria-valuenow="0">
+            <div id="barre"></div>
+          </div>
+        </div>
+        <p id="question"></p>
+      </div>
+
+      <div class="bloc-droite">
+        <fieldset id="choix-groupe" aria-labelledby="question">
+          <ul id="choix"></ul>
+        </fieldset>
+
+        <button type="button" id="valider" class="button" disabled>Submit</button>
+        <div id="feedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <article id="resultat" hidden>
+      <h2 data-i18n="rapport">Your result</h2>
+
+      <!-- Anneau de score : se remplit selon le pourcentage de bonnes réponses -->
+      <div id="anneau">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="piste" cx="60" cy="60" r="52"/>
+          <circle class="valeur" id="anneau-valeur" cx="60" cy="60" r="52" pathLength="100"/>
+        </svg>
+        <p id="score-grand"></p>
+      </div>
+
+      <p id="message"></p>
+      <p id="temps"></p>
+      <button type="button" id="rejouer" class="button" data-i18n="rejouer">Play again</button>
+    </article>
+  </main>
+
+  <script src="js/terre.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
