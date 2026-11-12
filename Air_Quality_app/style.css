@@ -1123,6 +1123,7 @@ h1 {
 @media (max-width: 900px) {
   :root {
     --gutter: 14px;
+    --tab-shift: 10px; /* tab labels sit this much lower (keeps clear of floating badges) */
   }
   html,
   body {
@@ -1303,6 +1304,8 @@ h1 {
   .tab {
     position: relative;
     min-height: 40px;
+    /* Top padding of twice the shift moves the centred label down by the shift. */
+    padding: calc(var(--tab-shift) * 2) 0 0;
     border: 0;
     background: none;
     font: inherit;
@@ -1312,22 +1315,22 @@ h1 {
     color: var(--muted);
     cursor: pointer;
   }
-  .tab[aria-current="true"] {
-    color: var(--ink);
-    font-weight: 500;
+  /* The current section is a filled block: colours inverted (ink background,
+     page-coloured text), so it is obvious where you are. */
+  .tab {
+    transition: background-color 0.2s ease-out, color 0.2s ease-out;
   }
-  .tab[aria-current="true"]::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    right: 30%;
-    left: 30%;
-    height: 2px;
+  .tab[aria-current="true"] {
     background-color: var(--ink);
+    color: var(--paper);
+    font-weight: 500;
   }
   .tab:focus-visible {
     outline: 1px solid var(--ink);
     outline-offset: -4px;
+  }
+  .tab[aria-current="true"]:focus-visible {
+    outline-color: var(--paper);
   }
   .site-footer {
     display: none; /* the credit moves into the Air and Learn sections */
@@ -1674,6 +1677,7 @@ h1 {
   }
   .tab {
     min-height: 30px;
+    --tab-shift: 5px; /* less height in landscape */
   }
 }
 

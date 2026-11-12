@@ -12,7 +12,7 @@
  *
  * Bump VERSION whenever a shell file is added, removed or renamed.
  */
-const VERSION = "v17";
+const VERSION = "v19";
 const CACHE = "air-quality-" + VERSION;
 const SLOW_NETWORK_MS = 4000;
 const SHELL = [
