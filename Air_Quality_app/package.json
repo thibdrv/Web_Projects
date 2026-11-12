@@ -1,0 +1,10 @@
+{
+  "name": "air-quality-cyprus",
+  "version": "1.0.0",
+  "description": "Air quality for the main cities of Cyprus (US AQI, European AQI, forecast, Saharan dust).",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
