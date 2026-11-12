@@ -1,6 +1,6 @@
 # Air Quality — Cyprus
 
-A small, dependency-free web app that shows the current air quality and a 48-hour forecast for the main places of Cyprus: **Nicosia, Larnaca, Limassol, Ayia Napa, Paphos, Famagusta and Troodos**, or any spot you tap on the map, or your own position. It is an installable, offline-ready web app (PWA).
+A small, dependency-free web app that shows the current air quality and a 48-hour forecast for the main places of Cyprus: **Nicosia, Larnaca, Limassol, Ayia Napa, Paphos, Famagusta and Troodos**, or any spot you tap on the map, or your own position. It is an offline-ready web app (PWA).
 
 | Light | Dark | Phone |
 | --- | --- | --- |
@@ -17,7 +17,7 @@ A small, dependency-free web app that shows the current air quality and a 48-hou
 - **Explanations** for how the AQI is calculated, what each pollutant is, and how Saharan dust is calculated.
 - **Saharan dust** reading (switchable) and **hourly forecast chart** for the AQI or the dust (hover or touch the chart for values).
 - **My location** (browser geolocation, rounded to about 1 km, never stored), shown on the map when you are in Cyprus.
-- **Installable and offline-ready (PWA)**: "Install app" button in the header when your browser offers it. The app shell is cached by a service worker, so it opens without a connection.
+- **Offline-ready (PWA)**: the app shell is cached by a service worker, so it opens without a connection. Your browser's own menu can still add it to the home screen.
 - **English, French and Greek**; the language follows your browser unless you choose one.
 - **Dark mode**, remembered; follows your system by default.
 - Resilient: the last data is cached for 30 minutes and still shown, as an "offline copy", if the network fails. Requests time out after 10 s and can be retried.
@@ -71,7 +71,7 @@ style.css    layout, themes, responsive rules (monochrome design)
 aqi.js       pure logic: scales, levels, parsing, helpers (unit-tested)
 map.js       island outline and map projection (unit-tested)
 i18n.js      English / French / Greek strings
-main.js      UI, fetching, cache, chart, map, geolocation, PWA install
+main.js      UI, fetching, cache, chart, map, geolocation, service worker registration
 sw.js        service worker (offline app shell)
 manifest.webmanifest, icons/   PWA manifest and icons
 fonts/       Inter (self-hosted, SIL Open Font License)

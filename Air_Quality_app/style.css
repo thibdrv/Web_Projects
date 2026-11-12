@@ -709,11 +709,6 @@ h1 {
   line-height: 1.5;
   color: var(--muted);
 }
-.install-button {
-  margin-left: 0;
-  border-color: var(--ink);
-  color: var(--ink);
-}
 .description {
   font-size: 13px;
   font-weight: 300;
@@ -1089,8 +1084,7 @@ h1 {
 
 /* Touch screens: comfortable tap targets ---------------------------------------- */
 @media (pointer: coarse) {
-  .opt,
-  .install-button {
+  .opt {
     min-width: 40px;
     min-height: 40px;
     padding: 0 12px;
@@ -1171,12 +1165,6 @@ h1 {
   }
   .theme-switch {
     justify-self: end;
-  }
-  .install-button {
-    grid-column: 1 / -1;
-    justify-self: end;
-    margin-top: 6px;
-    padding: 0 8px;
   }
   .opt {
     min-width: 32px;

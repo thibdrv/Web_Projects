@@ -146,7 +146,6 @@
     map: $(".map"),
     layout: $(".layout"),
     share: $(".share-button"),
-    install: $(".install-button"),
     themeSwitch: $(".theme-switch"),
     formula: $(".formula"),
   };
@@ -1292,7 +1291,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // PWA: offline app shell (service worker) and "Install app" button
+  // PWA: offline app shell (service worker)
   // -------------------------------------------------------------------------
 
   function initPwa() {
@@ -1308,22 +1307,6 @@
       });
     }
 
-    let installEvent = null;
-    window.addEventListener("beforeinstallprompt", (event) => {
-      event.preventDefault();
-      installEvent = event;
-      els.install.hidden = false;
-    });
-    els.install.addEventListener("click", async () => {
-      if (!installEvent) return;
-      installEvent.prompt();
-      await installEvent.userChoice;
-      installEvent = null;
-      els.install.hidden = true;
-    });
-    window.addEventListener("appinstalled", () => {
-      els.install.hidden = true;
-    });
   }
 
   // -------------------------------------------------------------------------
