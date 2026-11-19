@@ -31,4 +31,7 @@ Welcome to my portfolio ! Here is a collection of my web development projects, f
 * **Tech Stack:** JavaScript, DOM Manipulation
 * **🔗 Live Demo:** [quiz-jsv.netlify.app](https://quiz-jsv.netlify.app/)
 
----
+### 6. Iatros (Medical Appointments)
+- **Description:** An online platform that makes booking medical appointments easier in Cyprus, inspired by existing sites while trying to improve a few of their weak points. Still a demo, not a live service yet.
+- **Tech Stack:** TypeScript
+- **🔗 Live Demo:** [iatros-demo-cjae64f19-td-c652.vercel.app](https://iatros-demo-cjae64f19-td-c652.vercel.app/en)
