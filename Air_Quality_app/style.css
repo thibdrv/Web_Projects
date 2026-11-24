@@ -1123,7 +1123,6 @@ h1 {
 @media (max-width: 900px) {
   :root {
     --gutter: 14px;
-    --tab-shift: 10px; /* tab labels sit this much lower (keeps clear of floating badges) */
   }
   html,
   body {
@@ -1304,8 +1303,12 @@ h1 {
   .tab {
     position: relative;
     min-height: 40px;
-    /* Top padding of twice the shift moves the centred label down by the shift. */
-    padding: calc(var(--tab-shift) * 2) 0 0;
+    /* Label centred both ways. The left padding cancels the letter-spacing that
+       the browser adds after the last letter, which would push the text left. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 0 0.18em;
     border: 0;
     background: none;
     font: inherit;
@@ -1677,7 +1680,6 @@ h1 {
   }
   .tab {
     min-height: 30px;
-    --tab-shift: 5px; /* less height in landscape */
   }
 }
 
