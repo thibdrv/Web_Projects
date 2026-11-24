@@ -6,7 +6,7 @@ A small, dependency-free web app that shows the current air quality and a 48-hou
 | --- | --- | --- |
 | ![Light theme](docs/screenshot-light.jpg) | ![Dark theme](docs/screenshot-dark.jpg) | ![Phone layout](docs/screenshot-mobile.jpg) |
 
-> Live demo: _add your GitHub Pages link here once the site is published._
+> Live demo: **[air-qualityapp.vercel.app](https://air-qualityapp.vercel.app/)**
 
 ## Features
 
@@ -57,11 +57,11 @@ The logic lives in `aqi.js` (levels, parsing, helpers) and `map.js` (projection,
 npm test
 ```
 
-GitHub Actions runs the same tests on every push and pull request (`.github/workflows/ci.yml`).
+A GitHub Actions workflow that runs the same tests on every push and pull request is included (`.github/workflows/ci.yml`). GitHub only reads workflows at the root of a repository, so it runs only when this folder is the root of its own repository.
 
-## Publish with GitHub Pages
+## Deploy
 
-The site is fully static. In the repository go to **Settings → Pages**, choose **Deploy from a branch**, branch `main`, folder `/ (root)`. The API is served over HTTPS, so it works on Pages as is.
+The site is fully static (no build step), so any static host works. The live demo runs on **Vercel**: import the repository, set the **Root Directory** to the folder that contains `index.html` (`Air_Quality_app` when the app lives inside a larger repository), choose the "Other" preset and leave the build command empty. GitHub Pages and Netlify work the same way. The data API is served over HTTPS, and the service worker needs HTTPS, so use a host that provides it.
 
 ## Project structure
 
